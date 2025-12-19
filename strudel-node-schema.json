@@ -1,0 +1,435 @@
+{
+  "schemaVersion": "2.0",
+  "description": "Strudel Node Connector & Sequencing Schema - Directed Acyclic Signal Graph",
+  
+  "socketTypes": {
+    "patternIn": "Accepts a Strudel Pattern",
+    "patternOut": "Outputs a Strudel Pattern", 
+    "eventIn": "Accepts event-level transforms",
+    "controlIn": "Numeric or pattern control",
+    "wrapIn": "Accepts a pattern to wrap",
+    "wrapOut": "Outputs wrapped pattern"
+  },
+
+  "executionStages": {
+    "source": {"priority": 10, "description": "Sound generators"},
+    "structural": {"priority": 20, "description": "Pattern combinators"},
+    "rhythmic": {"priority": 30, "description": "Time slicing & repeats"},
+    "pitch": {"priority": 40, "description": "Pitch transformations"},
+    "modulation": {"priority": 50, "description": "Modulation & control"},
+    "spectral": {"priority": 60, "description": "Spectral effects"},
+    "space": {"priority": 70, "description": "Spatial effects"},
+    "wrapper": {"priority": 80, "description": "Higher-order transforms"}
+  },
+
+  "nodes": {
+    "Instrument": {
+      "id": "Instrument",
+      "category": "source",
+      "title": "Instrument",
+      "description": "Sound generator for melodic instruments",
+      "sockets": {
+        "in": [],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 10,
+        "wraps": false
+      },
+      "maxInstances": 1,
+      "properties": {
+        "sound": {
+          "type": "select",
+          "source": "instrumentList",
+          "required": true,
+          "mapsTo": "s"
+        },
+        "gain": {"type": "knob", "min": 0, "max": 2, "default": 1, "mapsTo": ".gain"},
+        "pan": {"type": "slider", "min": -1, "max": 1, "default": 0, "mapsTo": ".pan"},
+        "attack": {"type": "knob", "min": 0, "max": 1, "default": 0.01, "mapsTo": ".attack"},
+        "decay": {"type": "knob", "min": 0, "max": 1, "default": 0.3, "mapsTo": ".decay"},
+        "sustain": {"type": "knob", "min": 0, "max": 1, "default": 0.7, "mapsTo": ".sustain"},
+        "release": {"type": "knob", "min": 0, "max": 2, "default": 0.5, "mapsTo": ".release"}
+      }
+    },
+
+    "DrumSymbol": {
+      "id": "DrumSymbol",
+      "category": "source",
+      "title": "Drum",
+      "description": "Sound generator for percussion",
+      "sockets": {
+        "in": [],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 10,
+        "wraps": false
+      },
+      "maxInstances": 1,
+      "properties": {
+        "symbol": {
+          "type": "select",
+          "values": ["bd", "sd", "hh", "oh", "rim", "lt", "mt", "ht", "rd", "cr"],
+          "required": true,
+          "mapsTo": "s"
+        },
+        "bank": {
+          "type": "select",
+          "values": ["RolandTR909", "RolandTR808", "RolandTR707", "AkaiLinn"],
+          "default": "RolandTR909",
+          "mapsTo": ".bank"
+        },
+        "dec": {"type": "knob", "min": 0, "max": 2, "default": 0.3, "mapsTo": ".dec"}
+      }
+    },
+
+    "Stack": {
+      "id": "Stack",
+      "category": "structural",
+      "title": "Stack",
+      "description": "Combines patterns in parallel",
+      "sockets": {
+        "in": ["patternIn", "patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 20,
+        "wraps": false
+      },
+      "multiInput": true,
+      "properties": {}
+    },
+
+    "Sequence": {
+      "id": "Sequence",
+      "category": "structural", 
+      "title": "Sequence",
+      "description": "Combines patterns in sequence",
+      "sockets": {
+        "in": ["patternIn", "patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 20,
+        "wraps": false
+      },
+      "multiInput": true,
+      "properties": {}
+    },
+
+    "Group": {
+      "id": "Group",
+      "category": "structural",
+      "title": "Group", 
+      "description": "Groups patterns with grouping mode",
+      "sockets": {
+        "in": ["patternIn", "patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural", 
+        "priority": 20,
+        "wraps": false
+      },
+      "multiInput": true,
+      "properties": {
+        "mode": {
+          "type": "select",
+          "values": ["parallel", "alternate"],
+          "default": "parallel",
+          "mapsTo": "groupMode"
+        }
+      }
+    },
+
+    "Chop": {
+      "id": "Chop",
+      "category": "rhythmic",
+      "title": "Chop",
+      "description": "Time slicing for granular effects",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30,
+        "wraps": false
+      },
+      "maxPerChain": 1,
+      "properties": {
+        "amount": {"type": "knob", "min": 1, "max": 16, "default": 4, "mapsTo": "arg"}
+      }
+    },
+
+    "Stutter": {
+      "id": "Stutter",
+      "category": "rhythmic",
+      "title": "Stutter",
+      "description": "Repeats for stuttering effects",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30,
+        "wraps": false
+      },
+      "maxPerChain": 1,
+      "properties": {
+        "amount": {"type": "knob", "min": 1, "max": 16, "default": 4, "mapsTo": "arg"}
+      }
+    },
+
+    "LPF": {
+      "id": "LPF",
+      "category": "effect",
+      "title": "Low Pass Filter",
+      "description": "Filters high frequencies",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "frequency": {"type": "knob", "min": 50, "max": 8000, "default": 8000, "mapsTo": "arg"}
+      }
+    },
+
+    "HPF": {
+      "id": "HPF",
+      "category": "effect",
+      "title": "High Pass Filter", 
+      "description": "Filters low frequencies",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "frequency": {"type": "knob", "min": 20, "max": 2000, "default": 20, "mapsTo": "arg"}
+      }
+    },
+
+    "Delay": {
+      "id": "Delay",
+      "category": "effect",
+      "title": "Delay",
+      "description": "Time-based delay effect",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70,
+        "wraps": false
+      },
+      "properties": {
+        "time": {"type": "knob", "min": 0, "max": 1, "default": 0.3, "mapsTo": "arg"},
+        "feedback": {"type": "knob", "min": 0, "max": 0.95, "default": 0.4, "mapsTo": ".delayfb"}
+      }
+    },
+
+    "Reverb": {
+      "id": "Reverb",
+      "category": "effect",
+      "title": "Reverb",
+      "description": "Spatial reverb effect",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70,
+        "wraps": false
+      },
+      "properties": {
+        "room": {"type": "knob", "min": 0, "max": 1, "default": 0.3, "mapsTo": "arg"}
+      }
+    },
+
+    "Distort": {
+      "id": "Distort",
+      "category": "effect",
+      "title": "Distortion",
+      "description": "Signal distortion effect",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "amount": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": "arg"}
+      }
+    },
+
+    "Often": {
+      "id": "Often",
+      "category": "wrapper",
+      "title": "Often",
+      "description": "High probability wrapper",
+      "sockets": {
+        "in": ["wrapIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80,
+        "wraps": true
+      },
+      "properties": {
+        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.7, "mapsTo": "arg"}
+      }
+    },
+
+    "Sometimes": {
+      "id": "Sometimes",
+      "category": "wrapper",
+      "title": "Sometimes",
+      "description": "Medium probability wrapper",
+      "sockets": {
+        "in": ["wrapIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80,
+        "wraps": true
+      },
+      "properties": {
+        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": "arg"}
+      }
+    },
+
+    "Rarely": {
+      "id": "Rarely",
+      "category": "wrapper",
+      "title": "Rarely",
+      "description": "Low probability wrapper",
+      "sockets": {
+        "in": ["wrapIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80,
+        "wraps": true
+      },
+      "properties": {
+        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.3, "mapsTo": "arg"}
+      }
+    },
+
+    "LFO": {
+      "id": "LFO",
+      "category": "control",
+      "title": "LFO",
+      "description": "Low Frequency Oscillator",
+      "sockets": {
+        "in": [],
+        "out": ["controlOut"]
+      },
+      "execution": {
+        "stage": "modulation",
+        "priority": 50,
+        "wraps": false
+      },
+      "properties": {
+        "rate": {"type": "knob", "min": 0.1, "max": 10, "default": 1, "mapsTo": "arg"},
+        "depth": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": ".depth"}
+      }
+    },
+
+    "Random": {
+      "id": "Random",
+      "category": "control",
+      "title": "Random",
+      "description": "Random value generator",
+      "sockets": {
+        "in": [],
+        "out": ["controlOut"]
+      },
+      "execution": {
+        "stage": "modulation",
+        "priority": 50,
+        "wraps": false
+      },
+      "properties": {
+        "min": {"type": "number", "min": 0, "max": 255, "default": 0, "mapsTo": ".min"},
+        "max": {"type": "number", "min": 1, "max": 255, "default": 8, "mapsTo": ".max"}
+      }
+    },
+
+    "Pitch": {
+      "id": "Pitch",
+      "category": "modulation",
+      "title": "Pitch",
+      "description": "Pitch transformation",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40,
+        "wraps": false
+      },
+      "properties": {
+        "semitones": {"type": "number", "min": -24, "max": 24, "default": 0, "mapsTo": "arg"},
+        "octaves": {"type": "number", "min": -3, "max": 3, "default": 0, "mapsTo": ".octave"}
+      }
+    }
+  },
+
+  "socketCompatibilityMatrix": {
+    "patternOut": {
+      "patternIn": true,
+      "wrapIn": true,
+      "controlIn": false
+    },
+    "wrapOut": {
+      "patternIn": false,
+      "wrapIn": false,
+      "controlIn": false
+    },
+    "controlOut": {
+      "patternIn": false,
+      "wrapIn": false,
+      "controlIn": true
+    }
+  },
+
+  "validationRules": {
+    "forbiddenConnections": [
+      {"from": "patternOut", "to": "source"},
+      {"from": "source", "to": "source"},
+      {"from": "effect", "to": "source"},
+      {"from": "wrapper", "to": "structural"}
+    ],
+    "enforcedRules": [
+      {"rule": "singleSourcePerChain", "description": "Maximum one source node per chain"},
+      {"rule": "wrapperAtEnd", "description": "Wrapper nodes must be at the end of chains"},
+      {"rule": "orderedExecution", "description": "Nodes must execute in priority order"}
+    ]
+  }
+}

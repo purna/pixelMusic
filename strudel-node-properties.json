@@ -1,0 +1,416 @@
+{
+  "schemaVersion": "1.0",
+
+  "uiControls": {
+    "knob": { "component": "Knob" },
+    "slider": { "component": "Slider" },
+    "select": { "component": "Select" },
+    "toggle": { "component": "Toggle" },
+    "pattern": { "component": "PatternInput" },
+    "number": { "component": "NumberInput" }
+  },
+
+  "nodes": {
+    "Instrument": {
+      "title": "Instrument",
+      "sections": [
+        {
+          "id": "sound",
+          "label": "Sound",
+          "properties": {
+            "sound": {
+              "label": "Sample",
+              "type": "select",
+              "source": "instrumentList",
+              "required": true,
+              "mapsTo": "s"
+            },
+            "n": {
+              "label": "Variant",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0,
+              "mapsTo": ".n"
+            }
+          }
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "properties": {
+            "gain": {
+              "label": "Gain",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 1,
+              "mapsTo": ".gain"
+            },
+            "pan": {
+              "label": "Pan",
+              "type": "slider",
+              "min": -1,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".pan"
+            }
+          }
+        },
+        {
+          "id": "envelope",
+          "label": "Envelope (ADSR)",
+          "properties": {
+            "attack": {
+              "label": "Attack",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.01,
+              "mapsTo": ".attack"
+            },
+            "decay": {
+              "label": "Decay",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.3,
+              "mapsTo": ".decay"
+            },
+            "sustain": {
+              "label": "Sustain",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.7,
+              "mapsTo": ".sustain"
+            },
+            "release": {
+              "label": "Release",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0.5,
+              "mapsTo": ".release"
+            }
+          }
+        },
+        {
+          "id": "effects",
+          "label": "Audio Effects",
+          "properties": {
+            "vowel": {
+              "label": "Vowel Filter",
+              "type": "toggle",
+              "default": false,
+              "mapsTo": ".vowel"
+            },
+            "lpf": {
+              "label": "Low Pass Filter",
+              "type": "knob",
+              "min": 50,
+              "max": 8000,
+              "step": 10,
+              "default": 8000,
+              "mapsTo": ".lpf"
+            },
+            "hpf": {
+              "label": "High Pass Filter",
+              "type": "knob",
+              "min": 20,
+              "max": 2000,
+              "step": 10,
+              "default": 20,
+              "mapsTo": ".hpf"
+            },
+            "bpf": {
+              "label": "Band Pass Filter",
+              "type": "knob",
+              "min": 100,
+              "max": 4000,
+              "step": 10,
+              "default": 1000,
+              "mapsTo": ".bpf"
+            },
+            "delay": {
+              "label": "Delay",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".delay"
+            },
+            "reverb": {
+              "label": "Reverb",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".reverb"
+            },
+            "distort": {
+              "label": "Distortion",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".distort"
+            },
+            "crush": {
+              "label": "Bit Crush",
+              "type": "knob",
+              "min": 0,
+              "max": 16,
+              "step": 1,
+              "default": 0,
+              "mapsTo": ".crush"
+            },
+            "speed": {
+              "label": "Speed",
+              "type": "knob",
+              "min": 0.25,
+              "max": 4,
+              "step": 0.01,
+              "default": 1,
+              "mapsTo": ".speed"
+            }
+          }
+        }
+      ]
+    },
+
+    "DrumSymbol": {
+      "title": "Drum",
+      "sections": [
+        {
+          "id": "sound",
+          "label": "Drum Sound",
+          "properties": {
+            "symbol": {
+              "label": "Drum Type",
+              "type": "select",
+              "values": ["bd", "sd", "hh", "oh", "rim", "lt", "mt", "ht", "rd", "cr"],
+              "mapsTo": "s"
+            },
+            "bank": {
+              "label": "Drum Machine",
+              "type": "select",
+              "values": [
+                "RolandTR909",
+                "RolandTR808",
+                "RolandTR707",
+                "AkaiLinn",
+                "RhythmAce",
+                "ViscoSpaceDrum"
+              ],
+              "default": "RolandTR909",
+              "mapsTo": ".bank"
+            }
+          }
+        },
+        {
+          "id": "env",
+          "label": "Envelope",
+          "properties": {
+            "dec": {
+              "label": "Decay",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0.3,
+              "mapsTo": ".dec"
+            }
+          }
+        }
+      ]
+    },
+
+    "Repeater": {
+      "title": "Repeat",
+      "sections": [
+        {
+          "id": "repeat",
+          "label": "Repeat Settings",
+          "properties": {
+            "amount": {
+              "label": "Repeats",
+              "type": "number",
+              "min": 1,
+              "max": 32,
+              "step": 1,
+              "default": 4,
+              "mapsTo": "*"
+            }
+          }
+        }
+      ]
+    },
+
+    "Group": {
+      "title": "Group",
+      "sections": [
+        {
+          "id": "group",
+          "label": "Grouping",
+          "properties": {
+            "mode": {
+              "label": "Group Type",
+              "type": "select",
+              "values": ["parallel", "alternate"],
+              "default": "parallel",
+              "mapsTo": "groupMode"
+            }
+          }
+        }
+      ]
+    },
+
+    "Effect": {
+      "title": "Effect",
+      "sections": [
+        {
+          "id": "effect",
+          "label": "Effect",
+          "properties": {
+            "type": {
+              "label": "Effect Type",
+              "type": "select",
+              "values": [
+                "lpf", "hpf", "bpf", "lpq",
+                "delay", "delayfb", "delayt",
+                "reverb", "room",
+                "distort", "crush", "shape",
+                "vibrato", "tremolo",
+                "chop", "stutter"
+              ],
+              "default": "lpf",
+              "mapsTo": "method"
+            }
+          }
+        },
+        {
+          "id": "params",
+          "label": "Parameters",
+          "properties": {
+            "amount": {
+              "label": "Amount",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.5,
+              "mapsTo": "arg"
+            }
+          }
+        }
+      ]
+    },
+
+    "Envelope": {
+      "title": "Envelope",
+      "sections": [
+        {
+          "id": "envelope",
+          "label": "Envelope",
+          "properties": {
+            "time": {
+              "label": "Time",
+              "type": "knob",
+              "min": 0,
+              "max": 4,
+              "step": 0.01,
+              "default": 0.4,
+              "mapsTo": "arg"
+            }
+          }
+        }
+      ]
+    },
+
+    "Pitch": {
+      "title": "Pitch",
+      "sections": [
+        {
+          "id": "pitch",
+          "label": "Pitch",
+          "properties": {
+            "note": {
+              "label": "Semitones",
+              "type": "number",
+              "min": -24,
+              "max": 24,
+              "step": 1,
+              "default": 0,
+              "mapsTo": ".note"
+            },
+            "speed": {
+              "label": "Speed",
+              "type": "knob",
+              "min": 0.25,
+              "max": 4,
+              "step": 0.01,
+              "default": 1,
+              "mapsTo": ".speed"
+            }
+          }
+        }
+      ]
+    },
+
+    "Generator": {
+      "title": "Generator",
+      "sections": [
+        {
+          "id": "generator",
+          "label": "Generator",
+          "properties": {
+            "type": {
+              "label": "Generator Type",
+              "type": "select",
+              "values": ["irand", "rand", "range"],
+              "mapsTo": "fn"
+            },
+            "max": {
+              "label": "Max Value",
+              "type": "number",
+              "min": 1,
+              "max": 512,
+              "step": 1,
+              "default": 8,
+              "mapsTo": "arg"
+            }
+          }
+        }
+      ]
+    },
+
+    "Output": {
+      "title": "Output",
+      "sections": [
+        {
+          "id": "output",
+          "label": "Output",
+          "properties": {
+            "enabled": {
+              "label": "Enabled",
+              "type": "toggle",
+              "default": true,
+              "mapsTo": "active"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

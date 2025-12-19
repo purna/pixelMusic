@@ -39,6 +39,7 @@
      <link rel="stylesheet" href="css/settings.css">
      <link rel="stylesheet" href="css/modal.css">
      <link rel="stylesheet" href="css/tutorials.css">
+     <link rel="stylesheet" href="css/node.css">
 </head>
 
 <body>
@@ -61,11 +62,6 @@
             <button class="icon-tab-btn" data-panel="instruments" data-tooltip-right="Instruments">
                 <i class="fas fa-music"></i>
             </button>
-            <!--
-            <button class="icon-tab-btn" data-panel="settings" data-tooltip-right="Settings">
-                <i class="fas fa-cog"></i>
-            </button>
-            -->
         </div>
 
         <div id="workspace-area">
@@ -74,411 +70,48 @@
                 <div id="instrument-panel">
                     <div class="instrument-categories">
                         <!-- Category Tabs -->
-                        <div class="category-tabs">
-                            <button class="category-tab active" data-category="samples">Samples</button>
-                            <button class="category-tab" data-category="drum-machines">Drum Machines</button>
-                            <button class="category-tab" data-category="synths">Synths</button>
-                            <button class="category-tab" data-category="tonejs">Tone.js</button>
+                        <div class="category-tabs" id="category-tabs">
+                            <!-- Dynamically loaded from strudel-node-instruments.json -->
                         </div>
-                          
-                        <!-- Samples Category -->
-                        <div class="instrument-list category-content active" data-category="samples">
-                            <!-- Percussion Subgroup -->
-                            <div class="sample-subgroup" data-sample-group="percussion">
-                                <div class="sample-group-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Percussion</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="sample-group-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="bongo" data-strudel="bongo(28)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Bongo</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="brakedrum" data-strudel="brakedrum(17)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Brake Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="cabasa" data-strudel="cabasa(6)">
-                                        <i class="fas fa-shaker instrument-icon"></i>
-                                        <span>Cabasa</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Metallic Subgroup -->
-                            <div class="sample-subgroup" data-sample-group="metallic">
-                                <div class="sample-group-header">
-                                    <i class="fas fa-gong instrument-icon"></i>
-                                    <span>Metallic</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="sample-group-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="agogo" data-strudel="agogo(5)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Agogo</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="anvil" data-strudel="anvil(9)">
-                                        <i class="fas fa-hammer instrument-icon"></i>
-                                        <span>Anvil</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Wooden Subgroup -->
-                            <div class="sample-subgroup" data-sample-group="wooden">
-                                <div class="sample-group-header">
-                                    <i class="fas fa-xylophone instrument-icon"></i>
-                                    <span>Wooden</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="sample-group-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="balafon" data-strudel="balafon(6)">
-                                        <i class="fas fa-xylophone instrument-icon"></i>
-                                        <span>Balafon</span>
-                                    </div>
-                                </div>
-                            </div>
+                        
+                        <!-- Dynamic Instrument Content -->
+                        <div id="instrument-content">
+                            <!-- Dynamically loaded from strudel-node-instruments.json -->
                         </div>
-                          
-                        <!-- Drum Machines Category -->
-                        <div class="instrument-list category-content" data-category="drum-machines">
-                            <!-- Drum Machine Categories -->
-                            <div class="drum-machine-category" data-drum-machine="9000">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>9000</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_bd" data-strudel="9000_bd(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_sd" data-strudel="9000_sd(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_hh" data-strudel="9000_hh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_oh" data-strudel="9000_oh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_lt" data-strudel="9000_lt(2)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_mt" data-strudel="9000_mt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_ht" data-strudel="9000_ht(2)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_rd" data-strudel="9000_rd(2)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_cr" data-strudel="9000_cr(2)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="9000_rim" data-strudel="9000_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
-                             
-                            <div class="drum-machine-category" data-drum-machine="AkaiLinn">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Akai Linn</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_bd" data-strudel="akailinn_bd(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_sd" data-strudel="akailinn_sd(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_hh" data-strudel="akailinn_hh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_oh" data-strudel="akailinn_oh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_lt" data-strudel="akailinn_lt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_mt" data-strudel="akailinn_mt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_ht" data-strudel="akailinn_ht(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_rd" data-strudel="akailinn_rd(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_cr" data-strudel="akailinn_cr(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="akailinn_rim" data-strudel="akailinn_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
-                             
-                            <div class="drum-machine-category" data-drum-machine="RhythmAce">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Rhythm Ace</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_bd" data-strudel="rhythmace_bd(3)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_sd" data-strudel="rhythmace_sd(3)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_hh" data-strudel="rhythmace_hh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_oh" data-strudel="rhythmace_oh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_lt" data-strudel="rhythmace_lt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_mt" data-strudel="rhythmace_mt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_ht" data-strudel="rhythmace_ht(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_rd" data-strudel="rhythmace_rd(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_cr" data-strudel="rhythmace_cr(2)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="rhythmace_rim" data-strudel="rhythmace_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
-                             
-                            <div class="drum-machine-category" data-drum-machine="RolandTR808">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Roland TR-808</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_bd" data-strudel="tr808_bd(25)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_sd" data-strudel="tr808_sd(25)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_hh" data-strudel="tr808_hh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_oh" data-strudel="tr808_oh(5)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_lt" data-strudel="tr808_lt(5)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_mt" data-strudel="tr808_mt(5)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_ht" data-strudel="tr808_ht(5)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_rd" data-strudel="tr808_rd(25)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_cr" data-strudel="tr808_cr(25)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr808_rim" data-strudel="tr808_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
-                             
-                            <div class="drum-machine-category" data-drum-machine="RolandTR707">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Roland TR-707</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_bd" data-strudel="tr707_bd(2)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_sd" data-strudel="tr707_sd(2)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_hh" data-strudel="tr707_hh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_oh" data-strudel="tr707_oh(1)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_lt" data-strudel="tr707_lt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_mt" data-strudel="tr707_mt(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_ht" data-strudel="tr707_ht(1)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_rd" data-strudel="tr707_rd(2)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_cr" data-strudel="tr707_cr(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="tr707_rim" data-strudel="tr707_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
-                             
-                            <div class="drum-machine-category" data-drum-machine="ViscoSpaceDrum">
-                                <div class="drum-machine-header">
-                                    <i class="fas fa-drum instrument-icon"></i>
-                                    <span>Visco Space Drum</span>
-                                    <i class="fas fa-chevron-right expand-icon"></i>
-                                </div>
-                                <div class="drum-machine-instruments">
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_bd" data-strudel="spacedrum_bd(11)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Bass Drum</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_sd" data-strudel="spacedrum_sd(3)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Snare</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_hh" data-strudel="spacedrum_hh(6)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_oh" data-strudel="spacedrum_oh(3)">
-                                        <i class="fas fa-hat-cowboy instrument-icon"></i>
-                                        <span>Open Hi-Hat</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_lt" data-strudel="spacedrum_lt(2)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Low Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_mt" data-strudel="spacedrum_mt(2)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>Mid Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_ht" data-strudel="spacedrum_ht(7)">
-                                        <i class="fas fa-drum instrument-icon"></i>
-                                        <span>High Tom</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_rd" data-strudel="spacedrum_rd(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Ride Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_cr" data-strudel="spacedrum_cr(1)">
-                                        <i class="fas fa-gong instrument-icon"></i>
-                                        <span>Crash Cymbal</span>
-                                    </div>
-                                    <div class="instrument-item" draggable="true" data-instrument="spacedrum_rim" data-strudel="spacedrum_rim(1)">
-                                        <i class="fas fa-drum-steelpan instrument-icon"></i>
-                                        <span>Rimshot</span>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+                </div>
+                
+                <!-- Node Type Legend -->
+                <div class="info-panel">
+                    <h3>Node Type Legend</h3>
+                    <div class="node-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-instrument"></div>
+                            <span>Instruments</span>
                         </div>
-                          
-                        <!-- Synths Category -->
-                        <div class="instrument-list category-content" data-category="synths">
-                            <div class="instrument-item" draggable="true" data-instrument="brown" data-strudel="brown">
-                                <i class="fas fa-wave-square instrument-icon"></i>
-                                <span>Brown Noise</span>
-                            </div>
-                            <div class="instrument-item" draggable="true" data-instrument="bytebeat" data-strudel="bytebeat">
-                                <i class="fas fa-wave-sine instrument-icon"></i>
-                                <span>Bytebeat</span>
-                            </div>
-                            <div class="instrument-item" draggable="true" data-instrument="crackle" data-strudel="crackle">
-                                <i class="fas fa-bolt instrument-icon"></i>
-                                <span>Crackle</span>
-                            </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-note"></div>
+                            <span>Musical Notes</span>
                         </div>
-                          
-                        <!-- Tone.js Category (Original) -->
-                        <div class="instrument-list category-content" data-category="tonejs">
-                            <div class="instrument-item" draggable="true" data-instrument="sine">
-                                <i class="fas fa-wave-square instrument-icon"></i>
-                                <span>Sine Wave</span>
-                            </div>
-                            <div class="instrument-item" draggable="true" data-instrument="square">
-                                <i class="fas fa-square instrument-icon"></i>
-                                <span>Square Wave</span>
-                            </div>
-                            <div class="instrument-item" draggable="true" data-instrument="sawtooth">
-                                <i class="fas fa-wave-sine instrument-icon"></i>
-                                <span>Sawtooth Wave</span>
-                            </div>
-                            <div class="instrument-item" draggable="true" data-instrument="triangle">
-                                <i class="fas fa-play instrument-icon"></i>
-                                <span>Triangle Wave</span>
-                            </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-rest"></div>
+                            <span>Rests</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-multiplier"></div>
+                            <span>Multipliers</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-stack"></div>
+                            <span>Stack Operations</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-parallel"></div>
+                            <span>Parallel Execution</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-group"></div>
+                            <span>Groups</span>
                         </div>
                     </div>
                 </div>
@@ -487,100 +120,149 @@
 
         <div id="center-stack">
             <div id="music-grid-container">
-                <div class="grid-header">Music Grid</div>
-                <div id="music-grid">
-                    <div class="grid-quarter" data-quarter="1"></div>
-                    <div class="grid-quarter" data-quarter="2"></div>
-                    <div class="grid-quarter" data-quarter="3"></div>
-                    <div class="grid-quarter" data-quarter="4"></div>
+                <div class="grid-header">Node-Based Music Editor</div>
+                <div id="node-canvas">
+                    <div class="canvas-content" id="canvas-content">
+                        <!-- Nodes and connections will be rendered here -->
+                    </div>
                 </div>
                 <div class="play-controls">
-                    <button id="playBtn"><i class="fas fa-play"></i> Play</button>
-                    <button id="stopBtn"><i class="fas fa-stop"></i> Stop</button>
-                    <button id="deleteBtn"><i class="fas fa-trash"></i> Delete</button>
-                    <button id="clearBtn"><i class="fas fa-trash"></i> Clear All</button>
+                    <button id="play-all-nodes" class="btn btn-play-all"><i class="fas fa-play"></i> Play All Nodes</button>
+                    <button id="stop-all-nodes" class="btn btn-secondary"><i class="fas fa-stop"></i> Stop All</button>
+                    <button id="delete-selected-node" class="btn btn-secondary"><i class="fas fa-trash-alt"></i> Delete Selected</button>
+                    <button id="clear-nodes" class="btn btn-secondary"><i class="fas fa-trash"></i> Clear Nodes</button>
+                </div>
+                
+                <!-- Status Message -->
+                <div class="status-message" id="status-message">
+                    Node Editor Ready - Click play buttons on nodes to test sounds
                 </div>
             </div>
         </div>
 
+        <!-- Dynamic Side Panel for Node Properties -->
         <div id="side-panel">
-            <div id="sound-properties">
+            <div class="side-panel-header">
+                <h3 id="side-panel-title">Node Properties</h3>
+                <button class="side-panel-close" id="side-panel-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="node-properties">
                 <div class="property-group">
-                    <label for="instrumentType">Instrument Type</label>
-                    <select id="instrumentType">
+                    <label for="node-instrument">Instrument</label>
+                    <select id="node-instrument">
                         <option value="sine">Sine Wave</option>
                         <option value="square">Square Wave</option>
                         <option value="sawtooth">Sawtooth Wave</option>
                         <option value="triangle">Triangle Wave</option>
                         <option value="piano">Piano</option>
+                        <option value="violin">Violin</option>
                         <option value="guitar">Guitar</option>
-                        <!-- Strudel instruments -->
-                        <option value="agogo">Agogo</option>
-                        <option value="anvil">Anvil</option>
-                        <option value="balafon">Balafon</option>
-                        <option value="bongo">Bongo</option>
-                        <option value="brakedrum">Brake Drum</option>
-                        <option value="cabasa">Cabasa</option>
-                        <option value="9000_bd">9000 Bass Drum</option>
-                        <option value="9000_sd">9000 Snare</option>
-                        <option value="9000_hh">9000 Hi-Hat</option>
-                        <option value="ace_bd">Ace Bass Drum</option>
+                        <option value="flute">Flute</option>
+                        <option value="trumpet">Trumpet</option>
                         <option value="brown">Brown Noise</option>
-                        <option value="bytebeat">Bytebeat</option>
                         <option value="crackle">Crackle</option>
                     </select>
                 </div>
-                  
-                <!-- Strudel-specific settings (hidden by default) -->
-                <div class="property-group strudel-settings">
-                    <label for="strudelSample">Strudel Sample</label>
-                    <input type="text" id="strudelSample" readonly>
-                </div>
-                  
+                
                 <div class="property-group">
-                    <label for="duration">Duration (ms)</label>
-                    <input type="range" id="duration" min="100" max="2000" value="500">
-                    <span class="value" id="durationVal">500</span>
+                    <label for="node-note">Note (if applicable)</label>
+                    <input type="text" id="node-note" placeholder="e.g., c4, f#3">
                 </div>
+                
                 <div class="property-group">
-                    <label for="volume">Volume</label>
-                    <input type="range" id="volume" min="0" max="100" value="80">
-                    <span class="value" id="volumeVal">80</span>
+                    <label for="node-duration">Duration</label>
+                    <input type="range" id="node-duration" min="100" max="2000" value="500">
+                    <span class="value" id="node-duration-val">500</span>
                 </div>
-                  
-                <!-- Tone.js specific settings -->
-                <div class="property-group tonejs-settings">
-                    <label for="pitch">Pitch (Hz)</label>
-                    <input type="range" id="pitch" min="220" max="880" value="440">
-                    <span class="value" id="pitchVal">440</span>
+                
+                <div class="property-group">
+                    <label for="node-volume">Volume</label>
+                    <input type="range" id="node-volume" min="0" max="100" value="80">
+                    <span class="value" id="node-volume-val">80</span>
                 </div>
-                  
-                <div class="property-group tonejs-settings">
-                    <label for="pan">Pan</label>
-                    <input type="range" id="pan" min="-1" max="1" step="0.1" value="0">
-                    <span class="value" id="panVal">0</span>
+                
+                <div class="effects-section">
+                    <h4>Effects</h4>
+                    <div class="effects-list">
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-lpf" data-effect="lpf">
+                                Low-Pass Filter
+                            </label>
+                            <input type="range" id="effect-lpf-value" min="20" max="20000" value="800" disabled>
+                            <span class="effect-value" id="effect-lpf-val">800 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-hpf" data-effect="hpf">
+                                High-Pass Filter
+                            </label>
+                            <input type="range" id="effect-hpf-value" min="20" max="20000" value="200" disabled>
+                            <span class="effect-value" id="effect-hpf-val">200 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-bpf" data-effect="bpf">
+                                Band-Pass Filter
+                            </label>
+                            <input type="range" id="effect-bpf-value" min="20" max="20000" value="1200" disabled>
+                            <span class="effect-value" id="effect-bpf-val">1200 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-delay" data-effect="delay">
+                                Delay
+                            </label>
+                            <input type="range" id="effect-delay-value" min="0" max="1" step="0.01" value="0.25" disabled>
+                            <span class="effect-value" id="effect-delay-val">0.25</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-reverb" data-effect="reverb">
+                                Reverb
+                            </label>
+                            <input type="range" id="effect-reverb-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <span class="effect-value" id="effect-reverb-val">0.3</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-distort" data-effect="distort">
+                                Distortion
+                            </label>
+                            <input type="range" id="effect-distort-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <span class="effect-value" id="effect-distort-val">0.3</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-speed" data-effect="speed">
+                                Playback Speed
+                            </label>
+                            <input type="range" id="effect-speed-value" min="0.1" max="2" step="0.01" value="1" disabled>
+                            <span class="effect-value" id="effect-speed-val">1.0x</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-pan" data-effect="pan">
+                                Stereo Pan
+                            </label>
+                            <input type="range" id="effect-pan-value" min="-1" max="1" step="0.01" value="0" disabled>
+                            <span class="effect-value" id="effect-pan-val">0</span>
+                        </div>
+                    </div>
                 </div>
-                  
-                <div class="property-group tonejs-settings">
-                    <label for="attack">Attack (s)</label>
-                    <input type="range" id="attack" min="0" max="1" step="0.01" value="0.1">
-                    <span class="value" id="attackVal">0.1</span>
-                </div>
-                  
-                <div class="property-group tonejs-settings">
-                    <label for="decay">Decay (s)</label>
-                    <input type="range" id="decay" min="0" max="2" step="0.01" value="0.5">
-                    <span class="value" id="decayVal">0.5</span>
-                </div>
-                  
-                <div class="property-group tonejs-settings">
-                    <label for="waveform">Waveform</label>
-                    <select id="waveform">
-                        <option value="sine">Sine</option>
-                        <option value="square">Square</option>
-                        <option value="sawtooth">Sawtooth</option>
-                        <option value="triangle">Triangle</option>
-                    </select>
+                
+                <div class="property-group">
+                    <button class="btn btn-secondary" id="apply-effects">Apply Effects</button>
+                    <button class="btn btn-secondary" id="clear-effects">Clear All Effects</button>
                 </div>
             </div>
         </div>
@@ -641,7 +323,7 @@
                                 <input type="range" id="settings-gain" class="settings-range" min="0" max="2" step="0.01" value="1">
                                 <div class="range-value" id="gain-value">1.0</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrow-down"></i>
@@ -650,7 +332,7 @@
                                 <input type="range" id="settings-decay" class="settings-range" min="0" max="2" step="0.01" value="0.4">
                                 <div class="range-value" id="decay-value">0.4</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-wave-square"></i>
@@ -659,7 +341,7 @@
                                 <input type="range" id="settings-sustain" class="settings-range" min="0" max="1" step="0.01" value="0.2">
                                 <div class="range-value" id="sustain-value">0.2</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrow-up"></i>
@@ -668,7 +350,7 @@
                                 <input type="range" id="settings-attack" class="settings-range" min="0" max="1" step="0.01" value="0.01">
                                 <div class="range-value" id="attack-value">0.01</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrow-down"></i>
@@ -677,7 +359,7 @@
                                 <input type="range" id="settings-release" class="settings-range" min="0" max="2" step="0.01" value="0.2">
                                 <div class="range-value" id="release-value">0.2</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrows-alt-h"></i>
@@ -688,7 +370,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Filters -->
                     <div class="settings-section">
                         <div class="section-heading">Filters</div>
@@ -701,7 +383,7 @@
                                 <input type="range" id="settings-lpf" class="settings-range" min="20" max="20000" step="10" value="800">
                                 <div class="range-value" id="lpf-value">800</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-filter"></i>
@@ -710,7 +392,7 @@
                                 <input type="range" id="settings-hpf" class="settings-range" min="20" max="20000" step="10" value="200">
                                 <div class="range-value" id="hpf-value">200</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-filter"></i>
@@ -719,7 +401,7 @@
                                 <input type="range" id="settings-bpf" class="settings-range" min="20" max="20000" step="10" value="1200">
                                 <div class="range-value" id="bpf-value">1200</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-filter"></i>
@@ -730,7 +412,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Time & Space Effects -->
                     <div class="settings-section">
                         <div class="section-heading">Time & Space Effects</div>
@@ -743,7 +425,7 @@
                                 <input type="range" id="settings-delay" class="settings-range" min="0" max="1" step="0.01" value="0.25">
                                 <div class="range-value" id="delay-value">0.25</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-redo"></i>
@@ -752,7 +434,7 @@
                                 <input type="range" id="settings-delayfb" class="settings-range" min="0" max="1" step="0.01" value="0.4">
                                 <div class="range-value" id="delayfb-value">0.4</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-music"></i>
@@ -761,7 +443,7 @@
                                 <input type="range" id="settings-delayt" class="settings-range" min="0" max="1" step="0.01" value="0.33">
                                 <div class="range-value" id="delayt-value">0.33</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-mountain"></i>
@@ -770,7 +452,7 @@
                                 <input type="range" id="settings-reverb" class="settings-range" min="0" max="1" step="0.01" value="0.3">
                                 <div class="range-value" id="reverb-value">0.3</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-cube"></i>
@@ -781,7 +463,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Distortion & Saturation -->
                     <div class="settings-section">
                         <div class="section-heading">Distortion & Saturation</div>
@@ -794,7 +476,7 @@
                                 <input type="range" id="settings-distort" class="settings-range" min="0" max="1" step="0.01" value="0.3">
                                 <div class="range-value" id="distort-value">0.3</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-compress"></i>
@@ -803,7 +485,7 @@
                                 <input type="range" id="settings-crush" class="settings-range" min="1" max="16" step="1" value="4">
                                 <div class="range-value" id="crush-value">4</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-wave-square"></i>
@@ -814,7 +496,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Pitch & Playback -->
                     <div class="settings-section">
                         <div class="section-heading">Pitch & Playback</div>
@@ -827,7 +509,7 @@
                                 <input type="range" id="settings-speed" class="settings-range" min="0.1" max="2" step="0.01" value="1">
                                 <div class="range-value" id="speed-value">1.0</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-music"></i>
@@ -836,7 +518,7 @@
                                 <input type="range" id="settings-note" class="settings-range" min="-24" max="24" step="1" value="0">
                                 <div class="range-value" id="note-value">0</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrows-alt-v"></i>
@@ -847,7 +529,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Rhythmic & Glitch -->
                     <div class="settings-section">
                         <div class="section-heading">Rhythmic & Glitch</div>
@@ -860,7 +542,7 @@
                                 <input type="range" id="settings-chop" class="settings-range" min="1" max="16" step="1" value="8">
                                 <div class="range-value" id="chop-value">8</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-redo"></i>
@@ -869,7 +551,7 @@
                                 <input type="range" id="settings-stutter" class="settings-range" min="1" max="8" step="1" value="2">
                                 <div class="range-value" id="stutter-value">2</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-scissors"></i>
@@ -880,7 +562,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Modulation -->
                     <div class="settings-section">
                         <div class="section-heading">Modulation & Movement</div>
@@ -893,7 +575,7 @@
                                 <input type="range" id="settings-vibrato" class="settings-range" min="1" max="20" step="1" value="4">
                                 <div class="range-value" id="vibrato-value">4</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrows-alt-v"></i>
@@ -902,7 +584,7 @@
                                 <input type="range" id="settings-vibdepth" class="settings-range" min="0" max="0.1" step="0.001" value="0.02">
                                 <div class="range-value" id="vibdepth-value">0.02</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-wave-square"></i>
@@ -911,7 +593,7 @@
                                 <input type="range" id="settings-tremolo" class="settings-range" min="1" max="20" step="1" value="8">
                                 <div class="range-value" id="tremolo-value">8</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-arrows-alt-v"></i>
@@ -922,7 +604,7 @@
                             </div>
                         </div>
                     </div>
-                     
+                      
                     <!-- Probability & Variation -->
                     <div class="settings-section">
                         <div class="section-heading">Probability & Variation</div>
@@ -936,7 +618,7 @@
                                     These controls allow you to apply effects probabilistically to create variation in your sounds.
                                 </div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-percentage"></i>
@@ -945,7 +627,7 @@
                                 <input type="range" id="settings-often" class="settings-range" min="0" max="1" step="0.01" value="0.75">
                                 <div class="range-value" id="often-value">75%</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-percentage"></i>
@@ -954,7 +636,7 @@
                                 <input type="range" id="settings-sometimes" class="settings-range" min="0" max="1" step="0.01" value="0.5">
                                 <div class="range-value" id="sometimes-value">50%</div>
                             </div>
-                             
+                              
                             <div class="property-group has-slider">
                                 <label class="property-label">
                                     <i class="fas fa-percentage"></i>
@@ -986,6 +668,10 @@
     <script src="js/tooltip.js"></script>
     <!-- Audio Effects Manager -->
     <script src="js/audioEffectsManager.js"></script>
+    <!-- Dynamic Menu Loader -->
+    <script src="js/menuLoader.js"></script>
+    <!-- Node Manager -->
+    <script src="js/nodeManager.js"></script>
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
 </body>

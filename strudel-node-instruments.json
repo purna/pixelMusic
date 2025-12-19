@@ -1,0 +1,207 @@
+{
+  "version": "1.0",
+  "app": "Strudel Node Composer",
+  "menus": [
+    {
+      "id": "instruments",
+      "label": "Instruments",
+      "groups": [
+        {
+          "id": "drums",
+          "label": "Drum Kit",
+          "nodeType": "DrumSymbol",
+          "color": "#00d9ff",
+          "items": [
+            { "id": "bd", "label": "Bass Drum", "value": "bd" },
+            { "id": "sd", "label": "Snare Drum", "value": "sd" },
+            { "id": "rim", "label": "Rimshot", "value": "rim" },
+            { "id": "hh", "label": "Hi-Hat (Closed)", "value": "hh" },
+            { "id": "oh", "label": "Hi-Hat (Open)", "value": "oh" },
+            { "id": "lt", "label": "Low Tom", "value": "lt" },
+            { "id": "mt", "label": "Mid Tom", "value": "mt" },
+            { "id": "ht", "label": "High Tom", "value": "ht" },
+            { "id": "rd", "label": "Ride Cymbal", "value": "rd" },
+            { "id": "cr", "label": "Crash Cymbal", "value": "cr" }
+          ]
+        },
+        {
+          "id": "percussion",
+          "label": "Percussion",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "agogo", "anvil", "bongo", "cabasa", "cajon", "clave", "clap",
+            "conga", "cowbell", "darbuka", "flexatone", "guiro",
+            "ratchet", "shaker_large", "shaker_small",
+            "slapstick", "tambourine", "tambourine2",
+            "timpani", "timpani_roll",
+            "vibraslap", "woodblock"
+          ]
+        },
+        {
+          "id": "mallet",
+          "label": "Mallet & Tuned",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "balafon", "balafon_hard", "balafon_soft",
+            "glockenspiel",
+            "kalimba", "kalimba2", "kalimba3", "kalimba4", "kalimba5",
+            "marimba",
+            "vibraphone", "vibraphone_soft", "vibraphone_bowed",
+            "xylophone_hard_ff", "xylophone_hard_pp",
+            "xylophone_medium_ff", "xylophone_medium_pp",
+            "xylophone_soft_ff", "xylophone_soft_pp"
+          ]
+        },
+        {
+          "id": "strings",
+          "label": "Strings & Plucked",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "folkharp", "harp",
+            "psaltery_pluck", "psaltery_bow", "psaltery_spiccato",
+            "strumstick",
+            "wineglass", "wineglass_slow"
+          ]
+        },
+        {
+          "id": "winds",
+          "label": "Winds & Reeds",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "harmonica", "harmonica_soft", "harmonica_vib",
+            "ocarina", "ocarina_small", "ocarina_small_stacc", "ocarina_vib",
+            "recorder_soprano", "recorder_alto",
+            "recorder_tenor", "recorder_bass",
+            "sax", "sax_stacc", "sax_vib",
+            "saxello", "saxello_stacc", "saxello_vib",
+            "trainwhistle"
+          ]
+        },
+        {
+          "id": "keyboards",
+          "label": "Keyboards & Organs",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "piano", "piano1", "steinway", "fmpiano", "kawai",
+            "organ_4inch", "organ_8inch", "organ_full",
+            "pipeorgan_loud", "pipeorgan_quiet",
+            "pipeorgan_loud_pedal", "pipeorgan_quiet_pedal",
+            "super64", "super64_acc", "super64_vib"
+          ]
+        },
+        {
+          "id": "textures",
+          "label": "Textures & FX",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "casio", "clavisynth", "didgeridoo",
+            "east", "insect", "jazz",
+            "oceandrum", "space", "wind",
+            "siren", "crow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pattern",
+      "label": "Pattern",
+      "groups": [
+        {
+          "id": "repeat",
+          "label": "Repeat & Density",
+          "nodeType": "Repeater",
+          "color": "#ff006e",
+          "items": ["*", "slow", "fast"]
+        },
+        {
+          "id": "group",
+          "label": "Grouping",
+          "nodeType": "Group",
+          "color": "#8b5cf6",
+          "items": ["[ ]", "< >"]
+        },
+        {
+          "id": "chance",
+          "label": "Chance",
+          "nodeType": "Chance",
+          "color": "#00ff41",
+          "items": ["sometimes", "often", "rarely", "when"]
+        }
+      ]
+    },
+    {
+      "id": "effects",
+      "label": "Effects",
+      "groups": [
+        {
+          "id": "filter",
+          "label": "Filters",
+          "nodeType": "Effect",
+          "color": "#9400d3",
+          "items": ["lpf", "hpf", "bpf", "lpq"]
+        },
+        {
+          "id": "space",
+          "label": "Spatial",
+          "nodeType": "Effect",
+          "color": "#9400d3",
+          "items": ["pan", "reverb", "room", "delay", "delayfb", "delayt"]
+        },
+        {
+          "id": "distortion",
+          "label": "Distortion",
+          "nodeType": "Effect",
+          "color": "#9400d3",
+          "items": ["distort", "crush", "shape"]
+        },
+        {
+          "id": "modulation",
+          "label": "Modulation",
+          "nodeType": "Effect",
+          "color": "#9400d3",
+          "items": ["vibrato", "vibdepth", "tremolo", "tremdepth"]
+        },
+        {
+          "id": "glitch",
+          "label": "Glitch",
+          "nodeType": "Effect",
+          "color": "#9400d3",
+          "items": ["chop", "stutter", "slice"]
+        }
+      ]
+    },
+    {
+      "id": "utility",
+      "label": "Utility",
+      "groups": [
+        {
+          "id": "generators",
+          "label": "Generators",
+          "nodeType": "Generator",
+          "color": "#ffa500",
+          "items": ["irand", "rand", "range"]
+        },
+        {
+          "id": "transform",
+          "label": "Pattern Transform",
+          "nodeType": "Transform",
+          "color": "#ffa500",
+          "items": ["rev", "palindrome", "shuffle", "jux"]
+        },
+        {
+          "id": "output",
+          "label": "Output",
+          "nodeType": "Output",
+          "color": "#666",
+          "items": ["gain", "mute", "solo"]
+        }
+      ]
+    }
+  ]
+}

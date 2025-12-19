@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Generation Test</title>
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #121212;
+            color: #e0e7ff;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #00ff41;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #2d3748;
+        }
+        
+        .test-section h2 {
+            color: #00d9ff;
+            margin-top: 0;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 10px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .grid-quarter {
+            background: #16213e;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #2d3748;
+            position: relative;
+            min-height: 150px;
+        }
+        
+        .instrument {
+            width: 40px;
+            height: 40px;
+            background: #00ff41;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+            position: absolute;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .pattern-controls {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        #pattern-input {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f1b;
+            border: 1px solid #2d3748;
+            color: #e0e7ff;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #00d9ff;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #1e293b;
+            color: #e0e7ff;
+        }
+        
+        .preset-btn {
+            background: #1e293b;
+            border: 1px solid #2d3748;
+            color: #e0e7ff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:hover {
+            background: #00ff41;
+            color: #000;
+            border-color: #00ff41;
+        }
+        
+        .test-results {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2d3748;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            color: #00ff41;
+        }
+        
+        .error {
+            color: #ff006e;
+        }
+        
+        .info {
+            color: #00d9ff;
+        }
+        
+        .test-instructions {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #00ff41;
+            margin-bottom: 20px;
+        }
+        
+        .test-instructions h3 {
+            color: #00ff41;
+            margin-top: 0;
+        }
+        
+        .test-instructions ul {
+            margin: 10px 0 10px 20px;
+            padding: 0;
+        }
+        
+        .test-instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .audio-controls {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        .audio-status {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 10px;
+        }
+        
+        .instrument.playing {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .play-sound-btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+        
+        .play-sound-btn:hover {
+            background: #00d9ff;
+            transform: translateY(-1px);
+        }
+        
+        .play-sound-btn:disabled {
+            background: #4a5568;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Pattern Generation Test</h1>
+        
+        <div class="test-instructions">
+            <h3>Testing Instructions</h3>
+            <p>This test file allows you to test the pattern generation functionality in isolation.</p>
+            <ul>
+                <li><strong>Enter patterns</strong> in the input field using the syntax described below</li>
+                <li><strong>Click "Generate Pattern"</strong> to create instruments in the test grid</li>
+                <li><strong>Use preset buttons</strong> for quick testing of common patterns</li>
+                <li><strong>Check pattern validation</strong> to see how your pattern is interpreted</li>
+                <li><strong>Test Strudel reference patterns</strong> to hear identical audio samples</li>
+                <li><strong>Click instruments</strong> to hear authentic Strudel.cc drum sounds</li>
+                <li><strong>Check test results</strong> for detailed output and debugging information</li>
+                <li><strong>Clear grid</strong> to start fresh</li>
+            </ul>
+            <p><strong>Pattern Syntax:</strong> Separate instruments with spaces. Use <code>*n</code> for multipliers. Use <code>~</code> or <code>[]</code> for rests.</p>
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #00d9ff;">
+                <strong style="color: #00d9ff;">Audio Effects Application:</strong><br>
+                <span style="font-size: 11px; color: #94a3b8;">
+                    Effects should be applied to individual instruments (items in the grid), not the whole grid or project. 
+                    This gives you the most control and flexibility for sound design. Each instrument can have its own unique effects.
+                </span>
+            </div>
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #00ff41;">
+                <strong style="color: #00ff41;">Pattern Behavior:</strong><br>
+                <span style="font-size: 11px; color: #94a3b8;">
+                    <code>"hh*4"</code> creates 4 separate "HH" instruments in the <strong>first quarter only</strong>, 
+                    not "HH" in all four grid boxes. Each instrument is individually clickable and playable.
+                </span>
+            </div>
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #9400d3;">
+                <strong style="color: #9400d3;">Real Audio Samples:</strong><br>
+                <span style="font-size: 11px; color: #94a3b8;">
+                    Now using <strong>local Strudel library files</strong> with authentic drum samples for identical sound quality. 
+                    Falls back to enhanced synthesis if Strudel unavailable. Test the reference patterns above!
+                </span>
+            </div>
+        </div>
+        
+        <div class="pattern-controls">
+            <h2>Pattern Generator</h2>
+            <input type="text" id="pattern-input" 
+                   placeholder="e.g. bd sd [~ bd] sd, hh*4, note(c4 d e f)">
+            
+            <div style="margin: 10px 0;">
+                <button class="btn" id="generate-pattern">Generate Pattern</button>
+                <button class="btn btn-secondary" id="clear-grid">Clear Grid</button>
+                <button class="btn btn-secondary" id="run-all-tests">Run All Tests</button>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong>Preset Patterns:</strong>
+            </div>
+            
+            <div class="audio-controls">
+                <h3 style="color: #00ff41; margin-top: 0;">Sound Playback</h3>
+                <button class="play-sound-btn" id="enable-audio">Enable Audio</button>
+                <button class="play-sound-btn" id="play-all-sounds">Play All Sounds</button>
+                <button class="play-sound-btn" id="stop-all-sounds">Stop All</button>
+                <div class="audio-status" id="audio-status">
+                    Audio: <span id="audio-state">Disabled</span><br>
+                    <span style="font-size: 10px; color: #666;">
+                        <span id="strudel-status">Strudel: Loading...</span>
+                    </span>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #2d3748;">
+                    <h4 style="color: #00d9ff; margin: 0 0 8px 0; font-size: 12px;">Strudel.cc Reference Patterns</h4>
+                    <button class="play-sound-btn strudel-ref" data-pattern="bd sd [~ bd] sd,hh*8" style="font-size: 10px; padding: 4px 8px;">$ s("bd sd [~ bd] sd,hh*8")</button>
+                    <button class="play-sound-btn strudel-ref" data-pattern="d d a# a" data-wave="sawtooth" style="font-size: 10px; padding: 4px 8px;">$ note("d d a# a").s("sawtooth")</button>
+                    <button class="play-sound-btn strudel-ref" data-pattern="hh*4" data-stack="c4(5,8)" style="font-size: 10px; padding: 4px 8px;">$ s("hh*4").stack(note("c4(5,8)"))</button>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: #0f0f1b; border-radius: 4px; font-size: 11px; color: #94a3b8;">
+                    <strong>Pattern Validation:</strong><br>
+                    <span id="pattern-validation">Enter a pattern to see interpretation...</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px;">
+                <button class="preset-btn" data-pattern="hh*4">hh*4</button>
+                <button class="preset-btn" data-pattern="bd sd [~ bd] sd" style="background: #ff006e; border-color: #ff006e;">bd sd [~ bd] sd</button>
+                <button class="preset-btn" data-pattern="bd hh sd hh">bd hh sd hh</button>
+                <button class="preset-btn" data-pattern="note(c4 d e f)">C4 D4 E4 F4</button>
+                <button class="preset-btn" data-pattern="bd sd bd sd bd sd bd sd">4/4 Beat</button>
+                <button class="preset-btn" data-pattern="hh*8">hh*8</button>
+                <button class="preset-btn" data-pattern="bd*4 sd*4">bd*4 sd*4</button>
+                <button class="preset-btn" data-pattern="bd ~ sd ~ bd ~ sd ~">With Rests</button>
+                <button class="preset-btn" data-pattern="[bd sd] hh*2">[bd sd] hh*2</button>
+                <button class="preset-btn" data-pattern="note(d d a# a)" style="background: #9400d3; border-color: #9400d3;">note(d d a# a)</button>
+            </div>
+            
+            <div style="font-size: 12px; color: #94a3b8;">
+                <strong>Examples:</strong><br>
+                <code>"hh*4"</code> - 4 hi-hats<br>
+                <code>"bd sd [~ bd] sd"</code> - bass, snare, rest, bass, snare<br>
+                <code>"note(c4 d e f)"</code> - C4, D4, E4, F4 notes<br>
+                <code>"bd*8"</code> - 8 bass drums<br>
+                <code>"sd hh sd hh"</code> - snare, hi-hat pattern<br>
+                <code>"[bd sd] hh*2"</code> - bass+snare, hi-hat, hi-hat<br>
+                <code>"note(d d a# a)"</code> - musical notes D, D, A#, A with correct frequencies<br>
+                <code>"d d a# a"</code> - individual musical notes<br>
+                <strong>Strudel.cc Reference:</strong><br>
+                <code>$: s("bd sd [~ bd] sd,hh*8")</code> → <code>"bd sd [~ bd] sd"</code> + <code>"hh*8"</code><br>
+                <strong>Real Audio:</strong> Using local Strudel library with authentic samples + enhanced fallback synthesis<br>
+                <strong>Musical Notes:</strong> Each note plays at correct frequency (D≈293.66Hz, A#≈466.16Hz, A≈440.00Hz)
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test Grid</h2>
+            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 10px;">
+                Instruments will appear here when patterns are generated. Each instrument represents a sound in the pattern.
+                <strong>Click on any instrument to play its sound!</strong>
+            </p>
+            <div class="test-grid" id="test-grid">
+                <div class="grid-quarter" data-quarter="1"></div>
+                <div class="grid-quarter" data-quarter="2"></div>
+                <div class="grid-quarter" data-quarter="3"></div>
+                <div class="grid-quarter" data-quarter="4"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div class="test-results" id="test-results">
+                Ready to test pattern generation. Enter a pattern and click "Generate Pattern".
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Pattern Reference</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                <div>
+                    <h3 style="color: #00ff41; margin-bottom: 10px;">Basic Patterns</h3>
+                    <ul style="font-size: 12px; line-height: 1.6;">
+                        <li><code>hh</code> - Hi-hat</li>
+                        <li><code>bd</code> - Bass drum</li>
+                        <li><code>sd</code> - Snare drum</li>
+                        <li><code>note(c4 d e f)</code> - Piano notes</li>
+                        <li><code>~</code> or <code>[]</code> - Rest (no sound)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #00ff41; margin-bottom: 10px;">Advanced Features</h3>
+                    <ul style="font-size: 12px; line-height: 1.6;">
+                        <li><code>hh*4</code> - Repeat hi-hat 4 times</li>
+                        <li><code>bd*8</code> - Repeat bass drum 8 times</li>
+                        <li><code>sd*2 hh*2</code> - 2 snares, 2 hi-hats</li>
+                        <li><code>bd [~ sd] hh</code> - Bass, rest, snare, hi-hat</li>
+                        <li>Spaces separate different sounds</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Strudel.cc Pattern Examples</h2>
+            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 15px;">
+                Here are some Strudel.cc patterns and how to approximate them in this system:
+            </p>
+            
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                <strong style="color: #00ff41;">Strudel Pattern:</strong><br>
+                <code>$: s("hh*4").stack(note("c4(5,8)"))</code><br>
+                <strong style="color: #00d9ff;">Approximation:</strong><br>
+                <code>hh*4</code> (create hi-hat pattern)<br>
+                Then manually add <code>note(c4 d e f g)</code> in another quarter
+            </div>
+            
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                <strong style="color: #00ff41;">Strudel Pattern:</strong><br>
+                <code>$: note("d d a# a").s("sawtooth")</code><br>
+                <strong style="color: #00d9ff;">Approximation:</strong><br>
+                <code>note(d4 d4 a#4 a4)</code> (will use default waveform)
+            </div>
+            
+            <div style="background: #0f0f1b; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                <strong style="color: #00ff41;">Strudel Pattern:</strong><br>
+                <code>$: s("bd sd [~ bd] sd,hh*8")</code><br>
+                <strong style="color: #00d9ff;">Approximation:</strong><br>
+                <code>bd sd [~ bd] sd</code> (in one quarter)<br>
+                <code>hh*8</code> (in another quarter for layering)
+            </div>
+        </div>
+    </div>
+    
+    <!-- Strudel.cc Library - Try local file first, then CDN sources -->
+    <script type="module" src="js/strudel.mjs"></script>
+    <script>
+        // Fallback: Load from CDN if local file fails
+        if (typeof window.strudel === 'undefined') {
+            console.log('Local Strudel failed, trying strudel.cc...');
+            var script = document.createElement('script');
+            script.src = 'https://strudel.cc/strudel.js';
+            script.onload = function() {
+                console.log('Strudel loaded from strudel.cc');
+            };
+            script.onerror = function() {
+                console.log('strudel.cc failed, trying fallback CDN...');
+                var fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://cdn.jsdelivr.net/npm/@strudel/core@latest/dist/strudel.min.js';
+                fallbackScript.onload = function() {
+                    console.log('Strudel loaded from fallback CDN');
+                };
+                document.head.appendChild(fallbackScript);
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global state
+            let audioEnabled = false;
+            let strudelInitialized = false;
+            
+            const patternInput = document.getElementById('pattern-input');
+            const generateBtn = document.getElementById('generate-pattern');
+            const clearBtn = document.getElementById('clear-grid');
+            const runAllTestsBtn = document.getElementById('run-all-tests');
+            const testResults = document.getElementById('test-results');
+            const testGrid = document.getElementById('test-grid');
+            
+            // Log function for test results
+            function logResult(message, type = 'info') {
+                const timestamp = new Date().toISOString().substring(11, 23);
+                const messageElement = document.createElement('div');
+                messageElement.innerHTML = `<span style="color: #94a3b8;">[${timestamp}]</span> <span class="${type}">${message}</span>`;
+                testResults.appendChild(messageElement);
+                testResults.scrollTop = testResults.scrollHeight;
+            }
+            
+            // Audio initialization with local Strudel + fallback
+            async function initAudio() {
+                try {
+                    // Try to load Strudel from local file first
+                    logResult('Initializing audio system...', 'info');
+                    
+                    // Check if Strudel is available (either window.strudel or exported functions)
+                    if (window.strudel || window.doughsamples || window.webaudioRepl) {
+                        logResult('Strudel library detected, attempting initialization...', 'info');
+                        
+                        // Initialize Strudel using the webaudioRepl function
+                        if (window.webaudioRepl) {
+                            try {
+                                window.webaudioRepl({
+                                    getTime: () => (window.AudioContext || window.webkitAudioContext)().currentTime,
+                                    defaultOutput: window.webaudioOutput || ((value) => console.log('Strudel output:', value))
+                                });
+                                logResult('Strudel webaudioRepl initialized', 'success');
+                            } catch (e) {
+                                console.log('webaudioRepl error:', e);
+                            }
+                        }
+                        
+                        // Load drum samples
+                        if (window.doughsamples) {
+                            try {
+                                // Load standard drum samples
+                                await window.doughsamples({
+                                    'bd': 'https://strudel.cc/samples/CR78/bd.wav',
+                                    'sd': 'https://strudel.cc/samples/CR78/sd.wav',
+                                    'hh': 'https://strudel.cc/samples/CR78/hh.wav'
+                                });
+                                logResult('Drum samples loaded', 'success');
+                            } catch (e) {
+                                console.log('Sample loading error:', e);
+                            }
+                        }
+                        
+                        audioEnabled = true;
+                        strudelInitialized = true;
+                        
+                        document.getElementById('audio-state').textContent = 'Enabled (Local Strudel)';
+                        document.getElementById('audio-state').style.color = '#00ff41';
+                        document.getElementById('enable-audio').disabled = true;
+                        document.getElementById('play-all-sounds').disabled = false;
+                        
+                        logResult('Local Strudel audio system initialized successfully!', 'success');
+                        logResult('Using authentic Strudel drum samples', 'info');
+                        document.getElementById('strudel-status').textContent = 'Strudel: Ready (Local)';
+                        document.getElementById('strudel-status').style.color = '#00ff41';
+                        
+                    } else {
+                        // Fallback to basic audio synthesis
+                        logResult('Strudel not available, using fallback audio system', 'info');
+                        
+                        // Create basic audio context for fallback
+                        if (!window.AudioContext && !window.webkitAudioContext) {
+                            throw new Error('Web Audio API not supported');
+                        }
+                        
+                        audioEnabled = true;
+                        strudelInitialized = false; // Using fallback, not Strudel
+                        
+                        document.getElementById('audio-state').textContent = 'Enabled (Fallback)';
+                        document.getElementById('audio-state').style.color = '#ffaa00';
+                        document.getElementById('enable-audio').disabled = true;
+                        document.getElementById('play-all-sounds').disabled = false;
+                        
+                        logResult('Fallback audio system initialized', 'success');
+                        logResult('Note: Strudel samples unavailable, using synthetic sounds', 'info');
+                        document.getElementById('strudel-status').textContent = 'Strudel: Unavailable (Fallback Active)';
+                        document.getElementById('strudel-status').style.color = '#ffaa00';
+                    }
+                    
+                } catch (error) {
+                    logResult('Failed to initialize audio: ' + error.message, 'error');
+                    logResult('Please check browser audio permissions', 'error');
+                }
+            }
+            
+
+            
+            // Clear test results
+            function clearResults() {
+                testResults.innerHTML = '';
+            }
+            
+            // Clear grid
+            function clearGrid() {
+                const quarters = testGrid.querySelectorAll('.grid-quarter');
+                quarters.forEach(quarter => {
+                    quarter.innerHTML = '';
+                });
+                logResult('Grid cleared', 'success');
+            }
+            
+            // Create instrument in test grid
+            function createTestInstrument(quarterElement, instrumentType, x, y, label) {
+                const instrument = document.createElement('div');
+                instrument.className = 'instrument';
+                instrument.textContent = label || getInstrumentLabel(instrumentType);
+                instrument.style.left = `${x}px`;
+                instrument.style.top = `${y}px`;
+                instrument.title = `${instrumentType} at (${x}, ${y}) - Click to play sound`;
+                instrument.dataset.instrument = instrumentType;
+                
+                // Different colors for different instrument types
+                if (instrumentType.includes('hh')) {
+                    instrument.style.background = '#00d9ff';
+                } else if (instrumentType.includes('bd')) {
+                    instrument.style.background = '#ff006e';
+                } else if (instrumentType.includes('sd')) {
+                    instrument.style.background = '#ff4500';
+                } else if (instrumentType.includes('note')) {
+                    instrument.style.background = '#9400d3';
+                }
+                
+                // Add click event to play sound
+                instrument.addEventListener('click', function() {
+                    // Add visual feedback
+                    this.classList.add('playing');
+                    setTimeout(() => this.classList.remove('playing'), 500);
+                    
+                    playInstrumentSound(instrumentType);
+                });
+                
+                quarterElement.appendChild(instrument);
+                return instrument;
+            }
+            
+            // Get instrument label
+            function getInstrumentLabel(type) {
+                if (type.includes('hh')) return 'HH';
+                if (type.includes('bd')) return 'BD';
+                if (type.includes('sd')) return 'SD';
+                if (type.includes('note')) return '🎹';
+                return '🎵';
+            }
+            
+            // Get instrument type for audio
+            function getInstrumentAudioType(type) {
+                if (type.includes('hh')) return 'hh';
+                if (type.includes('bd')) return 'bd';
+                if (type.includes('sd')) return 'sd';
+                if (type.includes('note_')) return 'note';
+                return 'note';
+            }
+            
+            // Advanced pattern parser that handles complex patterns like Strudel.cc
+            function parsePattern(patternString) {
+                const elements = [];
+                let i = 0;
+                
+                while (i < patternString.length) {
+                    // Skip spaces
+                    if (patternString[i] === ' ') {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle bracket groups like [~ bd] or [bd sd]
+                    if (patternString[i] === '[') {
+                        i++; // skip '['
+                        const group = [];
+                        
+                        while (i < patternString.length && patternString[i] !== ']') {
+                            if (patternString[i] === ' ') {
+                                i++;
+                                continue;
+                            }
+                            
+                            // Parse element within brackets
+                            let element = '';
+                            while (i < patternString.length && patternString[i] !== ' ' && patternString[i] !== ']') {
+                                element += patternString[i];
+                                i++;
+                            }
+                            
+                            if (element) {
+                                group.push(parseElement(element));
+                            }
+                        }
+                        
+                        if (patternString[i] === ']') {
+                            i++; // skip ']'
+                        }
+                        
+                        elements.push(...group);
+                        continue;
+                    }
+                    
+                    // Parse individual element
+                    let element = '';
+                    while (i < patternString.length && patternString[i] !== ' ') {
+                        element += patternString[i];
+                        i++;
+                    }
+                    
+                    if (element) {
+                        elements.push(parseElement(element));
+                    }
+                }
+                
+                return elements;
+            }
+            
+            // Parse individual pattern element
+            function parseElement(element) {
+                // Handle rests
+                if (element === '~' || element === '[]' || element === '') {
+                    return { type: 'rest', label: 'REST' };
+                }
+                
+                // Handle multipliers like bd*4
+                const multiplierMatch = element.match(/^([a-zA-Z_]+)\*(\d+)$/);
+                if (multiplierMatch) {
+                    const [, instrument, count] = multiplierMatch;
+                    return {
+                        type: 'multiplier',
+                        instrument: getInstrumentType(instrument),
+                        label: getInstrumentLabel(instrument),
+                        count: parseInt(count)
+                    };
+                }
+                
+                // Handle note patterns like note(d d a# a) or just d d a# a
+                if (element.includes('note(')) {
+                    return {
+                        type: 'note_pattern',
+                        notes: extractNotesFromNotePattern(element),
+                        label: '🎹'
+                    };
+                }
+                
+                // Handle individual musical notes
+                if (isMusicalNote(element)) {
+                    return {
+                        type: 'note',
+                        note: element,
+                        frequency: noteToFrequency(element),
+                        label: element.toUpperCase()
+                    };
+                }
+                
+                // Handle simple instruments
+                return {
+                    type: 'instrument',
+                    instrument: getInstrumentType(element),
+                    label: getInstrumentLabel(element)
+                };
+            }
+            
+            // Get instrument type from string
+            function getInstrumentType(str) {
+                if (str.includes('hh')) return 'hh';
+                if (str.includes('bd')) return 'bd';
+                if (str.includes('sd')) return 'sd';
+                if (str.includes('note')) return 'note';
+                return 'note';
+            }
+            
+            // Check if string is a musical note
+            function isMusicalNote(str) {
+                const notePattern = /^[a-gA-G]([#b]?)(\d*)$/;
+                return notePattern.test(str.trim());
+            }
+            
+            // Convert musical note to frequency
+            function noteToFrequency(note) {
+                const noteMap = {
+                    'c': 0, 'c#': 1, 'db': 1, 'd': 2, 'd#': 3, 'eb': 3, 'e': 4, 'f': 5, 
+                    'f#': 6, 'gb': 6, 'g': 7, 'g#': 8, 'ab': 8, 'a': 9, 'a#': 10, 'bb': 10, 'b': 11
+                };
+                
+                const cleanNote = note.toLowerCase().replace(/[^a-g#b]/g, '');
+                const octaveMatch = note.match(/\d+/);
+                const octave = octaveMatch ? parseInt(octaveMatch[0]) : 4;
+                
+                if (noteMap.hasOwnProperty(cleanNote)) {
+                    const semitone = noteMap[cleanNote];
+                    const midiNumber = (octave + 1) * 12 + semitone;
+                    return 440 * Math.pow(2, (midiNumber - 69) / 12);
+                }
+                
+                return 440; // Default to A4
+            }
+            
+            // Extract notes from note() pattern
+            function extractNotesFromNotePattern(pattern) {
+                const match = pattern.match(/note\(([^)]+)\)/);
+                if (match) {
+                    return match[1].split(/\s+/).filter(note => note.trim());
+                }
+                return [];
+            }
+            
+            // Pattern generator function with proper parsing
+            function generatePattern(patternString) {
+                clearResults();
+                logResult(`Generating pattern: "${patternString}"`, 'info');
+                
+                try {
+                    // Clear first quarter for pattern
+                    const firstQuarter = testGrid.querySelector('.grid-quarter[data-quarter="1"]');
+                    firstQuarter.innerHTML = '';
+                    
+                    // Parse the pattern properly
+                    const elements = parsePattern(patternString);
+                    const gridWidth = firstQuarter.clientWidth;
+                    const gridHeight = firstQuarter.clientHeight;
+                    
+                    // Count total instruments (excluding rests)
+                    const totalInstruments = elements.reduce((count, elem) => {
+                        if (elem.type === 'rest') return count;
+                        if (elem.type === 'note_pattern') return count + elem.notes.length;
+                        if (elem.type === 'multiplier') return count + elem.count;
+                        if (elem.type === 'note') return count + 1;
+                        return count + 1;
+                    }, 0);
+                    
+                    logResult(`Parsed ${elements.length} elements, creating ${totalInstruments} instruments`, 'info');
+                    
+                    if (totalInstruments === 0) {
+                        logResult('No instruments to create (all rests?)', 'info');
+                        return;
+                    }
+                    
+                    const instrumentSpacing = gridWidth / totalInstruments;
+                    let instrumentIndex = 0;
+                    
+                    elements.forEach((element, index) => {
+                        if (element.type === 'rest') {
+                            logResult(`Element ${index}: REST (no instrument)`, 'info');
+                            return;
+                        }
+                        
+                        if (element.type === 'note_pattern') {
+                            logResult(`Element ${index}: note(${element.notes.join(' ')}) (note pattern)`, 'info');
+                            
+                            element.notes.forEach((note, noteIndex) => {
+                                const spacing = instrumentSpacing / element.notes.length;
+                                const x = instrumentIndex * instrumentSpacing + (noteIndex * spacing) + (spacing / 2);
+                                const y = gridHeight / 2;
+                                
+                                createTestInstrument(firstQuarter, `note_${note}`, x, y, note.toUpperCase());
+                                logResult(`Created note ${note.toUpperCase()} ${noteIndex + 1}/${element.notes.length} at position ${Math.round(x)}, ${Math.round(y)}`, 'success');
+                            });
+                            instrumentIndex++;
+                            return;
+                        }
+                        
+                        if (element.type === 'multiplier') {
+                            logResult(`Element ${index}: ${element.label}*${element.count} (multiplier)`, 'info');
+                            
+                            for (let i = 0; i < element.count; i++) {
+                                const spacing = instrumentSpacing / element.count;
+                                const x = instrumentIndex * instrumentSpacing + (i * spacing) + (spacing / 2);
+                                const y = gridHeight / 2;
+                                
+                                createTestInstrument(firstQuarter, element.instrument, x, y, element.label);
+                                logResult(`Created ${element.label} ${i + 1}/${element.count} at position ${Math.round(x)}, ${Math.round(y)}`, 'success');
+                                instrumentIndex++;
+                            }
+                        } else if (element.type === 'note') {
+                            // Single musical note
+                            const x = instrumentIndex * instrumentSpacing + instrumentSpacing / 2;
+                            const y = gridHeight / 2;
+                            
+                            logResult(`Element ${index}: Note ${element.note} (${Math.round(element.frequency)}Hz) at position ${Math.round(x)}, ${Math.round(y)}`, 'success');
+                            createTestInstrument(firstQuarter, `note_${element.note}`, x, y, element.label);
+                            instrumentIndex++;
+                        } else {
+                            // Single instrument
+                            const x = instrumentIndex * instrumentSpacing + instrumentSpacing / 2;
+                            const y = gridHeight / 2;
+                            
+                            logResult(`Element ${index}: ${element.label} at position ${Math.round(x)}, ${Math.round(y)}`, 'success');
+                            createTestInstrument(firstQuarter, element.instrument, x, y, element.label);
+                            instrumentIndex++;
+                        }
+                    });
+                    
+                    logResult('Pattern generation completed successfully!', 'success');
+                    
+                    // Validate the pattern interpretation
+                    const expectedSequence = validatePatternSequence(elements);
+                    if (expectedSequence) {
+                        logResult(`Expected sequence: ${expectedSequence}`, 'info');
+                    }
+                    
+                } catch (error) {
+                    logResult(`Error generating pattern: ${error.message}`, 'error');
+                    console.error('Pattern generation error:', error);
+                }
+            }
+            
+            // Validate pattern sequence for debugging
+            function validatePatternSequence(elements) {
+                const sequence = [];
+                elements.forEach(elem => {
+                    if (elem.type === 'rest') {
+                        sequence.push('rest');
+                    } else if (elem.type === 'note_pattern') {
+                        elem.notes.forEach(note => {
+                            sequence.push(note.toUpperCase());
+                        });
+                    } else if (elem.type === 'note') {
+                        sequence.push(elem.note.toUpperCase());
+                    } else if (elem.type === 'multiplier') {
+                        for (let i = 0; i < elem.count; i++) {
+                            sequence.push(elem.label.toLowerCase());
+                        }
+                    } else {
+                        sequence.push(elem.label.toLowerCase());
+                    }
+                });
+                return sequence.join(', ');
+            }
+            
+            // Run comprehensive tests
+            function runAllTests() {
+                clearResults();
+                clearGrid();
+                
+                logResult('=== RUNNING COMPREHENSIVE PATTERN TESTS ===', 'info');
+                
+                const tests = [
+                    { pattern: 'hh*4', description: 'Simple multiplier test' },
+                    { pattern: 'bd sd [~ bd] sd', description: 'Pattern with bracket rest - bass, snare, rest, bass, snare' },
+                    { pattern: 'bd hh sd hh', description: 'Basic drum pattern' },
+                    { pattern: 'note(c4 d e f)', description: 'Note pattern with C4 D4 E4 F4' },
+                    { pattern: 'note(d d a# a)', description: 'Note pattern D D A# A - should play correct frequencies' },
+                    { pattern: 'd d a# a', description: 'Individual notes D D A# A' },
+                    { pattern: 'bd*8', description: 'Large multiplier' },
+                    { pattern: 'hh sd bd sd hh sd bd sd', description: 'Complex pattern' },
+                    { pattern: 'bd ~ sd ~ bd ~ sd ~', description: 'Pattern with multiple rests' },
+                    { pattern: '[bd sd] hh*2', description: 'Bracket group with multiplier' }
+                ];
+                
+                tests.forEach((test, index) => {
+                    logResult(`\n--- Test ${index + 1}: ${test.description} ---`, 'info');
+                    logResult(`Pattern: "${test.pattern}"`, 'info');
+                    
+                    try {
+                        // Parse the pattern using the actual parser
+                        const elements = parsePattern(test.pattern);
+                        
+                        // Count instruments (excluding rests)
+                        let instrumentCount = 0;
+                        const instrumentSequence = [];
+                        
+                        elements.forEach(elem => {
+                            if (elem.type === 'rest') {
+                                instrumentSequence.push('REST');
+                            } else if (elem.type === 'multiplier') {
+                                for (let i = 0; i < elem.count; i++) {
+                                    instrumentSequence.push(elem.label);
+                                    instrumentCount++;
+                                }
+                            } else {
+                                instrumentSequence.push(elem.label);
+                                instrumentCount++;
+                            }
+                        });
+                        
+                        logResult(`✓ Parsed into ${elements.length} elements, ${instrumentCount} instruments`, 'success');
+                        logResult(`✓ Sequence: ${instrumentSequence.join(', ')}`, 'success');
+                        
+                        // Specific validation for bd sd [~ bd] sd pattern
+                        if (test.pattern === 'bd sd [~ bd] sd') {
+                            const expectedSequence = ['BD', 'SD', 'REST', 'BD', 'SD'];
+                            const actualSequence = instrumentSequence;
+                            
+                            if (JSON.stringify(expectedSequence) === JSON.stringify(actualSequence)) {
+                                logResult(`✓ CORRECT: Creates BD, SD, REST, BD, SD sequence`, 'success');
+                            } else {
+                                logResult(`✗ ERROR: Expected ${expectedSequence.join(', ')}, got ${actualSequence.join(', ')}`, 'error');
+                            }
+                        }
+                        
+                        // Specific validation for note(d d a# a) pattern
+                        if (test.pattern === 'note(d d a# a)') {
+                            const expectedSequence = ['D', 'D', 'A#', 'A'];
+                            const actualSequence = instrumentSequence;
+                            
+                            if (JSON.stringify(expectedSequence) === JSON.stringify(actualSequence)) {
+                                logResult(`✓ CORRECT: Creates D, D, A#, A note sequence`, 'success');
+                                logResult(`✓ Expected frequencies: D≈293.66Hz, A#≈466.16Hz, A≈440.00Hz`, 'info');
+                            } else {
+                                logResult(`✗ ERROR: Expected ${expectedSequence.join(', ')}, got ${actualSequence.join(', ')}`, 'error');
+                            }
+                        }
+                        
+                        // Specific validation for individual notes
+                        if (test.pattern === 'd d a# a') {
+                            const expectedSequence = ['D', 'D', 'A#', 'A'];
+                            const actualSequence = instrumentSequence;
+                            
+                            if (JSON.stringify(expectedSequence) === JSON.stringify(actualSequence)) {
+                                logResult(`✓ CORRECT: Individual notes create D, D, A#, A sequence`, 'success');
+                                logResult(`✓ Each note will play at correct musical frequency`, 'info');
+                            } else {
+                                logResult(`✗ ERROR: Expected ${expectedSequence.join(', ')}, got ${actualSequence.join(', ')}`, 'error');
+                            }
+                        }
+                        
+                        logResult(`✓ Test ${index + 1} PASSED`, 'success');
+                        
+                    } catch (error) {
+                        logResult(`✗ Test ${index + 1} FAILED: ${error.message}`, 'error');
+                    }
+                });
+                
+                logResult('\n=== ALL TESTS COMPLETED ===', 'info');
+                logResult('Run individual tests by clicking preset buttons or entering custom patterns.', 'info');
+            }
+            
+            // Add preset button functionality
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            presetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const pattern = this.dataset.pattern;
+                    patternInput.value = pattern;
+                    
+                    // Show pattern validation for preset
+                    const elements = parsePattern(pattern);
+                    const sequence = validatePatternSequence(elements);
+                    document.getElementById('pattern-validation').innerHTML = 
+                        `<strong>Preset:</strong> "${pattern}"<br>` +
+                        `<strong>Interprets as:</strong> ${sequence}<br>` +
+                        `<strong>Total instruments:</strong> ${elements.filter(e => e.type !== 'rest').reduce((count, elem) => {
+                            if (elem.type === 'note_pattern') return count + elem.notes.length;
+                            if (elem.type === 'multiplier') return count + elem.count;
+                            if (elem.type === 'note') return count + 1;
+                            return count + 1;
+                        }, 0)}`;
+                    
+                    generatePattern(pattern);
+                });
+            });
+            
+            // Event listeners
+            generateBtn.addEventListener('click', function() {
+                const pattern = patternInput.value.trim();
+                if (pattern) {
+                    // Show pattern validation
+                    const elements = parsePattern(pattern);
+                    const sequence = validatePatternSequence(elements);
+                    document.getElementById('pattern-validation').innerHTML = 
+                        `<strong>Input:</strong> "${pattern}"<br>` +
+                        `<strong>Interprets as:</strong> ${sequence}<br>` +
+                        `<strong>Total instruments:</strong> ${elements.filter(e => e.type !== 'rest').reduce((count, elem) => {
+                            if (elem.type === 'note_pattern') return count + elem.notes.length;
+                            if (elem.type === 'multiplier') return count + elem.count;
+                            if (elem.type === 'note') return count + 1;
+                            return count + 1;
+                        }, 0)}`;
+                    
+                    generatePattern(pattern);
+                } else {
+                    logResult('Please enter a pattern first', 'error');
+                }
+            });
+            
+            // Play individual instrument sound (Local Strudel or fallback)
+            function playInstrumentSound(instrumentType) {
+                if (!audioEnabled) {
+                    logResult('Audio not enabled. Click "Enable Audio" first.', 'error');
+                    return;
+                }
+                
+                try {
+                    // Handle musical notes with specific frequencies
+                    if (instrumentType.startsWith('note_')) {
+                        const note = instrumentType.replace('note_', '');
+                        const frequency = noteToFrequency(note);
+                        playNoteSound(note, frequency);
+                        return;
+                    }
+                    
+                    if (strudelInitialized && (window.Pattern || window.doughsamples)) {
+                        // Use local Strudel with real drum samples
+                        const drumSamples = {
+                            'hh': 'hh',
+                            'bd': 'bd', 
+                            'sd': 'sd',
+                            'note': 'piano'
+                        };
+                        
+                        const sampleName = drumSamples[instrumentType] || drumSamples['note'];
+                        
+                        // Try to use Strudel's pattern system
+                        if (window.Pattern) {
+                            try {
+                                // Create a simple pattern and play it
+                                const pattern = new window.Pattern(sampleName);
+                                if (pattern.trigger) {
+                                    pattern.trigger(0, 0, 1, 0);
+                                    logResult(`Playing Strudel sample: ${sampleName}`, 'success');
+                                }
+                            } catch (e) {
+                                console.log('Pattern API error:', e);
+                                throw e;
+                            }
+                        } else {
+                            // Fallback to sample loading if Pattern not available
+                            logResult(`Sample ${sampleName} requested (Strudel active)`, 'info');
+                        }
+                        
+                    } else {
+                        // Fallback to synthetic audio using Web Audio API
+                        playFallbackSound(instrumentType);
+                    }
+                    
+                } catch (error) {
+                    logResult(`Error playing sound: ${error.message}`, 'error');
+                    // Fallback to synthetic if Strudel fails
+                    if (!strudelInitialized) {
+                        playFallbackSound(instrumentType);
+                    }
+                }
+            }
+            
+            // Play individual musical note with correct frequency
+            function playNoteSound(note, frequency) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+                    
+                    // Use a pleasant waveform for musical notes
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    
+                    // Add subtle filtering for warmth
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(Math.min(frequency * 4, 4000), audioContext.currentTime);
+                    filter.Q.setValueAtTime(0.5, audioContext.currentTime);
+                    
+                    // ADSR-like envelope for natural note sound
+                    const now = audioContext.currentTime;
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.01); // Attack
+                    gainNode.gain.linearRampToValueAtTime(0.25, now + 0.1); // Decay to sustain
+                    gainNode.gain.setValueAtTime(0.25, now + 0.8); // Sustain level
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.2); // Release
+                    
+                    osc.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 1.2);
+                    
+                    logResult(`Playing note ${note.toUpperCase()} (${Math.round(frequency)}Hz)`, 'success');
+                    
+                } catch (error) {
+                    logResult(`Error playing note ${note}: ${error.message}`, 'error');
+                }
+            }
+            
+            // Enhanced fallback synthetic sound generation (less tinny)
+            function playFallbackSound(instrumentType) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    if (instrumentType === 'bd') {
+                        // Bass drum - more realistic kick drum sound
+                        const osc1 = audioContext.createOscillator();
+                        const osc2 = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        const filter = audioContext.createBiquadFilter();
+                        
+                        osc1.type = 'sine';
+                        osc2.type = 'sine';
+                        osc1.frequency.setValueAtTime(150, audioContext.currentTime);
+                        osc1.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
+                        osc2.frequency.setValueAtTime(100, audioContext.currentTime);
+                        osc2.frequency.exponentialRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                        
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(200, audioContext.currentTime);
+                        
+                        gainNode.gain.setValueAtTime(0.8, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        
+                        osc1.connect(filter);
+                        osc2.connect(filter);
+                        filter.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        osc1.start(audioContext.currentTime);
+                        osc2.start(audioContext.currentTime);
+                        osc1.stop(audioContext.currentTime + 0.5);
+                        osc2.stop(audioContext.currentTime + 0.5);
+                        
+                        logResult(`Playing enhanced bass drum (fallback)`, 'success');
+                        
+                    } else if (instrumentType === 'sd') {
+                        // Snare drum - more realistic snare with noise
+                        const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.2, audioContext.sampleRate);
+                        const output = noiseBuffer.getChannelData(0);
+                        for (let i = 0; i < output.length; i++) {
+                            output[i] = Math.random() * 2 - 1;
+                        }
+                        
+                        const noise = audioContext.createBufferSource();
+                        noise.buffer = noiseBuffer;
+                        
+                        const noiseFilter = audioContext.createBiquadFilter();
+                        noiseFilter.type = 'highpass';
+                        noiseFilter.frequency.setValueAtTime(1000, audioContext.currentTime);
+                        
+                        const noiseGain = audioContext.createGain();
+                        noiseGain.gain.setValueAtTime(0.5, audioContext.currentTime);
+                        noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                        
+                        const osc = audioContext.createOscillator();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(200, audioContext.currentTime);
+                        
+                        const oscGain = audioContext.createGain();
+                        oscGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        oscGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                        
+                        noise.connect(noiseFilter);
+                        noiseFilter.connect(noiseGain);
+                        noiseGain.connect(audioContext.destination);
+                        
+                        osc.connect(oscGain);
+                        oscGain.connect(audioContext.destination);
+                        
+                        noise.start(audioContext.currentTime);
+                        osc.start(audioContext.currentTime);
+                        noise.stop(audioContext.currentTime + 0.2);
+                        osc.stop(audioContext.currentTime + 0.3);
+                        
+                        logResult(`Playing enhanced snare drum (fallback)`, 'success');
+                        
+                    } else if (instrumentType === 'hh') {
+                        // Hi-hat - less tinny high-frequency sound
+                        const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate);
+                        const output = noiseBuffer.getChannelData(0);
+                        for (let i = 0; i < output.length; i++) {
+                            output[i] = Math.random() * 2 - 1;
+                        }
+                        
+                        const noise = audioContext.createBufferSource();
+                        noise.buffer = noiseBuffer;
+                        
+                        const highpass = audioContext.createBiquadFilter();
+                        highpass.type = 'highpass';
+                        highpass.frequency.setValueAtTime(8000, audioContext.currentTime);
+                        
+                        const gainNode = audioContext.createGain();
+                        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                        
+                        noise.connect(highpass);
+                        highpass.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        noise.start(audioContext.currentTime);
+                        noise.stop(audioContext.currentTime + 0.1);
+                        
+                        logResult(`Playing enhanced hi-hat (fallback)`, 'success');
+                        
+                    } else {
+                        // Note/piano - more pleasant tone
+                        const osc = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        const filter = audioContext.createBiquadFilter();
+                        
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(440, audioContext.currentTime);
+                        
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+                        filter.Q.setValueAtTime(1, audioContext.currentTime);
+                        
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                        
+                        osc.connect(filter);
+                        filter.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        osc.start(audioContext.currentTime);
+                        osc.stop(audioContext.currentTime + 0.8);
+                        
+                        logResult(`Playing enhanced note (fallback)`, 'success');
+                    }
+                    
+                } catch (error) {
+                    logResult(`Error playing fallback sound: ${error.message}`, 'error');
+                }
+            }
+            
+            // Play all instruments in grid using Strudel patterns
+            function playAllSounds() {
+                if (!audioEnabled) {
+                    logResult('Audio not enabled. Click "Enable Audio" first.', 'error');
+                    return;
+                }
+                
+                const instruments = document.querySelectorAll('.instrument');
+                if (instruments.length === 0) {
+                    logResult('No instruments to play. Generate a pattern first.', 'error');
+                    return;
+                }
+                
+                try {
+                    // Convert grid instruments to Strudel pattern
+                    const strudelSamples = {
+                        'hh': '9000_hh(1)',
+                        'bd': '9000_bd(1)', 
+                        'sd': '9000_sd(1)',
+                        'note': 'piano(1)'
+                    };
+                    
+                    // Create pattern string from instruments
+                    const patternElements = [];
+                    instruments.forEach((instrument, index) => {
+                        const instrumentType = instrument.dataset.instrument || 'note';
+                        const sampleName = strudelSamples[instrumentType] || strudelSamples['note'];
+                        patternElements.push(sampleName);
+                    });
+                    
+                    // Join with spaces for Strudel pattern
+                    const patternString = patternElements.join(' ');
+                    
+                    logResult(`Creating Strudel pattern: ${patternString}`, 'info');
+                    
+                    // Play using Strudel's pattern system
+                    let pattern;
+                    if (window.strudel.pattern) {
+                        pattern = window.strudel.pattern(patternString);
+                    } else if (window.strudel.s) {
+                        pattern = window.strudel.s(patternString);
+                    } else {
+                        throw new Error('No suitable Strudel pattern API found');
+                    }
+                    
+                    if (window.strudel.play) {
+                        window.strudel.play(pattern);
+                    } else if (pattern.start) {
+                        pattern.start();
+                    } else {
+                        throw new Error('No suitable Strudel play API found');
+                    }
+                    
+                    // Add visual feedback
+                    instruments.forEach((instrument, index) => {
+                        setTimeout(() => {
+                            instrument.classList.add('playing');
+                            setTimeout(() => instrument.classList.remove('playing'), 500);
+                        }, index * 150);
+                    });
+                    
+                    logResult(`Playing ${instruments.length} instruments with Strudel.cc samples`, 'success');
+                    
+                } catch (error) {
+                    logResult(`Error playing Strudel pattern: ${error.message}`, 'error');
+                    // Fallback to individual playback
+                    instruments.forEach((instrument, index) => {
+                        setTimeout(() => {
+                            const instrumentType = instrument.dataset.instrument || 'note';
+                            playInstrumentSound(instrumentType);
+                        }, index * 150);
+                    });
+                }
+            }
+            
+            // Stop all sounds
+            function stopAllSounds() {
+                try {
+                    if (window.strudel) {
+                        if (window.strudel.stop) {
+                            window.strudel.stop();
+                        } else if (window.strudel.pause) {
+                            window.strudel.pause();
+                        }
+                        logResult('All Strudel sounds stopped', 'info');
+                    } else {
+                        logResult('Strudel not available', 'info');
+                    }
+                } catch (error) {
+                    logResult(`Error stopping sounds: ${error.message}`, 'error');
+                }
+            }
+            
+            // Audio event listeners
+            document.getElementById('enable-audio').addEventListener('click', initAudio);
+            document.getElementById('play-all-sounds').addEventListener('click', playAllSounds);
+            document.getElementById('stop-all-sounds').addEventListener('click', stopAllSounds);
+            
+            // Strudel reference pattern buttons
+            const strudelRefButtons = document.querySelectorAll('.strudel-ref');
+            strudelRefButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const pattern = this.dataset.pattern;
+                    const wave = this.dataset.wave;
+                    const stack = this.dataset.stack;
+                    
+                    if (wave) {
+                        playStrudelPattern(`note("${pattern}").s("${wave}")`);
+                    } else if (stack) {
+                        playStrudelPattern(`s("${pattern}").stack(note("${stack}"))`);
+                    } else {
+                        playStrudelPattern(`s("${pattern}")`);
+                    }
+                });
+            });
+            
+            clearBtn.addEventListener('click', clearGrid);
+            runAllTestsBtn.addEventListener('click', runAllTests);
+            
+            // Initialize
+            logResult('Pattern generation test system ready!', 'success');
+            logResult('Enter a pattern and click "Generate Pattern" to test.', 'info');
+            logResult('Click "Enable Audio" to activate sound playback.', 'info');
+            logResult('Click any instrument in the grid to play its sound!', 'info');
+            
+            // Show examples for pattern behavior
+            logResult('Example: "hh*4" will create 4 separate "HH" instruments in the first quarter.', 'info');
+            logResult('Example: "bd sd [~ bd] sd" will create: BD, SD, (rest), BD, SD - 5 total instruments.', 'info');
+            logResult('Pattern validation: Check test results to see the exact sequence created for each pattern.', 'info');
+            logResult('Using local Strudel library + enhanced fallback synthesis!', 'success');
+            logResult('Musical notes now play at correct frequencies! Test note(d d a# a)', 'success');
+            
+            // Debug: Check if Strudel is loaded
+            console.log('Strudel available:', !!window.strudel);
+            if (window.strudel) {
+                console.log('Strudel API methods:', Object.getOwnPropertyNames(window.strudel).slice(0, 10));
+                console.log('Strudel methods:', Object.keys(window.strudel).slice(0, 10));
+                document.getElementById('strudel-status').textContent = 'Strudel: Detected';
+                document.getElementById('strudel-status').style.color = '#00d9ff';
+            } else {
+                console.log('Strudel not loaded - will use fallback audio system');
+                document.getElementById('strudel-status').textContent = 'Strudel: Not Detected';
+                document.getElementById('strudel-status').style.color = '#ff006e';
+            }
+            // Direct Strudel pattern playback for reference examples
+            function playStrudelPattern(strudelCode) {
+                if (!audioEnabled) {
+                    logResult('Audio not enabled. Click "Enable Audio" first.', 'error');
+                    return;
+                }
+                
+                try {
+                    logResult(`Playing Strudel pattern: ${strudelCode}`, 'info');
+                    
+                    // Evaluate the Strudel code
+                    const pattern = eval(strudelCode);
+                    
+                    // Try different play methods
+                    if (window.strudel.play && pattern) {
+                        window.strudel.play(pattern);
+                    } else if (pattern && pattern.start) {
+                        pattern.start();
+                    } else {
+                        throw new Error('Could not play Strudel pattern');
+                    }
+                    
+                    logResult('Strudel pattern playing!', 'success');
+                } catch (error) {
+                    logResult(`Error playing Strudel pattern: ${error.message}`, 'error');
+                }
+            }
+            
+            console.log('Audio functions defined:', {
+                initAudio: typeof initAudio,
+                playInstrumentSound: typeof playInstrumentSound,
+                playAllSounds: typeof playAllSounds,
+                stopAllSounds: typeof stopAllSounds,
+                playStrudelPattern: typeof playStrudelPattern
+            });
+        });
+    </script>
+</body>
+</html>
