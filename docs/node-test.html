@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Connection Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/node.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        #test-canvas {
+            width: 800px;
+            height: 600px;
+            background: #0f0f1b;
+            border: 2px solid #2d3748;
+            position: relative;
+            margin: 20px auto;
+            border-radius: 8px;
+        }
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #1a1a2e;
+            color: #00ff41;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <div>Node Test - Check console for debug info</div>
+        <div>Canvas ID: <span id="canvas-status">checking...</span></div>
+    </div>
+
+    <div id="test-canvas">
+        <div id="canvas-content"></div>
+    </div>
+
+    <script src="js/graphNormalizer.js"></script>
+    <script src="js/nodeManager.js"></script>
+    <script>
+        // Simple test to verify node rendering and connection ports
+        console.log('=== Node Connection Test Started ===');
+        
+        // Wait for DOM to load and NodeManager to be initialized
+        function waitForNodeManager() {
+            return new Promise((resolve) => {
+                const checkManager = () => {
+                    if (window.nodeManager) {
+                        console.log('NodeManager found:', window.nodeManager);
+                        resolve(window.nodeManager);
+                    } else {
+                        setTimeout(checkManager, 100);
+                    }
+                };
+                checkManager();
+            });
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DOM loaded, waiting for NodeManager...');
+            
+            try {
+                // Wait for NodeManager to be initialized
+                const nodeManager = await waitForNodeManager();
+                
+                // Create a simple test node
+                const testNode = {
+                    id: 'test-node-1',
+                    type: 'Instrument',
+                    instrument: 'sine',
+                    x: 100,
+                    y: 100,
+                    properties: {
+                        note: 'C4',
+                        gain: 0.8
+                    }
+                };
+                
+                console.log('Creating test node:', testNode);
+                
+                // Render the node
+                nodeManager.renderNode(testNode);
+                
+                // Check if the canvas exists
+                const canvas = document.getElementById('canvas-content');
+                console.log('Canvas element:', canvas);
+                
+                if (canvas) {
+                    document.getElementById('canvas-status').textContent = 'found';
+                    
+                    // Check if node was created
+                    const node = canvas.querySelector('.node');
+                    console.log('Rendered node:', node);
+                    
+                    if (node) {
+                        // Check for connection ports
+                        const inputPort = node.querySelector('.node-input');
+                        const outputPort = node.querySelector('.node-output');
+                        
+                        console.log('Connection ports check:', {
+                            inputPort: inputPort ? 'FOUND' : 'MISSING',
+                            outputPort: outputPort ? 'FOUND' : 'MISSING',
+                            inputPortStyles: inputPort ? window.getComputedStyle(inputPort) : 'N/A',
+                            outputPortStyles: outputPort ? window.getComputedStyle(outputPort) : 'N/A'
+                        });
+                        
+                        // Log all child elements
+                        console.log('Node children:', Array.from(node.children).map(child => ({
+                            className: child.className,
+                            tagName: child.tagName,
+                            hasChildren: child.children.length > 0
+                        })));
+                        
+                        // Test connection port visibility
+                        if (inputPort) {
+                            const rect = inputPort.getBoundingClientRect();
+                            console.log('Input port position:', rect);
+                        }
+                        
+                        if (outputPort) {
+                            const rect = outputPort.getBoundingClientRect();
+                            console.log('Output port position:', rect);
+                        }
+                    }
+                } else {
+                    console.error('Canvas not found!');
+                    document.getElementById('canvas-status').textContent = 'NOT FOUND';
+                }
+                
+            } catch (error) {
+                console.error('Error during test:', error);
+            }
+            
+            console.log('=== Node Connection Test Complete ===');
+        });
+    </script>
+</body>
+</html>

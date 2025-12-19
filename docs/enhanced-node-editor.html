@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Strudel Pattern Editor</title>
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/node.css">
+    <style>
+         /* Enhanced Node Editor Styles */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0a0a;
+    color: #e0e7ff;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    user-select: none;
+}
+
+.editor-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 320px;
+    background: #1a1a2e;
+    border-right: 1px solid #2d3748;
+    padding: 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.canvas-container {
+    flex: 1;
+    position: relative;
+    background: #0f0f1b;
+    overflow: hidden;
+}
+
+#node-canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: default;
+}
+
+h1 {
+    color: #00ff41;
+    font-size: 20px;
+    margin: 0 0 20px 0;
+}
+
+h2 {
+    color: #00d9ff;
+    font-size: 16px;
+    margin: 20px 0 10px 0;
+}
+
+.controls {
+    margin-bottom: 20px;
+}
+
+.btn {
+    background: #00ff41;
+    color: #000;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    font-size: 12px;
+}
+
+.btn:hover {
+    background: #00d9ff;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #1e293b;
+    color: #e0e7ff;
+}
+
+.btn-secondary:hover {
+    background: #334155;
+}
+
+.btn-play-all {
+    background: #ff006e;
+    color: #fff;
+    font-size: 14px;
+    padding: 12px 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.btn-play-all:hover {
+    background: #ff1744;
+}
+
+.pattern-input {
+    width: 100%;
+    padding: 12px;
+    background: #0f0f1b;
+    border: 1px solid #2d3748;
+    color: #e0e7ff;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 15px;
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.4;
+}
+
+.example-patterns {
+    background: #0f0f1b;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.pattern-example {
+    background: #1a1a2e;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-left: 4px solid #00ff41;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.pattern-example:hover {
+    background: #2d3748;
+    border-left-color: #00d9ff;
+    border-color: #00d9ff;
+    transform: translateX(4px);
+}
+
+.pattern-example h4 {
+    color: #00ff41;
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.pattern-example code {
+    color: #00d9ff;
+    font-size: 12px;
+    background: #0f0f1b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.pattern-example p {
+    color: #94a3b8;
+    font-size: 11px;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.info-panel {
+    background: #0f0f1b;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.info-panel h3 {
+    color: #00d9ff;
+    margin: 0 0 12px 0;
+    font-size: 15px;
+}
+
+.info-panel p {
+    color: #94a3b8;
+    font-size: 12px;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.node-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;xw
+    font-size: 11px;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+.legend-instrument { background: #00d9ff; }
+.legend-note { background: #9400d3; }
+.legend-rest { background: #666; }
+.legend-multiplier { background: #ff006e; }
+.legend-stack { background: #00ff41; }
+.legend-parallel { background: #ffa500; }
+.legend-group { background: #8b5cf6; }
+
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="sidebar">
+            <h1>🎵 Enhanced Strudel Editor</h1>
+            
+            <div class="info-panel">
+                <h3>Enhanced Node-Based Editor</h3>
+                <p>Create and connect Strudel pattern components visually with real-time playback. Each node represents a part of your pattern with editable properties and individual play buttons.</p>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-play-all" id="play-all">
+                    <i class="fas fa-play"></i> Play All Nodes
+                </button>
+                <button class="btn btn-secondary" id="test-audio" style="width: 100%; margin-bottom: 10px;">
+                    <i class="fas fa-volume-up"></i> Test Audio
+                </button>
+                
+                <h2>Pattern Generator</h2>
+                <textarea class="pattern-input" id="pattern-input" 
+                          placeholder="Enter Strudel pattern to generate nodes...">s("bd sd [bd bd] sd").bank("RolandTR808")</textarea>
+                <button class="btn" id="generate-pattern">Generate Nodes</button>
+                <button class="btn btn-secondary" id="clear-editor">Clear Canvas</button>
+            </div>
+            
+            <h2>Quick Examples</h2>
+            <div class="example-patterns">
+                <div class="pattern-example" data-pattern='s("bd sd [~ bd] sd,hh*8").bank("RolandTR808")'>
+                    <h4>808 Beat Pattern</h4>
+                    <code>s("bd sd [~ bd] sd,hh*8").bank("RolandTR808")</code>
+                    <p>Classic 808 drum pattern with parallel hi-hats</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='note("c3 e3 g3 c4").s("piano")'>
+                    <h4>Piano Melody</h4>
+                    <code>note("c3 e3 g3 c4").s("piano")</code>
+                    <p>Musical notes played with piano samples</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='note("c1(3,8)").s("sawtooth").lpf(500).lpq(3)'>
+                    <h4>Filtered Saw Bass</h4>
+                    <code>note("c1(3,8)").s("sawtooth").lpf(500).lpq(3)</code>
+                    <p>Sawtooth bass with low-pass filter</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='s("bd*4 sd*4").bank("AkaiLinn")'>
+                    <h4>Linn Drum Multipliers</h4>
+                    <code>s("bd*4 sd*4").bank("AkaiLinn")</code>
+                    <p>Four bass drums followed by four snare drums</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='[bd sd] hh*2'>
+                    <h4>Group with Multiplier</h4>
+                    <code>[bd sd] hh*2</code>
+                    <p>Group containing bass and snare, followed by two hi-hats</p>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Instrument Types</h3>
+                <p><strong>Synthesizers:</strong> sine, sawtooth, square, triangle, brown, crackle</p>
+                <p><strong>Drum Machines:</strong> RolandTR808, RolandTR707, AkaiLinn, 9000</p>
+                <p><strong>Pitched Samples:</strong> piano, violin, guitar, flute, trumpet</p>
+                <p><strong>Wavetables:</strong> wt_flute, wt_epiano, wt_oboe, wt_organ</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Node Type Legend</h3>
+                <div class="node-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-instrument"></div>
+                        <span>Instruments</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-note"></div>
+                        <span>Musical Notes</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-rest"></div>
+                        <span>Rests</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-multiplier"></div>
+                        <span>Multipliers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-stack"></div>
+                        <span>Stack Operations</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-parallel"></div>
+                        <span>Parallel Execution</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-group"></div>
+                        <span>Groups</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-toolbar">
+                <button class="toolbar-btn" id="pan-mode" title="Pan Mode (Space)">
+                    <i class="fas fa-hand-paper"></i>
+                </button>
+                <button class="toolbar-btn" id="select-mode" title="Select Mode (V)">
+                    <i class="fas fa-mouse-pointer"></i>
+                </button>
+                <button class="toolbar-btn" id="center-view" title="Center View">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+            </div>
+            
+            <div id="node-canvas">
+                <div class="canvas-content" id="canvas-content">
+                    <!-- Nodes and connections will be rendered here -->
+                </div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in">+</button>
+                <div class="zoom-level" id="zoom-level">100%</div>
+                <button class="zoom-btn" id="zoom-out">-</button>
+            </div>
+            
+            <div class="status-message" id="status-message">
+                Enhanced Node Editor Ready - Click play buttons to test sounds
+            </div>
+        </div>
+        
+        <!-- Side Panel for Node Effects -->
+        <div id="side-panel">
+            <div class="side-panel-header">
+                <h3 id="side-panel-title">Node Properties</h3>
+                <button class="side-panel-close" id="side-panel-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="node-properties">
+                <div class="property-group">
+                    <label for="node-instrument">Instrument</label>
+                    <select id="node-instrument">
+                        <option value="sine">Sine Wave</option>
+                        <option value="square">Square Wave</option>
+                        <option value="sawtooth">Sawtooth Wave</option>
+                        <option value="triangle">Triangle Wave</option>
+                        <option value="piano">Piano</option>
+                        <option value="violin">Violin</option>
+                        <option value="guitar">Guitar</option>
+                        <option value="flute">Flute</option>
+                        <option value="trumpet">Trumpet</option>
+                        <option value="brown">Brown Noise</option>
+                        <option value="crackle">Crackle</option>
+                    </select>
+                </div>
+                
+                <div class="property-group">
+                    <label for="node-note">Note (if applicable)</label>
+                    <input type="text" id="node-note" placeholder="e.g., c4, f#3">
+                </div>
+                
+                <div class="property-group">
+                    <label for="node-duration">Duration</label>
+                    <input type="range" id="node-duration" min="100" max="2000" value="500">
+                    <span class="value" id="node-duration-val">500</span>
+                </div>
+                
+                <div class="property-group">
+                    <label for="node-volume">Volume</label>
+                    <input type="range" id="node-volume" min="0" max="100" value="80">
+                    <span class="value" id="node-volume-val">80</span>
+                </div>
+                
+                <div class="effects-section">
+                    <h4>Effects</h4>
+                    <div class="effects-list">
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-lpf" data-effect="lpf">
+                                Low-Pass Filter
+                            </label>
+                            <input type="range" id="effect-lpf-value" min="20" max="20000" value="800" disabled>
+                            <span class="effect-value" id="effect-lpf-val">800 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-hpf" data-effect="hpf">
+                                High-Pass Filter
+                            </label>
+                            <input type="range" id="effect-hpf-value" min="20" max="20000" value="200" disabled>
+                            <span class="effect-value" id="effect-hpf-val">200 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-bpf" data-effect="bpf">
+                                Band-Pass Filter
+                            </label>
+                            <input type="range" id="effect-bpf-value" min="20" max="20000" value="1200" disabled>
+                            <span class="effect-value" id="effect-bpf-val">1200 Hz</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-delay" data-effect="delay">
+                                Delay
+                            </label>
+                            <input type="range" id="effect-delay-value" min="0" max="1" step="0.01" value="0.25" disabled>
+                            <span class="effect-value" id="effect-delay-val">0.25</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-reverb" data-effect="reverb">
+                                Reverb
+                            </label>
+                            <input type="range" id="effect-reverb-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <span class="effect-value" id="effect-reverb-val">0.3</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-distort" data-effect="distort">
+                                Distortion
+                            </label>
+                            <input type="range" id="effect-distort-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <span class="effect-value" id="effect-distort-val">0.3</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-speed" data-effect="speed">
+                                Playback Speed
+                            </label>
+                            <input type="range" id="effect-speed-value" min="0.1" max="2" step="0.01" value="1" disabled>
+                            <span class="effect-value" id="effect-speed-val">1.0x</span>
+                        </div>
+                        
+                        <div class="effect-item">
+                            <label>
+                                <input type="checkbox" id="effect-pan" data-effect="pan">
+                                Stereo Pan
+                            </label>
+                            <input type="range" id="effect-pan-value" min="-1" max="1" step="0.01" value="0" disabled>
+                            <span class="effect-value" id="effect-pan-val">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <button class="btn btn-secondary" id="apply-effects">Apply Effects</button>
+                    <button class="btn btn-secondary" id="clear-effects">Clear All Effects</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load required libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.8.43/build/Tone.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js"></script>
+    
+    <!-- Load our node manager -->
+    <script src="js/nodeManager.js"></script>
+</body>
+</html>

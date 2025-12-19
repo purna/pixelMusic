@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Node Editor - Demo</title>
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e0e7ff;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #00ff41;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .demo-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2d3748;
+        }
+        
+        .demo-section h2 {
+            color: #00d9ff;
+            margin-top: 0;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+        }
+        
+        .feature-card h3 {
+            color: #00ff41;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        
+        .feature-card ul {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #00d9ff;
+            transform: translateY(-2px);
+        }
+        
+        .example-patterns {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .pattern-item {
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00ff41;
+        }
+        
+        .pattern-code {
+            color: #00d9ff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #0a0a0a;
+            padding: 6px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        
+        .pattern-desc {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .comparison-table th {
+            background: #0f0f1b;
+            color: #00d9ff;
+        }
+        
+        .comparison-table td {
+            color: #e0e7ff;
+        }
+        
+        .check {
+            color: #00ff41;
+        }
+        
+        .cross {
+            color: #ff006e;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎵 Enhanced Strudel Pattern Node Editor</h1>
+        
+        <div class="demo-section">
+            <h2>🚀 What's New in the Enhanced Editor</h2>
+            <p>Based on your original <code>node-example.html</code>, I've created an enhanced version that incorporates the instrument types from <code>index.html</code> and adds real-time playback functionality.</p>
+            
+            <div class="feature-list">
+                <div class="feature-card">
+                    <h3>🎹 Instrument Categories</h3>
+                    <ul>
+                        <li><strong>Synthesizers:</strong> sine, sawtooth, square, triangle, brown, crackle</li>
+                        <li><strong>Drum Machines:</strong> RolandTR808, RolandTR707, AkaiLinn, 9000</li>
+                        <li><strong>Pitched Samples:</strong> piano, violin, guitar, flute, trumpet</li>
+                        <li><strong>Wavetables:</strong> wt_flute, wt_epiano, wt_oboe, wt_organ</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>▶️ Playback Features</h3>
+                    <ul>
+                        <li>Individual play buttons on each node</li>
+                        <li>"Play All" button for simultaneous playback</li>
+                        <li>Real-time audio using Strudel engine</li>
+                        <li>Pattern validation and error handling</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🎨 Enhanced UI</h3>
+                    <ul>
+                        <li>Dropdown selectors for instrument types</li>
+                        <li>Visual feedback for different node types</li>
+                        <li>Improved node properties panel</li>
+                        <li>Better error messages and status updates</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🔗 Pattern Support</h3>
+                    <ul>
+                        <li>Bank patterns (e.g., .bank("RolandTR808"))</li>
+                        <li>Note patterns with instruments</li>
+                        <li>Effect chains (lpf, lpq, etc.)</li>
+                        <li>Stack and parallel operations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📁 File Structure</h2>
+            <p>The enhanced editor now uses a modular structure with separated concerns:</p>
+            
+            <div class="example-patterns">
+                <div class="pattern-item">
+                    <div class="pattern-code">enhanced-node-editor.html</div>
+                    <div class="pattern-desc">Main HTML file with layout and structure</div>
+                </div>
+                
+                <div class="pattern-item">
+                    <div class="pattern-code">css/node.css</div>
+                    <div class="pattern-desc">All styling for the node editor interface</div>
+                </div>
+                
+                <div class="pattern-item">
+                    <div class="pattern-code">js/nodeManager.js</div>
+                    <div class="pattern-desc">Complete JavaScript functionality and audio integration</div>
+                </div>
+            </div>
+            
+            <h2>📝 Example Patterns</h2>
+            <p>Here are some example patterns you can try in the enhanced editor:</p>
+            
+            <div class="example-patterns">
+                <div class="pattern-item">
+                    <div class="pattern-code">s("bd sd [bd bd] sd").bank("RolandTR808")</div>
+                    <div class="pattern-desc">Classic 808 drum pattern with bank selection</div>
+                </div>
+                
+                <div class="pattern-item">
+                    <div class="pattern-code">note("c3 e3 g3 c4").s("piano")</div>
+                    <div class="pattern-desc">Piano melody using pitched samples</div>
+                </div>
+                
+                <div class="pattern-item">
+                    <div class="pattern-code">note("c1(3,8)").s("sawtooth").lpf(500).lpq(3)</div>
+                    <div class="pattern-desc">Filtered sawtooth bass with effects</div>
+                </div>
+                
+                <div class="pattern-item">
+                    <div class="pattern-code">s("bd*4 sd*4").bank("AkaiLinn")</div>
+                    <div class="pattern-desc">Multiplied drum pattern with Linn drum machine</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🔄 Feature Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Original node-example.html</th>
+                        <th>Enhanced Version</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Node-based Editor</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Pattern Parsing</td>
+                        <td class="check">✓</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Instrument Categories</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Real-time Playback</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Individual Node Play</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Play All Function</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Bank Support</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Effect Chains</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Audio Engine Integration</td>
+                        <td class="cross">✗</td>
+                        <td class="check">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🎯 How to Use</h2>
+            <ol>
+                <li><strong>Open the Enhanced Editor:</strong> Click the button below to open the enhanced node editor</li>
+                <li><strong>Wait for Audio Loading:</strong> The editor loads Strudel and Tone.js from CDN - this may take a few seconds</li>
+                <li><strong>Test Audio:</strong> Click "Test Audio" to verify the audio engine is working</li>
+                <li><strong>Generate Patterns:</strong> Use the pattern generator or click on example patterns</li>
+                <li><strong>Customize Instruments:</strong> Click on instrument nodes to change the instrument type using the dropdown</li>
+                <li><strong>Test Sounds:</strong> Click the play button on individual nodes or use "Play All"</li>
+                <li><strong>Create Connections:</strong> Drag from output to input ports to connect nodes</li>
+                <li><strong>Edit Properties:</strong> Click on editable properties to modify node behavior</li>
+            </ol>
+            
+            <div style="background: #0f0f1b; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ff006e;">
+                <h4 style="color: #ff006e; margin-top: 0;">⚠️ Audio Dependencies</h4>
+                <p style="color: #94a3b8; font-size: 13px; margin: 0;">The enhanced editor requires internet connection to load Strudel and Tone.js libraries from CDN. If playback doesn't work, check your network connection and try the "Test Audio" button.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="enhanced-node-editor.html" class="btn">
+                    <i class="fas fa-play"></i> Open Enhanced Node Editor
+                </a>
+                <a href="node-example.html" class="btn" style="background: #374151; color: #e0e7ff;">
+                    <i class="fas fa-eye"></i> View Original
+                </a>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🎼 Key Improvements</h2>
+            <p>The enhanced editor maintains all the original functionality while adding:</p>
+            
+            <div class="feature-list">
+                <div class="feature-card">
+                    <h3>Audio Integration</h3>
+                    <p>Built-in Strudel and Tone.js integration for real-time audio playback. No external setup required.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Smart Instrument Detection</h3>
+                    <p>Automatically detects instrument types and provides appropriate dropdown options for easy selection.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Enhanced Examples</h3>
+                    <p>Includes practical examples showcasing different instrument categories and effect chains.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Better UX</h3>
+                    <p>Improved visual feedback, error handling, and status messages for better user experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

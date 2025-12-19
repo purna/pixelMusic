@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Nodes Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .test-result {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .schema-code {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Control Nodes Schema Test</h1>
+    
+    <div class="test-section">
+        <div class="test-title">1. Schema Validation Test</div>
+        <div id="schema-validation-result" class="test-result">Testing schema structure...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">2. Control Node Categories Test</div>
+        <div id="categories-test-result" class="test-result">Testing control node categories...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">3. Serialization Test</div>
+        <div id="serialization-test-result" class="test-result">Testing serialization patterns...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">4. Example Graph Test</div>
+        <div id="graph-test-result" class="test-result">Testing example graph serialization...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">5. Control Socket Rules Test</div>
+        <div id="socket-test-result" class="test-result">Testing control socket rules...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">Current Schema</div>
+        <div id="current-schema" class="schema-code">Loading schema...</div>
+    </div>
+    
+    <script>
+        // Load the control nodes schema
+        fetch('strudel-control-nodes.json')
+            .then(response => response.json())
+            .then(schema => {
+                document.getElementById('current-schema').textContent = JSON.stringify(schema, null, 2);
+                
+                // Run all tests
+                testSchemaValidation(schema);
+                testControlNodeCategories(schema);
+                testSerialization(schema);
+                testExampleGraph(schema);
+                testControlSocketRules(schema);
+            })
+            .catch(error => {
+                document.getElementById('current-schema').textContent = 'Error loading schema: ' + error.message;
+                console.error('Error loading schema:', error);
+            });
+        
+        function testSchemaValidation(schema) {
+            const resultElement = document.getElementById('schema-validation-result');
+            
+            try {
+                // Check schema version
+                if (!schema.schemaVersion) {
+                    throw new Error('Missing schemaVersion');
+                }
+                
+                // Check controlNodes object
+                if (!schema.controlNodes || typeof schema.controlNodes !== 'object') {
+                    throw new Error('Missing or invalid controlNodes object');
+                }
+                
+                // Check each control node
+                const controlNodeTypes = Object.keys(schema.controlNodes);
+                if (controlNodeTypes.length === 0) {
+                    throw new Error('No control nodes defined');
+                }
+                
+                let allValid = true;
+                const validationResults = [];
+                
+                controlNodeTypes.forEach(nodeType => {
+                    const nodeDef = schema.controlNodes[nodeType];
+                    
+                    // Check required fields
+                    if (!nodeDef.label) {
+                        validationResults.push(`❌ ${nodeType}: Missing label`);
+                        allValid = false;
+                    }
+                    
+                    if (!nodeDef.category) {
+                        validationResults.push(`❌ ${nodeType}: Missing category`);
+                        allValid = false;
+                    }
+                    
+                    if (!nodeDef.outputs || !nodeDef.outputs.includes('controlOut')) {
+                        validationResults.push(`❌ ${nodeType}: Missing controlOut in outputs`);
+                        allValid = false;
+                    }
+                    
+                    if (!nodeDef.serialization) {
+                        validationResults.push(`❌ ${nodeType}: Missing serialization`);
+                        allValid = false;
+                    }
+                    
+                    // Check serialization types
+                    const serialization = nodeDef.serialization;
+                    const validSerializationTypes = ['literal', 'function', 'method', 'template'];
+                    
+                    if (!serialization.type || !validSerializationTypes.includes(serialization.type)) {
+                        validationResults.push(`❌ ${nodeType}: Invalid serialization type`);
+                        allValid = false;
+                    }
+                    
+                    // Check serialization requirements based on type
+                    switch (serialization.type) {
+                        case 'literal':
+                            if (!serialization.template) {
+                                validationResults.push(`❌ ${nodeType}: Missing template for literal serialization`);
+                                allValid = false;
+                            }
+                            break;
+                        case 'function':
+                            if (!serialization.function) {
+                                validationResults.push(`❌ ${nodeType}: Missing function name`);
+                                allValid = false;
+                            }
+                            if (!serialization.args || !Array.isArray(serialization.args)) {
+                                validationResults.push(`❌ ${nodeType}: Missing or invalid args array`);
+                                allValid = false;
+                            }
+                            break;
+                        case 'method':
+                            if (!serialization.function) {
+                                validationResults.push(`❌ ${nodeType}: Missing method name`);
+                                allValid = false;
+                            }
+                            break;
+                    }
+                    
+                    if (allValid) {
+                        validationResults.push(`✅ ${nodeType}: Valid control node definition`);
+                    }
+                });
+                
+                if (allValid) {
+                    resultElement.innerHTML = '<span class="success">✅ Schema validation passed</span><br>' + validationResults.join('<br>');
+                } else {
+                    resultElement.innerHTML = '<span class="error">❌ Schema validation failed</span><br>' + validationResults.join('<br>');
+                }
+                
+            } catch (error) {
+                resultElement.innerHTML = '<span class="error">❌ Schema validation error: ' + error.message + '</span>';
+                console.error('Schema validation error:', error);
+            }
+        }
+        
+        function testControlNodeCategories(schema) {
+            const resultElement = document.getElementById('categories-test-result');
+            
+            try {
+                const expectedCategories = ['value', 'lfo', 'random', 'pattern', 'utility'];
+                const foundCategories = new Set();
+                const categoryNodes = {};
+                
+                Object.keys(schema.controlNodes).forEach(nodeType => {
+                    const nodeDef = schema.controlNodes[nodeType];
+                    const category = nodeDef.category;
+                    
+                    if (category) {
+                        foundCategories.add(category);
+                        
+                        if (!categoryNodes[category]) {
+                            categoryNodes[category] = [];
+                        }
+                        categoryNodes[category].push(nodeType);
+                    }
+                });
+                
+                let allCategoriesFound = true;
+                const results = [];
+                
+                expectedCategories.forEach(expectedCat => {
+                    if (foundCategories.has(expectedCat)) {
+                        results.push(`✅ ${expectedCat}: Found (${categoryNodes[expectedCat].length} nodes)`);
+                    } else {
+                        results.push(`❌ ${expectedCat}: Missing`);
+                        allCategoriesFound = false;
+                    }
+                });
+                
+                // Check for unexpected categories
+                foundCategories.forEach(foundCat => {
+                    if (!expectedCategories.includes(foundCat)) {
+                        results.push(`⚠️  ${foundCat}: Unexpected category (${categoryNodes[foundCat].length} nodes)`);
+                    }
+                });
+                
+                if (allCategoriesFound) {
+                    resultElement.innerHTML = '<span class="success">✅ All expected categories found</span><br>' + results.join('<br>');
+                } else {
+                    resultElement.innerHTML = '<span class="error">❌ Missing expected categories</span><br>' + results.join('<br>');
+                }
+                
+            } catch (error) {
+                resultElement.innerHTML = '<span class="error">❌ Category test error: ' + error.message + '</span>';
+                console.error('Category test error:', error);
+            }
+        }
+        
+        function testSerialization(schema) {
+            const resultElement = document.getElementById('serialization-test-result');
+            
+            try {
+                const testCases = [
+                    {
+                        name: 'Constant node',
+                        type: 'constant',
+                        properties: { value: 42 },
+                        expectedPattern: '42'
+                    },
+                    {
+                        name: 'Sine LFO',
+                        type: 'sine',
+                        properties: { rate: 0.25 },
+                        expectedPattern: 'sine(0.25)'
+                    },
+                    {
+                        name: 'Range mapper',
+                        type: 'range',
+                        properties: { min: 400, max: 4000 },
+                        expectedPattern: '.range(400, 4000)'
+                    },
+                    {
+                        name: 'Pattern generator',
+                        type: 'pattern',
+                        properties: { pattern: '0 1 0.5 1' },
+                        expectedPattern: 'p("0 1 0.5 1")'
+                    }
+                ];
+                
+                const results = [];
+                let allPassed = true;
+                
+                testCases.forEach(testCase => {
+                    const nodeDef = schema.controlNodes[testCase.type];
+                    
+                    if (!nodeDef) {
+                        results.push(`❌ ${testCase.name}: Node type not found`);
+                        allPassed = false;
+                        return;
+                    }
+                    
+                    try {
+                        const pattern = buildControlNodePattern(nodeDef, testCase.properties);
+                        
+                        if (pattern === testCase.expectedPattern) {
+                            results.push(`✅ ${testCase.name}: Serialization correct - "${pattern}"`);
+                        } else {
+                            results.push(`❌ ${testCase.name}: Expected "${testCase.expectedPattern}", got "${pattern}"`);
+                            allPassed = false;
+                        }
+                    } catch (error) {
+                        results.push(`❌ ${testCase.name}: Serialization error - ${error.message}`);
+                        allPassed = false;
+                    }
+                });
+                
+                if (allPassed) {
+                    resultElement.innerHTML = '<span class="success">✅ All serialization tests passed</span><br>' + results.join('<br>');
+                } else {
+                    resultElement.innerHTML = '<span class="error">❌ Some serialization tests failed</span><br>' + results.join('<br>');
+                }
+                
+            } catch (error) {
+                resultElement.innerHTML = '<span class="error">❌ Serialization test error: ' + error.message + '</span>';
+                console.error('Serialization test error:', error);
+            }
+        }
+        
+        function buildControlNodePattern(nodeDef, properties) {
+            const serialization = nodeDef.serialization;
+            
+            switch (serialization.type) {
+                case 'literal':
+                    return serialization.template.replace('{value}', properties.value || 0);
+                
+                case 'function':
+                    const func = serialization.function;
+                    const args = serialization.args || [];
+                    const argValues = args.map(argName => {
+                        const value = properties[argName];
+                        return typeof value === 'string' ? `"${value}"` : value;
+                    }).join(', ');
+                    return `${func}(${argValues})`;
+                
+                case 'method':
+                    const method = serialization.function;
+                    const methodArgs = serialization.args || [];
+                    const methodArgValues = methodArgs.map(argName => {
+                        const value = properties[argName];
+                        return typeof value === 'string' ? `"${value}"` : value;
+                    }).join(', ');
+                    return `.${method}(${methodArgValues})`;
+                
+                case 'template':
+                    let pattern = serialization.template;
+                    Object.keys(properties).forEach(propKey => {
+                        const placeholder = `{${propKey}}`;
+                        const value = properties[propKey];
+                        pattern = pattern.replace(placeholder, typeof value === 'string' ? `"${value}"` : value);
+                    });
+                    return pattern;
+                
+                default:
+                    throw new Error(`Unknown serialization type: ${serialization.type}`);
+            }
+        }
+        
+        function testExampleGraph(schema) {
+            const resultElement = document.getElementById('graph-test-result');
+            
+            try {
+                // Test the example from the task: Sine LFO → Range 400–4000 → LPF
+                const sineNode = schema.controlNodes.sine;
+                const rangeNode = schema.controlNodes.range;
+                
+                if (!sineNode || !rangeNode) {
+                    throw new Error('Missing required nodes for example graph test');
+                }
+                
+                // Build the control chain
+                const sinePattern = buildControlNodePattern(sineNode, { rate: 0.25 });
+                const rangePattern = buildControlNodePattern(rangeNode, { min: 400, max: 4000 });
+                
+                // Combine them (range is a method that should be chained)
+                const combinedPattern = `${sinePattern}${rangePattern}`;
+                
+                const expectedPattern = 'sine(0.25).range(400, 4000)';
+                
+                if (combinedPattern === expectedPattern) {
+                    resultElement.innerHTML = `<span class="success">✅ Example graph test passed</span><br>
+                        Expected: ${expectedPattern}<br>
+                        Got: ${combinedPattern}<br>
+                        This would be used as: sound("bd").lpf(${combinedPattern})`;
+                } else {
+                    resultElement.innerHTML = `<span class="error">❌ Example graph test failed</span><br>
+                        Expected: ${expectedPattern}<br>
+                        Got: ${combinedPattern}`;
+                }
+                
+            } catch (error) {
+                resultElement.innerHTML = '<span class="error">❌ Example graph test error: ' + error.message + '</span>';
+                console.error('Example graph test error:', error);
+            }
+        }
+        
+        function testControlSocketRules(schema) {
+            const resultElement = document.getElementById('socket-test-result');
+            
+            try {
+                const results = [];
+                let allValid = true;
+                
+                // Test 1: All control nodes should have controlOut
+                Object.keys(schema.controlNodes).forEach(nodeType => {
+                    const nodeDef = schema.controlNodes[nodeType];
+                    
+                    if (!nodeDef.outputs || !nodeDef.outputs.includes('controlOut')) {
+                        results.push(`❌ ${nodeType}: Missing controlOut socket`);
+                        allValid = false;
+                    } else {
+                        results.push(`✅ ${nodeType}: Has controlOut socket`);
+                    }
+                });
+                
+                // Test 2: Only utility nodes should have controlIn
+                const utilityNodes = Object.keys(schema.controlNodes).filter(nodeType => {
+                    const nodeDef = schema.controlNodes[nodeType];
+                    return nodeDef.category === 'utility' && nodeDef.inputs && nodeDef.inputs.includes('controlIn');
+                });
+                
+                if (utilityNodes.length > 0) {
+                    results.push(`✅ Utility nodes with controlIn: ${utilityNodes.join(', ')}`);
+                } else {
+                    results.push(`⚠️  No utility nodes found with controlIn sockets`);
+                }
+                
+                // Test 3: Check socket rules compliance
+                const socketRules = {
+                    controlSockets: {
+                        outputs: ["controlOut"],
+                        inputs: ["controlIn"]
+                    }
+                };
+                
+                results.push(`✅ Control socket rules: ${JSON.stringify(socketRules.controlSockets)}`);
+                
+                if (allValid) {
+                    resultElement.innerHTML = '<span class="success">✅ Control socket rules test passed</span><br>' + results.join('<br>');
+                } else {
+                    resultElement.innerHTML = '<span class="error">❌ Control socket rules test failed</span><br>' + results.join('<br>');
+                }
+                
+            } catch (error) {
+                resultElement.innerHTML = '<span class="error">❌ Control socket rules test error: ' + error.message + '</span>';
+                console.error('Control socket rules test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

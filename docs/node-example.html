@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strudel Pattern Custom Node Editor</title>
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e0e7ff;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #1a1a2e;
+            border-right: 1px solid #2d3748;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #0f0f1b;
+            overflow: hidden;
+        }
+        
+        #node-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: default;
+        }
+        
+        h1 {
+            color: #00ff41;
+            font-size: 20px;
+            margin: 0 0 20px 0;
+        }
+        
+        h2 {
+            color: #00d9ff;
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .btn:hover {
+            background: #00d9ff;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #1e293b;
+            color: #e0e7ff;
+        }
+        
+        .btn-secondary:hover {
+            background: #334155;
+        }
+        
+        .pattern-input {
+            width: 100%;
+            padding: 12px;
+            background: #0f0f1b;
+            border: 1px solid #2d3748;
+            color: #e0e7ff;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.4;
+        }
+        
+        .example-patterns {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .pattern-example {
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00ff41;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .pattern-example:hover {
+            background: #2d3748;
+            border-left-color: #00d9ff;
+            border-color: #00d9ff;
+            transform: translateX(4px);
+        }
+        
+        .pattern-example h4 {
+            color: #00ff41;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .pattern-example code {
+            color: #00d9ff;
+            font-size: 12px;
+            background: #0f0f1b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .pattern-example p {
+            color: #94a3b8;
+            font-size: 11px;
+            margin: 0;
+            line-height: 1.3;
+        }
+        
+        .info-panel {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .info-panel h3 {
+            color: #00d9ff;
+            margin: 0 0 12px 0;
+            font-size: 15px;
+        }
+        
+        .info-panel p {
+            color: #94a3b8;
+            font-size: 12px;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        
+        .node-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        
+        .legend-instrument { background: #00d9ff; }
+        .legend-note { background: #9400d3; }
+        .legend-rest { background: #666; }
+        .legend-multiplier { background: #ff006e; }
+        .legend-stack { background: #00ff41; }
+        .legend-parallel { background: #ffa500; }
+        .legend-group { background: #8b5cf6; }
+        
+        /* Node Styles */
+        .node {
+            background: #1a1a2e;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            min-width: 140px;
+            max-width: 200px;
+            position: absolute;
+            cursor: move;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            z-index: 10;
+            user-select: none;
+        }
+        
+        .node:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .node.selected {
+            border-color: #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .node.dragging {
+            z-index: 1000;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .node-title {
+            background: linear-gradient(135deg, #2d3748, #374151);
+            color: #e0e7ff;
+            padding: 8px 12px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #374151;
+            cursor: move;
+            position: relative;
+        }
+        
+        .node-content {
+            padding: 12px;
+            position: relative;
+        }
+        
+        .node-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        
+        .node-input,
+        .node-output {
+            background: #0f0f1b;
+            border: 2px solid #374151;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            position: absolute;
+            cursor: crosshair;
+            transition: all 0.2s;
+        }
+        
+        .node-input {
+            background: #00d9ff;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .node-input:hover {
+            background: #00ff41;
+            transform: translateY(-50%) scale(1.2);
+        }
+        
+        .node-output {
+            background: #00ff41;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .node-output:hover {
+            background: #00d9ff;
+            transform: translateY(-50%) scale(1.2);
+        }
+        
+        .node-instrument .node-title {
+            border-left: 4px solid #00d9ff;
+        }
+        
+        .node-note .node-title {
+            border-left: 4px solid #9400d3;
+        }
+        
+        .node-rest .node-title {
+            border-left: 4px solid #666;
+        }
+        
+        .node-multiplier .node-title {
+            border-left: 4px solid #ff006e;
+        }
+        
+        .node-stack .node-title {
+            border-left: 4px solid #00ff41;
+        }
+        
+        .node-parallel .node-title {
+            border-left: 4px solid #ffa500;
+        }
+        
+        .node-group .node-title {
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .properties-panel {
+            background: #0f0f1b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #374151;
+        }
+        
+        .property-item {
+            margin-bottom: 8px;
+        }
+        
+        .property-label {
+            color: #94a3b8;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+        
+        .property-value {
+            background: #1a1a2e;
+            border: 1px solid #374151;
+            color: #e0e7ff;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .property-value:focus {
+            border-color: #00ff41;
+            outline: none;
+        }
+        
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .connection-path {
+            stroke: #475569;
+            stroke-width: 3;
+            fill: none;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        .connection-path.active {
+            stroke: #00ff41;
+            stroke-width: 4;
+        }
+        
+        .canvas-toolbar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .toolbar-btn {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e0e7ff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #4b5563;
+            border-color: #00ff41;
+        }
+        
+        .toolbar-btn.active {
+            background: #00ff41;
+            color: #000;
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff006e;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(255, 0, 110, 0.4);
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .status-message {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 26, 46, 0.9);
+            color: #94a3b8;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 100;
+            border: 1px solid #374151;
+        }
+        
+        .canvas-panning {
+            cursor: grab;
+        }
+        
+        .canvas-panning:active {
+            cursor: grabbing;
+        }
+        
+        .canvas-content {
+            width: 3000px;
+            height: 2000px;
+            position: absolute;
+            transform-origin: 0 0;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 100;
+        }
+        
+        .zoom-btn {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e0e7ff;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background: #4b5563;
+            border-color: #00ff41;
+        }
+        
+        .zoom-level {
+            color: #94a3b8;
+            font-size: 11px;
+            text-align: center;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="sidebar">
+            <h1>🎵 Strudel Pattern Editor</h1>
+            
+            <div class="info-panel">
+                <h3>Custom Node-Based Editor</h3>
+                <p>Create and connect Strudel pattern components visually. Each node represents a part of your pattern with editable properties.</p>
+            </div>
+            
+            <div class="controls">
+                <h2>Pattern Generator</h2>
+                <textarea class="pattern-input" id="pattern-input" 
+                          placeholder="Enter Strudel pattern to generate nodes...">s("hh*4").stack(note("c4(5,8)"))</textarea>
+                <button class="btn" id="generate-pattern">Generate Nodes</button>
+                <button class="btn btn-secondary" id="clear-editor">Clear Canvas</button>
+            </div>
+            
+            <h2>Quick Examples</h2>
+            <div class="example-patterns">
+                <div class="pattern-example" data-pattern='s("hh*4").stack(note("c4(5,8)"))'>
+                    <h4>Stack Pattern</h4>
+                    <code>s("hh*4").stack(note("c4(5,8)"))</code>
+                    <p>Four hi-hats stacked with a note pattern that has properties (5,8)</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='s("bd sd [~ bd] sd,hh*8")'>
+                    <h4>Parallel Execution</h4>
+                    <code>s("bd sd [~ bd] sd,hh*8")</code>
+                    <p>Drum sequence running parallel to eight hi-hat repeats</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='note("d d a# a").s("sawtooth")'>
+                    <h4>Note with Waveform</h4>
+                    <code>note("d d a# a").s("sawtooth")</code>
+                    <p>Musical notes played with a sawtooth waveform</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='s("bd*4 sd*4")'>
+                    <h4>Multipliers</h4>
+                    <code>s("bd*4 sd*4")</code>
+                    <p>Four bass drums followed by four snare drums</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='[bd sd] hh*2'>
+                    <h4>Group with Multiplier</h4>
+                    <code>[bd sd] hh*2</code>
+                    <p>Group containing bass and snare, followed by two hi-hats</p>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Node Type Legend</h3>
+                <div class="node-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-instrument"></div>
+                        <span>Instruments</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-note"></div>
+                        <span>Musical Notes</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-rest"></div>
+                        <span>Rests</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-multiplier"></div>
+                        <span>Multipliers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-stack"></div>
+                        <span>Stack Operations</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-parallel"></div>
+                        <span>Parallel Execution</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-group"></div>
+                        <span>Groups</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-toolbar">
+                <button class="toolbar-btn" id="pan-mode" title="Pan Mode (Space)">
+                    <i class="fas fa-hand-paper"></i>
+                </button>
+                <button class="toolbar-btn" id="select-mode" title="Select Mode (V)">
+                    <i class="fas fa-mouse-pointer"></i>
+                </button>
+                <button class="toolbar-btn" id="center-view" title="Center View">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+            </div>
+            
+            <div id="node-canvas">
+                <div class="canvas-content" id="canvas-content">
+                    <!-- Nodes and connections will be rendered here -->
+                </div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in">+</button>
+                <div class="zoom-level" id="zoom-level">100%</div>
+                <button class="zoom-btn" id="zoom-out">-</button>
+            </div>
+            
+            <div class="status-message" id="status-message">
+                Custom Node Editor Ready - Click nodes to edit properties
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class StrudelPatternNodeEditor {
+            constructor() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.nodeIdCounter = 0;
+                this.connectionIdCounter = 0;
+                this.draggedNode = null;
+                this.dragOffset = { x: 0, y: 0 };
+                this.isConnecting = false;
+                this.connectionStart = null;
+                this.tempConnection = null;
+                this.canvas = document.getElementById('node-canvas');
+                this.canvasContent = document.getElementById('canvas-content');
+                this.panMode = false;
+                this.panStart = { x: 0, y: 0 };
+                this.viewOffset = { x: 0, y: 0 };
+                this.zoomLevel = 1;
+                
+                this.initEditor();
+            }
+            
+            initEditor() {
+                this.setupEventListeners();
+                this.loadDefaultPattern();
+                this.updateStatus('Custom Node Editor Ready - Click nodes to edit properties');
+            }
+            
+            setupEventListeners() {
+                // Pattern generation
+                document.getElementById('generate-pattern').addEventListener('click', () => {
+                    const pattern = document.getElementById('pattern-input').value.trim();
+                    if (pattern) {
+                        this.generateFromPattern(pattern);
+                    }
+                });
+                
+                // Clear editor
+                document.getElementById('clear-editor').addEventListener('click', () => {
+                    this.clearEditor();
+                });
+                
+                // Example patterns
+                document.querySelectorAll('.pattern-example').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const pattern = btn.dataset.pattern;
+                        document.getElementById('pattern-input').value = pattern;
+                        this.generateFromPattern(pattern);
+                    });
+                });
+                
+                // Canvas interaction
+                this.setupCanvasEvents();
+                
+                // Toolbar
+                this.setupToolbarEvents();
+                
+                // Zoom controls
+                this.setupZoomControls();
+                
+                // Keyboard shortcuts
+                this.setupKeyboardShortcuts();
+            }
+            
+            setupCanvasEvents() {
+                // Mouse down for panning
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (e.target === this.canvas || e.target === this.canvasContent) {
+                        if (this.panMode || e.button === 1) { // Middle mouse button
+                            this.startPanning(e);
+                        } else if (!this.panMode) {
+                            this.deselectAllNodes();
+                        }
+                    }
+                });
+                
+                // Mouse move for panning and dragging
+                document.addEventListener('mousemove', (e) => {
+                    if (this.draggedNode) {
+                        this.updateNodePosition(e);
+                    } else if (this.isConnecting && this.tempConnection) {
+                        this.updateTempConnection(e);
+                    } else if (this.panMode) {
+                        this.updatePanning(e);
+                    }
+                });
+                
+                // Mouse up
+                document.addEventListener('mouseup', (e) => {
+                    if (this.draggedNode) {
+                        this.stopDragging();
+                    }
+                    if (this.isConnecting) {
+                        this.finishConnection(e);
+                    }
+                    if (this.panMode) {
+                        this.stopPanning();
+                    }
+                });
+                
+                // Prevent context menu
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+            }
+            
+            setupToolbarEvents() {
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                const centerBtn = document.getElementById('center-view');
+                
+                panBtn.addEventListener('click', () => {
+                    this.togglePanMode();
+                });
+                
+                selectBtn.addEventListener('click', () => {
+                    this.toggleSelectMode();
+                });
+                
+                centerBtn.addEventListener('click', () => {
+                    this.centerView();
+                });
+            }
+            
+            setupZoomControls() {
+                document.getElementById('zoom-in').addEventListener('click', () => {
+                    this.zoomIn();
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', () => {
+                    this.zoomOut();
+                });
+            }
+            
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.togglePanMode();
+                    } else if (e.key === 'v' || e.key === 'V') {
+                        this.toggleSelectMode();
+                    } else if (e.ctrlKey || e.metaKey) {
+                        if (e.key === '=') {
+                            e.preventDefault();
+                            this.zoomIn();
+                        } else if (e.key === '-') {
+                            e.preventDefault();
+                            this.zoomOut();
+                        } else if (e.key === '0') {
+                            e.preventDefault();
+                            this.resetZoom();
+                        }
+                    }
+                });
+            }
+            
+            loadDefaultPattern() {
+                const pattern = 's("hh*4").stack(note("c4(5,8)"))';
+                document.getElementById('pattern-input').value = pattern;
+                this.generateFromPattern(pattern);
+            }
+            
+            clearEditor() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.canvasContent.innerHTML = '';
+                this.updateStatus('Canvas cleared');
+            }
+            
+            generateFromPattern(pattern) {
+                this.clearEditor();
+                
+                try {
+                    const parsed = this.parseStrudelPattern(pattern);
+                    this.createNodesFromParsedPattern(parsed, 100, 100);
+                    this.updateStatus(`Generated nodes from pattern: ${pattern}`);
+                } catch (error) {
+                    console.error('Pattern parsing error:', error);
+                    this.showError(`Failed to parse pattern: ${error.message}`);
+                }
+            }
+            
+            parseStrudelPattern(pattern) {
+                const result = { type: 'root', children: [] };
+                
+                // Handle stack patterns
+                const stackMatch = pattern.match(/s?\("([^"]+)"\)\.stack\(([^)]+)\)/);
+                if (stackMatch) {
+                    const [, leftPattern, rightPattern] = stackMatch;
+                    result.children.push({
+                        type: 'stack',
+                        left: this.parseSimplePattern(leftPattern),
+                        right: this.parseSimplePattern(rightPattern)
+                    });
+                    return result;
+                }
+                
+                // Handle parallel patterns
+                const parallelMatch = pattern.match(/s?\("([^,]+),([^"]+)"\)/);
+                if (parallelMatch) {
+                    const [, leftPattern, rightPattern] = parallelMatch;
+                    result.children.push({
+                        type: 'parallel',
+                        left: this.parseSimplePattern(leftPattern),
+                        right: this.parseSimplePattern(rightPattern)
+                    });
+                    return result;
+                }
+                
+                // Simple pattern
+                const cleanPattern = pattern.replace(/s?\("?([^"]+)"?\)/, '$1');
+                result.children.push({
+                    type: 'simple',
+                    pattern: this.parseSimplePattern(cleanPattern)
+                });
+                
+                return result;
+            }
+            
+            parseSimplePattern(patternStr) {
+                const elements = [];
+                let i = 0;
+                
+                while (i < patternStr.length) {
+                    if (patternStr[i] === ' ') {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle groups
+                    if (patternStr[i] === '[') {
+                        i++;
+                        let content = '';
+                        
+                        while (i < patternStr.length && patternStr[i] !== ']') {
+                            content += patternStr[i];
+                            i++;
+                        }
+                        
+                        if (patternStr[i] === ']') {
+                            i++;
+                        }
+                        
+                        elements.push({
+                            type: 'group',
+                            content: content.trim()
+                        });
+                        continue;
+                    }
+                    
+                    // Parse element
+                    let element = '';
+                    while (i < patternStr.length && patternStr[i] !== ' ') {
+                        element += patternStr[i];
+                        i++;
+                    }
+                    
+                    if (element) {
+                        elements.push(this.parseElement(element));
+                    }
+                }
+                
+                return { type: 'sequence', elements };
+            }
+            
+            parseElement(element) {
+                // Multipliers
+                const multMatch = element.match(/^([a-zA-Z_]+)\*(\d+)$/);
+                if (multMatch) {
+                    const [, instrument, count] = multMatch;
+                    return {
+                        type: 'multiplier',
+                        instrument: instrument,
+                        count: parseInt(count)
+                    };
+                }
+                
+                // Notes with properties
+                const notePropsMatch = element.match(/^([a-gA-G][#b]?\d*)\(([^)]+)\)$/);
+                if (notePropsMatch) {
+                    const [, note, props] = notePropsMatch;
+                    return {
+                        type: 'note_with_props',
+                        note: note,
+                        properties: props
+                    };
+                }
+                
+                // Simple notes
+                if (/^[a-gA-G][#b]?\d*$/.test(element)) {
+                    return {
+                        type: 'note',
+                        note: element
+                    };
+                }
+                
+                // Rests
+                if (element === '~' || element === '[]') {
+                    return { type: 'rest' };
+                }
+                
+                // Default to instrument
+                return {
+                    type: 'instrument',
+                    instrument: element
+                };
+            }
+            
+            createNodesFromParsedPattern(pattern, startX, startY) {
+                let currentX = startX;
+                
+                pattern.children.forEach(child => {
+                    if (child.type === 'stack') {
+                        this.createStackNodes(child, currentX, startY);
+                        currentX += 400;
+                    } else if (child.type === 'parallel') {
+                        this.createParallelNodes(child, currentX, startY);
+                        currentX += 400;
+                    } else if (child.type === 'simple') {
+                        this.createSimpleNodes(child.pattern, currentX, startY);
+                        currentX += 300;
+                    }
+                });
+            }
+            
+            createStackNodes(stackPattern, x, y) {
+                const stackNode = this.createNode('Stack', 'Stack Operation', 'node-stack', x + 150, y + 100);
+                
+                const leftNodes = this.createSequenceNodes(stackPattern.left, x, y);
+                const rightNodes = this.createSequenceNodes(stackPattern.right, x + 250, y + 50);
+                
+                // Connect nodes
+                leftNodes.forEach(node => {
+                    this.createConnection(node, stackNode);
+                });
+                
+                rightNodes.forEach(node => {
+                    this.createConnection(stackNode, node);
+                });
+            }
+            
+            createParallelNodes(parallelPattern, x, y) {
+                const parallelNode = this.createNode('Parallel', 'Parallel Execution', 'node-parallel', x + 150, y + 100);
+                
+                const leftNodes = this.createSequenceNodes(parallelPattern.left, x, y);
+                const rightNodes = this.createSequenceNodes(parallelPattern.right, x + 250, y);
+                
+                leftNodes.forEach(node => {
+                    this.createConnection(node, parallelNode);
+                });
+                
+                rightNodes.forEach(node => {
+                    this.createConnection(parallelNode, node);
+                });
+            }
+            
+            createSimpleNodes(sequencePattern, x, y) {
+                this.createSequenceNodes(sequencePattern, x, y);
+            }
+            
+            createSequenceNodes(sequencePattern, startX, startY) {
+                const nodes = [];
+                let currentX = startX;
+                
+                sequencePattern.elements.forEach(element => {
+                    if (element.type === 'group') {
+                        const groupNode = this.createNode('Group', 'Group Content', 'node-group', currentX, startY);
+                        groupNode.querySelector('.properties-panel').innerHTML = `
+                            <div class="property-item">
+                                <div class="property-label">Content</div>
+                                <div class="property-value" contenteditable="true" data-property="content">${element.content}</div>
+                            </div>
+                        `;
+                        nodes.push(groupNode);
+                        currentX += 120;
+                    } else if (element.type === 'multiplier') {
+                        const multiplierNode = this.createNode('Multiplier', `×${element.count}`, 'node-multiplier', currentX, startY);
+                        multiplierNode.querySelector('.properties-panel').innerHTML = `
+                            <div class="property-item">
+                                <div class="property-label">Count</div>
+                                <div class="property-value" contenteditable="true" data-property="count">${element.count}</div>
+                            </div>
+                        `;
+                        
+                        const instrumentNode = this.createNode('Instrument', element.instrument.toUpperCase(), 'node-instrument', currentX - 60, startY);
+                        instrumentNode.querySelector('.properties-panel').innerHTML = `
+                            <div class="property-item">
+                                <div class="property-label">Instrument</div>
+                                <div class="property-value" contenteditable="true" data-property="instrument">${element.instrument}</div>
+                            </div>
+                        `;
+                        
+                        this.createConnection(instrumentNode, multiplierNode);
+                        nodes.push(multiplierNode);
+                        currentX += 100;
+                    } else {
+                        const node = this.createElementNode(element, currentX, startY);
+                        nodes.push(node);
+                        currentX += 80;
+                    }
+                });
+                
+                // Connect sequential nodes
+                for (let i = 0; i < nodes.length - 1; i++) {
+                    this.createConnection(nodes[i], nodes[i + 1]);
+                }
+                
+                return nodes;
+            }
+            
+            createNode(title, subtitle, className, x, y) {
+                const node = document.createElement('div');
+                node.className = `node ${className}`;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.dataset.nodeId = (++this.nodeIdCounter).toString();
+                
+                node.innerHTML = `
+                    <div class="node-title">${title}</div>
+                    <div class="node-content">
+                        <div class="node-subtitle">${subtitle}</div>
+                        <div class="node-input"></div>
+                        <div class="node-output"></div>
+                        <div class="properties-panel">
+                            <div style="font-size: 10px; color: #666;">Click properties to edit</div>
+                        </div>
+                    </div>
+                `;
+                
+                this.setupNodeEvents(node);
+                this.canvasContent.appendChild(node);
+                this.nodes.push(node);
+                return node;
+            }
+            
+            createElementNode(element, x, y) {
+                let title = 'Instrument';
+                let subtitle = '';
+                let className = 'node-instrument';
+                let properties = '';
+                
+                if (element.type === 'note') {
+                    title = 'Note';
+                    subtitle = element.note;
+                    className = 'node-note';
+                    properties = `
+                        <div class="property-item">
+                            <div class="property-label">Note</div>
+                            <div class="property-value" contenteditable="true" data-property="note">${element.note}</div>
+                        </div>
+                    `;
+                } else if (element.type === 'note_with_props') {
+                    title = 'Note';
+                    subtitle = element.note;
+                    className = 'node-note';
+                    properties = `
+                        <div class="property-item">
+                            <div class="property-label">Note</div>
+                            <div class="property-value" contenteditable="true" data-property="note">${element.note}</div>
+                        </div>
+                        <div class="property-item">
+                            <div class="property-label">Properties</div>
+                            <div class="property-value" contenteditable="true" data-property="properties">${element.properties}</div>
+                        </div>
+                    `;
+                } else if (element.type === 'rest') {
+                    title = 'Rest';
+                    subtitle = '~';
+                    className = 'node-rest';
+                    properties = `
+                        <div class="property-item">
+                            <div class="property-label">Type</div>
+                            <div class="property-value">Rest</div>
+                        </div>
+                    `;
+                } else if (element.type === 'instrument') {
+                    title = 'Instrument';
+                    subtitle = element.instrument.toUpperCase();
+                    className = 'node-instrument';
+                    properties = `
+                        <div class="property-item">
+                            <div class="property-label">Instrument</div>
+                            <div class="property-value" contenteditable="true" data-property="instrument">${element.instrument}</div>
+                        </div>
+                    `;
+                }
+                
+                const node = this.createNode(title, subtitle, className, x, y);
+                node.querySelector('.properties-panel').innerHTML = properties;
+                return node;
+            }
+            
+            setupNodeEvents(node) {
+                // Node selection
+                node.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('node-title')) {
+                        this.startDragging(node, e);
+                    } else if (e.target.classList.contains('node-input')) {
+                        this.startConnection(node, e);
+                    } else if (e.target.classList.contains('node-output')) {
+                        this.startConnection(node, e);
+                    } else if (!e.target.contentEditable) {
+                        this.selectNode(node);
+                    }
+                });
+                
+                // Property editing
+                node.addEventListener('input', (e) => {
+                    if (e.target.contentEditable === 'true') {
+                        this.updateNodeProperty(node, e.target.dataset.property, e.target.textContent);
+                    }
+                });
+                
+                // Prevent text selection during drag
+                node.addEventListener('selectstart', (e) => {
+                    e.preventDefault();
+                });
+            }
+            
+            startDragging(node, e) {
+                this.draggedNode = node;
+                this.draggedNode.classList.add('dragging');
+                
+                const rect = node.getBoundingClientRect();
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                this.dragOffset.x = e.clientX - rect.left;
+                this.dragOffset.y = e.clientY - rect.top;
+                
+                e.preventDefault();
+            }
+            
+            updateNodePosition(e) {
+                if (!this.draggedNode) return;
+                
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const contentRect = this.canvasContent.getBoundingClientRect();
+                
+                let newX = e.clientX - canvasRect.left - this.dragOffset.x;
+                let newY = e.clientY - canvasRect.top - this.dragOffset.y;
+                
+                // Apply view offset and zoom
+                newX = (newX - this.viewOffset.x) / this.zoomLevel;
+                newY = (newY - this.viewOffset.y) / this.zoomLevel;
+                
+                // Constrain to canvas bounds
+                newX = Math.max(0, Math.min(newX, this.canvasContent.offsetWidth - 140));
+                newY = Math.max(0, Math.min(newY, this.canvasContent.offsetHeight - 100));
+                
+                this.draggedNode.style.left = newX + 'px';
+                this.draggedNode.style.top = newY + 'px';
+                
+                this.updateConnections();
+            }
+            
+            stopDragging() {
+                if (this.draggedNode) {
+                    this.draggedNode.classList.remove('dragging');
+                    this.draggedNode = null;
+                }
+            }
+            
+            startConnection(node, e) {
+                this.isConnecting = true;
+                this.connectionStart = node;
+                this.tempConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.tempConnection.setAttribute('class', 'connection-path');
+                this.tempConnection.style.strokeDasharray = '5,5';
+                
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'connection-line');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.appendChild(this.tempConnection);
+                
+                this.canvasContent.appendChild(svg);
+                this.tempConnection = this.tempConnection;
+            }
+            
+            updateTempConnection(e) {
+                if (!this.tempConnection || !this.connectionStart) return;
+                
+                const startSocket = this.connectionStart.querySelector('.node-output') || this.connectionStart.querySelector('.node-input');
+                const startRect = startSocket.getBoundingClientRect();
+                const canvasRect = this.canvasContent.getBoundingClientRect();
+                
+                const startX = startRect.left - canvasRect.left + startRect.width / 2;
+                const startY = startRect.top - canvasRect.top + startRect.height / 2;
+                
+                const endX = e.clientX - canvasRect.left;
+                const endY = e.clientY - canvasRect.top;
+                
+                const midX = (startX + endX) / 2;
+                const d = `M ${startX} ${startY} Q ${midX} ${startY} ${midX} ${(startY + endY) / 2} T ${endX} ${endY}`;
+                this.tempConnection.setAttribute('d', d);
+            }
+            
+            finishConnection(e) {
+                if (!this.isConnecting || !this.connectionStart) return;
+                
+                const targetNode = e.target.closest('.node');
+                if (targetNode && targetNode !== this.connectionStart) {
+                    this.createConnection(this.connectionStart, targetNode);
+                }
+                
+                // Clean up temp connection
+                if (this.tempConnection) {
+                    this.tempConnection.parentNode.remove();
+                }
+                
+                this.isConnecting = false;
+                this.connectionStart = null;
+                this.tempConnection = null;
+            }
+            
+            createConnection(fromNode, toNode) {
+                const connection = {
+                    from: fromNode,
+                    to: toNode,
+                    id: (++this.connectionIdCounter).toString()
+                };
+                
+                this.connections.push(connection);
+                this.renderConnection(connection);
+            }
+            
+            renderConnection(connection) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'connection-line');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'connection-path');
+                path.dataset.connectionId = connection.id;
+                
+                svg.appendChild(path);
+                this.canvasContent.appendChild(svg);
+                connection.svg = svg;
+                connection.path = path;
+                
+                this.updateConnectionPath(connection);
+            }
+            
+            updateConnectionPath(connection) {
+                if (!connection.from || !connection.to) return;
+                
+                const fromSocket = connection.from.querySelector('.node-output');
+                const toSocket = connection.to.querySelector('.node-input');
+                
+                if (!fromSocket || !toSocket) return;
+                
+                const fromRect = fromSocket.getBoundingClientRect();
+                const toRect = toSocket.getBoundingClientRect();
+                const canvasRect = this.canvasContent.getBoundingClientRect();
+                
+                const x1 = fromRect.left - canvasRect.left + fromRect.width / 2;
+                const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
+                const x2 = toRect.left - canvasRect.left + toRect.width / 2;
+                const y2 = toRect.top - canvasRect.top + toRect.height / 2;
+                
+                const midX = (x1 + x2) / 2;
+                const d = `M ${x1} ${y1} Q ${midX} ${y1} ${midX} ${(y1 + y2) / 2} T ${x2} ${y2}`;
+                
+                connection.path.setAttribute('d', d);
+            }
+            
+            updateConnections() {
+                this.connections.forEach(connection => {
+                    this.updateConnectionPath(connection);
+                });
+            }
+            
+            selectNode(node) {
+                this.deselectAllNodes();
+                node.classList.add('selected');
+                this.selectedNode = node;
+            }
+            
+            deselectAllNodes() {
+                this.nodes.forEach(node => {
+                    node.classList.remove('selected');
+                });
+                this.selectedNode = null;
+            }
+            
+            updateNodeProperty(node, property, value) {
+                // Update the node's data based on the property
+                node.dataset[property] = value;
+                
+                // Update subtitle if it's an important property
+                if (property === 'instrument' || property === 'note') {
+                    const subtitle = node.querySelector('.node-subtitle');
+                    if (subtitle) {
+                        subtitle.textContent = value.toUpperCase();
+                    }
+                }
+                
+                this.updateStatus(`Updated ${property}: ${value}`);
+            }
+            
+            // Pan and zoom functionality
+            startPanning(e) {
+                this.panStart = { x: e.clientX, y: e.clientY };
+                this.canvas.classList.add('canvas-panning');
+            }
+            
+            updatePanning(e) {
+                if (!this.panStart.x) return;
+                
+                const deltaX = e.clientX - this.panStart.x;
+                const deltaY = e.clientY - this.panStart.y;
+                
+                this.viewOffset.x += deltaX;
+                this.viewOffset.y += deltaY;
+                
+                this.updateCanvasTransform();
+                
+                this.panStart.x = e.clientX;
+                this.panStart.y = e.clientY;
+            }
+            
+            stopPanning() {
+                this.panStart = { x: 0, y: 0 };
+                this.canvas.classList.remove('canvas-panning');
+            }
+            
+            updateCanvasTransform() {
+                this.canvasContent.style.transform = 
+                    `translate(${this.viewOffset.x}px, ${this.viewOffset.y}px) scale(${this.zoomLevel})`;
+            }
+            
+            zoomIn() {
+                this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3);
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            zoomOut() {
+                this.zoomLevel = Math.max(this.zoomLevel / 1.2, 0.3);
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            resetZoom() {
+                this.zoomLevel = 1;
+                this.viewOffset = { x: 0, y: 0 };
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            updateZoomDisplay() {
+                document.getElementById('zoom-level').textContent = Math.round(this.zoomLevel * 100) + '%';
+            }
+            
+            togglePanMode() {
+                this.panMode = !this.panMode;
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                
+                if (this.panMode) {
+                    panBtn.classList.add('active');
+                    selectBtn.classList.remove('active');
+                    this.updateStatus('Pan mode active - drag to pan canvas');
+                } else {
+                    panBtn.classList.remove('active');
+                    this.updateStatus('Select mode active');
+                }
+            }
+            
+            toggleSelectMode() {
+                this.panMode = false;
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                
+                panBtn.classList.remove('active');
+                selectBtn.classList.add('active');
+                this.updateStatus('Select mode active');
+            }
+            
+            centerView() {
+                // Center the view on all nodes
+                if (this.nodes.length === 0) return;
+                
+                const bounds = this.getNodesBounds();
+                const canvasBounds = this.canvas.getBoundingClientRect();
+                
+                const centerX = (bounds.left + bounds.right) / 2;
+                const centerY = (bounds.top + bounds.bottom) / 2;
+                
+                this.viewOffset.x = canvasBounds.width / 2 - centerX * this.zoomLevel;
+                this.viewOffset.y = canvasBounds.height / 2 - centerY * this.zoomLevel;
+                
+                this.updateCanvasTransform();
+            }
+            
+            getNodesBounds() {
+                const rects = this.nodes.map(node => node.getBoundingClientRect());
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                const left = Math.min(...rects.map(r => r.left - canvasRect.left));
+                const right = Math.max(...rects.map(r => r.right - canvasRect.left));
+                const top = Math.min(...rects.map(r => r.top - canvasRect.top));
+                const bottom = Math.max(...rects.map(r => r.bottom - canvasRect.top));
+                
+                return { left, right, top, bottom };
+            }
+            
+            updateStatus(message) {
+                document.getElementById('status-message').textContent = message;
+            }
+            
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 4000);
+            }
+        }
+        
+        // Initialize the editor when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new StrudelPatternNodeEditor();
+        });
+    </script>
+</body>
+</html>

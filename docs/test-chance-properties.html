@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chance Node Properties</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .property-display {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005999;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Chance Node Properties</h1>
+    <p>This page tests whether the "sometimes" node properties appear correctly in the properties panel.</p>
+    
+    <div class="test-container">
+        <h2>Node Manager Test</h2>
+        <button onclick="createSometimesNode()">Create "Sometimes" Node</button>
+        <button onclick="testProperties()">Test Properties Display</button>
+        <button onclick="testGetDefaultProperties()">Test getDefaultProperties</button>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Console Output</h2>
+        <div id="console-output" style="background: #000; color: #0f0; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        // Capture console output
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f00' : type === 'warn' ? '#ff0' : '#0f0';
+            consoleOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        let nodeManager = null;
+
+        async function initNodeManager() {
+            if (nodeManager) return nodeManager;
+            
+            try {
+                // Simulate loading the node manager
+                console.log('Initializing NodeManager...');
+                
+                // Load property schema
+                const response = await fetch('strudel-node-properties.json');
+                const propertySchema = await response.json();
+                console.log('Property schema loaded:', propertySchema);
+                
+                // Create a mock node manager with just the necessary methods
+                nodeManager = {
+                    propertySchema: propertySchema,
+                    getDefaultProperties: function(nodeType) {
+                        let schema = this.propertySchema.nodes[nodeType];
+                        
+                        // Check if it's a transform node
+                        if (!schema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[nodeType]) {
+                            const transformDef = this.propertySchema.transformNodes[nodeType];
+                            const defaults = {};
+                            
+                            // Extract default values from transform node properties
+                            Object.keys(transformDef.properties).forEach(propKey => {
+                                const propDef = transformDef.properties[propKey];
+                                if (propDef.default !== undefined) {
+                                    defaults[propKey] = propDef.default;
+                                } else {
+                                    defaults[propKey] = this.getDefaultValueForType(propDef.type);
+                                }
+                            });
+                            
+                            return defaults;
+                        }
+                        
+                        const defaults = {};
+                        
+                        if (schema && schema.sections) {
+                            schema.sections.forEach(section => {
+                                Object.keys(section.properties).forEach(propKey => {
+                                    const prop = section.properties[propKey];
+                                    if (prop.default !== undefined) {
+                                        defaults[propKey] = prop.default;
+                                    } else {
+                                        defaults[propKey] = this.getDefaultValueForType(prop.type);
+                                    }
+                                });
+                            });
+                        }
+                        
+                        return defaults;
+                    },
+                    getDefaultValueForType: function(type) {
+                        switch (type) {
+                            case 'knob':
+                            case 'slider':
+                            case 'number':
+                                return 0;
+                            case 'toggle':
+                                return false;
+                            case 'select':
+                                return '';
+                            default:
+                                return '';
+                        }
+                    }
+                };
+                
+                console.log('NodeManager initialized successfully');
+                return nodeManager;
+            } catch (error) {
+                console.error('Failed to initialize NodeManager:', error);
+                return null;
+            }
+        }
+
+        async function createSometimesNode() {
+            const nm = await initNodeManager();
+            if (!nm) return;
+            
+            console.log('Creating "sometimes" node...');
+            const sometimesProps = nm.getDefaultProperties('sometimes');
+            console.log('Sometimes node default properties:', sometimesProps);
+            
+            // Display results
+            document.getElementById('test-results').innerHTML = `
+                <div class="property-display">
+                    <strong>Sometimes Node Properties:</strong><br>
+                    ${JSON.stringify(sometimesProps, null, 2)}
+                </div>
+            `;
+        }
+
+        async function testProperties() {
+            const nm = await initNodeManager();
+            if (!nm) return;
+            
+            console.log('Testing properties for all chance nodes...');
+            
+            const chanceNodes = ['often', 'sometimes', 'rarely'];
+            let resultsHTML = '<h3>All Chance Node Properties:</h3>';
+            
+            chanceNodes.forEach(nodeType => {
+                const props = nm.getDefaultProperties(nodeType);
+                console.log(`${nodeType} node properties:`, props);
+                resultsHTML += `
+                    <div class="property-display">
+                        <strong>${nodeType.toUpperCase()} Node:</strong><br>
+                        ${JSON.stringify(props, null, 2)}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('test-results').innerHTML = resultsHTML;
+        }
+
+        async function testGetDefaultProperties() {
+            const nm = await initNodeManager();
+            if (!nm) return;
+            
+            console.log('Testing getDefaultProperties method...');
+            
+            // Test transform node
+            const transformProps = nm.getDefaultProperties('sometimes');
+            console.log('Transform node "sometimes" properties:', transformProps);
+            
+            // Test regular node
+            const regularProps = nm.getDefaultProperties('Instrument');
+            console.log('Regular node "Instrument" properties:', regularProps);
+            
+            // Test unknown node
+            const unknownProps = nm.getDefaultProperties('UnknownNode');
+            console.log('Unknown node properties:', unknownProps);
+            
+            document.getElementById('test-results').innerHTML = `
+                <div class="property-display">
+                    <strong>Transform Node (sometimes):</strong><br>
+                    ${JSON.stringify(transformProps, null, 2)}
+                </div>
+                <div class="property-display">
+                    <strong>Regular Node (Instrument):</strong><br>
+                    ${JSON.stringify(regularProps, null, 2)}
+                </div>
+                <div class="property-display">
+                    <strong>Unknown Node:</strong><br>
+                    ${JSON.stringify(unknownProps, null, 2)}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

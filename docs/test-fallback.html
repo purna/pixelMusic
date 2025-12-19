@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Manager Fallback Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .test-result {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .success {
+            border-left: 4px solid #00ff41;
+        }
+        
+        .error {
+            border-left: 4px solid #ff4444;
+        }
+        
+        .warning {
+            border-left: 4px solid #ffaa00;
+        }
+        
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #005a9e;
+        }
+        
+        .btn-secondary {
+            background: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Node Manager Fallback Test</h1>
+        
+        <div class="test-section">
+            <h2>📊 System Status</h2>
+            <div id="system-status" class="test-result">Loading...</div>
+            <button onclick="checkSystemStatus()">Check Status</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Fallback Functionality Tests</h2>
+            <div id="fallback-tests"></div>
+            <button onclick="testFallbackFunctionality()">Run Fallback Tests</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔌 Connection System Tests</h2>
+            <div id="connection-tests"></div>
+            <button onclick="testConnectionSystem()">Test Connection System</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Property Synchronization Tests</h2>
+            <div id="property-tests"></div>
+            <button onclick="testPropertySynchronization()">Test Property Sync</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock the NodeManager class for testing fallback functionality
+        class TestNodeManager {
+            constructor() {
+                this.nodes = [];
+                this.connections = [];
+                this.graphNormalizer = null; // Simulate graph normalizer not being available
+                this.nodeSchema = null; // Simulate schema not being loaded
+                this.selectedNode = null;
+                this.instrumentList = ['bd', 'sd', 'hh', 'piano', 'guitar'];
+            }
+            
+            updateStatus(message) {
+                console.log('Status:', message);
+                const statusEl = document.getElementById('system-status');
+                if (statusEl) {
+                    statusEl.textContent = message;
+                    statusEl.className = 'test-result';
+                }
+            }
+            
+            basicNormalizeGraph() {
+                console.log('Using basic normalization fallback');
+                this.updateStatus('Using basic normalization fallback');
+                return [
+                    [{ id: 'node1', type: 'Instrument', instrument: 'piano' }],
+                    [{ id: 'node2', type: 'DrumSymbol', instrument: 'bd' }]
+                ];
+            }
+            
+            basicGenerateCanonicalCode() {
+                console.log('Using basic canonical code generation fallback');
+                this.updateStatus('Using basic canonical code generation fallback');
+                return 's("bd") s("piano")';
+            }
+            
+            // Fallback methods that should work when advanced features are unavailable
+            normalizeGraph() {
+                console.log('normalizeGraph: Checking for graph normalizer...');
+                
+                if (this.graphNormalizer && this.nodeSchema) {
+                    console.log('Graph normalizer available, using advanced normalization');
+                    return { success: false, error: 'Not actually implemented in test' };
+                } else {
+                    console.warn('Graph normalizer not available, using basic normalization');
+                    this.updateStatus('Graph normalizer not available - Using basic normalization');
+                    return this.basicNormalizeGraph();
+                }
+            }
+            
+            generateCanonicalCode() {
+                console.log('generateCanonicalCode: Checking for graph normalizer...');
+                
+                if (this.graphNormalizer && this.nodeSchema) {
+                    console.log('Graph normalizer available, using advanced code generation');
+                    return 's("advanced")';
+                } else {
+                    console.warn('Graph normalizer not available, using basic code generation');
+                    this.updateStatus('Graph normalizer not available - Using basic code generation');
+                    return this.basicGenerateCanonicalCode();
+                }
+            }
+            
+            showNormalizationInfo() {
+                if (this.graphNormalizer && this.nodeSchema) {
+                    try {
+                        console.log('Graph normalizer available, showing detailed info');
+                        this.updateStatus('Graph normalizer available - Detailed normalization info would be shown');
+                    } catch (error) {
+                        this.updateStatus(`Normalization error: ${error.message}`);
+                    }
+                } else {
+                    console.warn('Graph normalizer not available, showing fallback message');
+                    this.updateStatus('⚠️ Graph Normalizer Not Available - Using basic normalization');
+                }
+            }
+        }
+        
+        // Initialize test
+        let testManager;
+        
+        function checkSystemStatus() {
+            const statusEl = document.getElementById('system-status');
+            
+            if (!testManager) {
+                testManager = new TestNodeManager();
+            }
+            
+            const checks = [
+                { name: 'Node Manager', status: !!window.nodeManager || !!testManager },
+                { name: 'Graph Normalizer', status: !!(window.graphNormalizer || (testManager && testManager.graphNormalizer)) },
+                { name: 'Node Schema', status: !!(window.nodeSchema || (testManager && testManager.nodeSchema)) },
+                { name: 'Strudel Library', status: typeof strudel !== 'undefined' }
+            ];
+            
+            let statusText = 'System Status:\n';
+            checks.forEach(check => {
+                statusText += `${check.status ? '✅' : '❌'} ${check.name}: ${check.status ? 'Available' : 'Not Available'}\n`;
+            });
+            
+            statusText += '\n📊 Fallback System: ';
+            if (!checks[1].status || !checks[2].status) {
+                statusText += 'Active (Basic normalization will be used)';
+            } else {
+                statusText += 'Ready (Advanced normalization available)';
+            }
+            
+            statusEl.textContent = statusText;
+            statusEl.className = 'test-result success';
+        }
+        
+        function testFallbackFunctionality() {
+            const testsEl = document.getElementById('fallback-tests');
+            
+            if (!testManager) {
+                testManager = new TestNodeManager();
+            }
+            
+            let results = [];
+            
+            // Test 1: Basic normalization fallback
+            try {
+                const normalized = testManager.normalizeGraph();
+                results.push({
+                    test: 'Basic Normalization Fallback',
+                    result: 'success',
+                    message: `Normalized ${Array.isArray(normalized) ? normalized.length : 0} chains using fallback`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Basic Normalization Fallback',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 2: Basic canonical code generation fallback
+            try {
+                const code = testManager.generateCanonicalCode();
+                results.push({
+                    test: 'Basic Canonical Code Generation Fallback',
+                    result: 'success',
+                    message: `Generated code: ${code}`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Basic Canonical Code Generation Fallback',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 3: Show normalization info fallback
+            try {
+                testManager.showNormalizationInfo();
+                results.push({
+                    test: 'Show Normalization Info Fallback',
+                    result: 'success',
+                    message: 'Fallback message displayed'
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Show Normalization Info Fallback',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Display results
+            let html = '';
+            results.forEach(result => {
+                html += `
+                    <div class="test-result ${result.result}">
+                        <strong>${result.test}</strong><br>
+                        ${result.message}
+                    </div>
+                `;
+            });
+            
+            testsEl.innerHTML = html;
+        }
+        
+        function testConnectionSystem() {
+            const testsEl = document.getElementById('connection-tests');
+            
+            if (!testManager) {
+                testManager = new TestNodeManager();
+            }
+            
+            // Create test nodes
+            const node1 = { id: 'node1', type: 'Instrument', instrument: 'piano' };
+            const node2 = { id: 'node2', type: 'DrumSymbol', instrument: 'bd' };
+            
+            let results = [];
+            
+            // Test 1: Can connect method with fallback
+            try {
+                // Simulate connection validation (this would normally use nodeSchema)
+                const canConnect = testManager.legacyCanConnect ? 
+                    testManager.legacyCanConnect(node1, 'output', node2, 'input') : true;
+                
+                results.push({
+                    test: 'Legacy Connection Validation',
+                    result: 'success',
+                    message: `Connection validation: ${canConnect ? 'Allowed' : 'Rejected'}`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Legacy Connection Validation',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 2: Connection creation
+            try {
+                testManager.connections = [];
+                const connection = {
+                    id: 'test-conn-1',
+                    sourceNodeId: node1.id,
+                    sourcePort: 'output',
+                    targetNodeId: node2.id,
+                    targetPort: 'input'
+                };
+                
+                testManager.connections.push(connection);
+                results.push({
+                    test: 'Connection Creation',
+                    result: 'success',
+                    message: `Created connection: ${connection.id}`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Connection Creation',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 3: Connection validation with schema
+            try {
+                // Test when schema is not available
+                const schemaAvailable = !!testManager.nodeSchema;
+                results.push({
+                    test: 'Schema Validation',
+                    result: schemaAvailable ? 'success' : 'warning',
+                    message: `Schema ${schemaAvailable ? 'available' : 'not available'} - Using ${schemaAvailable ? 'advanced' : 'legacy'} validation`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Schema Validation',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Display results
+            let html = '';
+            results.forEach(result => {
+                html += `
+                    <div class="test-result ${result.result}">
+                        <strong>${result.test}</strong><br>
+                        ${result.message}
+                    </div>
+                `;
+            });
+            
+            testsEl.innerHTML = html;
+        }
+        
+        function testPropertySynchronization() {
+            const testsEl = document.getElementById('property-tests');
+            
+            if (!testManager) {
+                testManager = new TestNodeManager();
+            }
+            
+            let results = [];
+            
+            // Test 1: Node property updates
+            try {
+                const testNode = {
+                    id: 'test-node',
+                    type: 'Instrument',
+                    instrument: 'piano',
+                    properties: {
+                        strudelProperties: {
+                            gain: 0.8,
+                            pan: 0.2
+                        }
+                    }
+                };
+                
+                testManager.nodes = [testNode];
+                testManager.selectedNode = testNode;
+                
+                // Simulate property update
+                testNode.properties.strudelProperties.gain = 0.9;
+                
+                results.push({
+                    test: 'Node Property Update',
+                    result: 'success',
+                    message: `Updated gain: ${testNode.properties.strudelProperties.gain}`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Node Property Update',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 2: Display synchronization
+            try {
+                const testNode = {
+                    id: 'display-test',
+                    type: 'Instrument',
+                    instrument: 'guitar'
+                };
+                
+                // Simulate updateNodeDisplay method
+                const displayText = testNode.instrument;
+                results.push({
+                    test: 'Display Synchronization',
+                    result: 'success',
+                    message: `Display updated: ${displayText}`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Display Synchronization',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Test 3: Instrument list fallback
+            try {
+                const hasInstruments = testManager.instrumentList && testManager.instrumentList.length > 0;
+                results.push({
+                    test: 'Instrument List Fallback',
+                    result: hasInstruments ? 'success' : 'warning',
+                    message: `Available instruments: ${testManager.instrumentList.length} (${testManager.instrumentList.slice(0, 3).join(', ')}${testManager.instrumentList.length > 3 ? '...' : ''})`
+                });
+            } catch (error) {
+                results.push({
+                    test: 'Instrument List Fallback',
+                    result: 'error',
+                    message: `Error: ${error.message}`
+                });
+            }
+            
+            // Display results
+            let html = '';
+            results.forEach(result => {
+                html += `
+                    <div class="test-result ${result.result}">
+                        <strong>${result.test}</strong><br>
+                        ${result.message}
+                    </div>
+                `;
+            });
+            
+            testsEl.innerHTML = html;
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html>

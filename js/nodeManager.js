@@ -15,6 +15,7 @@ class NodeManager {
         this.connectionPreview = null;
         this.propertySchema = null;
         this.nodeSchema = null;
+        this.controlNodesSchema = null;
         this.graphNormalizer = null;
         this.instrumentList = [];
         
@@ -92,6 +93,17 @@ class NodeManager {
         }
 
         try {
+            // Load control nodes schema
+            const controlResponse = await fetch('strudel-control-nodes.json');
+            if (controlResponse.ok) {
+                this.controlNodesSchema = await controlResponse.json();
+                console.log('Control nodes schema loaded with', Object.keys(this.controlNodesSchema.controlNodes || {}).length, 'control node types');
+            }
+        } catch (error) {
+            console.warn('Could not load control nodes schema:', error);
+        }
+
+        try {
             // Load instrument list from strudel-node-instruments.json
             const menuResponse = await fetch('strudel-node-instruments.json');
             if (menuResponse.ok) {
@@ -111,10 +123,15 @@ class NodeManager {
                 this.nodeSchema = await response.json();
                 console.log('Node schema loaded with', Object.keys(this.nodeSchema.nodes).length, 'node types');
                 
-                // Initialize GraphNormalizer
+                // Initialize GraphNormalizer if available
                 try {
-                    this.graphNormalizer = new GraphNormalizer(this.nodeSchema);
-                    console.log('Graph normalizer initialized successfully');
+                    if (typeof GraphNormalizer !== 'undefined') {
+                        this.graphNormalizer = new GraphNormalizer(this.nodeSchema);
+                        console.log('Graph normalizer initialized successfully');
+                    } else {
+                        console.log('Graph normalizer class not available - using basic normalization');
+                        this.graphNormalizer = null;
+                    }
                 } catch (normalizerError) {
                     console.warn('Graph normalizer initialization failed:', normalizerError);
                     this.graphNormalizer = null;
@@ -397,8 +414,20 @@ class NodeManager {
         };
 
         // Initialize strudelProperties based on node type
-        if (this.propertySchema && this.propertySchema.nodes[type]) {
-            node.properties.strudelProperties = this.getDefaultProperties(type);
+        if (this.propertySchema) {
+            // Check regular nodes first
+            if (this.propertySchema.nodes && this.propertySchema.nodes[type]) {
+                node.properties.strudelProperties = this.getDefaultProperties(type);
+            }
+            // Then check transform nodes
+            else if (this.propertySchema.transformNodes && this.propertySchema.transformNodes[type]) {
+                node.properties.strudelProperties = this.getDefaultProperties(type);
+            }
+        }
+
+        // Check control nodes schema
+        if (this.controlNodesSchema && this.controlNodesSchema.controlNodes && this.controlNodesSchema.controlNodes[type]) {
+            node.properties.strudelProperties = this.getDefaultControlNodeProperties(type);
         }
 
         // Set initial instrument/sound properties based on type
@@ -437,6 +466,28 @@ class NodeManager {
         const categoryIcon = this.getCategoryIcon(category);
         const stageInfo = stage ? `<div class="node-stage">${stage.toUpperCase()}</div>` : '';
         
+        // Build connection ports based on node type
+        let portsHTML = '';
+        if (this.isControlNode(node)) {
+            // Control nodes use controlIn/controlOut sockets
+            const controlNodeDef = this.controlNodesSchema?.controlNodes?.[node.type];
+            const hasInput = controlNodeDef?.inputs?.includes('controlIn') || false;
+            const hasOutput = controlNodeDef?.outputs?.includes('controlOut') || false;
+            
+            if (hasInput) {
+                portsHTML += `<div class="node-input connection-port control-port" data-port="input" title="Control Input - Connect from other control nodes"></div>`;
+            }
+            if (hasOutput) {
+                portsHTML += `<div class="node-output connection-port control-port" data-port="output" title="Control Output - Connect to effect control inputs"></div>`;
+            }
+        } else {
+            // Regular nodes use patternIn/patternOut sockets
+            portsHTML = `
+                <div class="node-input connection-port" data-port="input" title="Input - Connect from other nodes"></div>
+                <div class="node-output connection-port" data-port="output" title="Output - Connect to other nodes"></div>
+            `;
+        }
+
         nodeElement.innerHTML = `
             <div class="node-header">
                 <div class="node-title">${categoryIcon} ${this.getNodeTitle(node)}</div>
@@ -450,8 +501,7 @@ class NodeManager {
                     <i class="fas fa-play"></i> Play
                 </button>
             </div>
-            <div class="node-input connection-port" data-port="input" title="Input - Connect from other nodes"></div>
-            <div class="node-output connection-port" data-port="output" title="Output - Connect to other nodes"></div>
+            ${portsHTML}
         `;
 
         console.log(`Rendered node ${node.type} with connection ports`);
@@ -493,12 +543,23 @@ class NodeManager {
             'modulation': '🎚️',
             'pitch': '🎼',
             'spectral': '🌈',
-            'space': '🌌'
+            'space': '🌌',
+            'value': '🔢',
+            'lfo': '🌊',
+            'random': '🎲',
+            'pattern': '📝',
+            'utility': '🔧'
         };
         return icons[category] || '⚙️';
     }
 
     getNodeTitle(node) {
+        // Check for control nodes first
+        if (this.isControlNode(node)) {
+            const controlDef = this.getControlNodeDefinition(node.type);
+            return controlDef?.label || node.type;
+        }
+        
         if (this.nodeSchema && this.nodeSchema.nodes[node.type]) {
             return this.nodeSchema.nodes[node.type].title || node.type;
         }
@@ -506,6 +567,11 @@ class NodeManager {
         // Check for individual transform nodes
         if (this.propertySchema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
             return this.propertySchema.transformNodes[node.type].label || node.type;
+        }
+        
+        // Check regular nodes in property schema (like Transform, Effect, etc.)
+        if (this.propertySchema && this.propertySchema.nodes && this.propertySchema.nodes[node.type]) {
+            return this.propertySchema.nodes[node.type].title || node.type;
         }
         
         // Legacy titles for backward compatibility
@@ -519,6 +585,14 @@ class NodeManager {
             'Generator': 'Generator',
             'Transform': 'Transform',
             'Output': 'Output',
+            'Pitch': 'Pitch',
+            'Stack': 'Stack',
+            'LPF': 'Low-Pass Filter',
+            'HPF': 'High-Pass Filter',
+            'Delay': 'Delay',
+            'Reverb': 'Reverb',
+            'Chop': 'Chop',
+            'Stutter': 'Stutter',
             'instrument': 'Instrument',
             'note': 'Musical Note',
             'rest': 'Rest',
@@ -555,6 +629,20 @@ class NodeManager {
         if (!this.nodeSchema) return 50;
         const nodeDef = this.nodeSchema.nodes[node.type];
         return nodeDef?.execution?.priority || 50;
+    }
+
+    isControlNode(node) {
+        if (!this.controlNodesSchema || !this.controlNodesSchema.controlNodes) {
+            return false;
+        }
+        return this.controlNodesSchema.controlNodes[node.type] !== undefined;
+    }
+
+    getControlNodeDefinition(nodeType) {
+        if (!this.controlNodesSchema || !this.controlNodesSchema.controlNodes) {
+            return null;
+        }
+        return this.controlNodesSchema.controlNodes[nodeType];
     }
 
     addConnectionPortListeners(nodeElement, node) {
@@ -711,6 +799,14 @@ class NodeManager {
         // Debug: Log connection attempt
         console.log(`Connection attempt: ${sourceNode.type} (${sourcePort}) -> ${targetNode.type} (${targetPort})`);
 
+        // Check for control node connections first
+        const isSourceControl = this.isControlNode(sourceNode);
+        const isTargetControl = this.isControlNode(targetNode);
+        
+        if (isSourceControl || isTargetControl) {
+            return this.validateControlConnection(sourceNode, sourcePort, targetNode, targetPort);
+        }
+
         // Get node definitions from schema
         if (!this.nodeSchema) {
             console.warn('Node schema not loaded, using legacy validation');
@@ -822,6 +918,52 @@ class NodeManager {
         }
 
         return { valid: true };
+    }
+
+    validateControlConnection(sourceNode, sourcePort, targetNode, targetPort) {
+        const isSourceControl = this.isControlNode(sourceNode);
+        const isTargetControl = this.isControlNode(targetNode);
+        
+        // Control nodes can only connect to control inputs
+        if (isSourceControl && !isTargetControl) {
+            // Check if target effect accepts control
+            const targetDef = this.propertySchema?.nodes?.[targetNode.type];
+            if (targetDef && targetDef.acceptsControl) {
+                if (sourcePort === 'output' && targetPort === 'input') {
+                    console.log('Control connection allowed: Control -> Effect with acceptsControl');
+                    return true;
+                }
+            }
+            this.updateStatus(`Control nodes can only connect to control inputs or effects that accept control`);
+            return false;
+        }
+        
+        // Control to Control connections
+        if (isSourceControl && isTargetControl) {
+            const sourceDef = this.getControlNodeDefinition(sourceNode.type);
+            const targetDef = this.getControlNodeDefinition(targetNode.type);
+            
+            // Check socket availability
+            const sourceHasOutput = sourceDef.outputs.includes('controlOut');
+            const targetHasInput = targetDef.inputs.includes('controlIn');
+            
+            if (sourceHasOutput && targetHasInput && sourcePort === 'output' && targetPort === 'input') {
+                console.log('Control to Control connection allowed');
+                return true;
+            }
+            
+            this.updateStatus(`Invalid control socket connection: ${sourceNode.type} (${sourcePort}) -> ${targetNode.type} (${targetPort})`);
+            return false;
+        }
+        
+        // Non-control to control (should not be allowed)
+        if (!isSourceControl && isTargetControl) {
+            this.updateStatus(`Cannot connect non-control node to control node`);
+            return false;
+        }
+        
+        console.log('Control connection validation completed');
+        return true;
     }
 
     legacyCanConnect(sourceNode, sourcePort, targetNode, targetPort) {
@@ -1194,6 +1336,7 @@ class NodeManager {
         const sidePanel = document.getElementById('side-panel');
         if (sidePanel) {
             sidePanel.classList.add('open');
+            sidePanel.style.right = '0'; // Reset position when showing
         }
     }
 
@@ -1272,17 +1415,34 @@ class NodeManager {
     }
 
     updateSidePanel(node) {
-        if (!this.propertySchema) {
+        if (!this.propertySchema && !this.controlNodesSchema) {
             console.warn('Property schema not loaded');
             return;
         }
 
         const nodeType = node.type;
-        let schema = this.propertySchema.nodes[nodeType];
+        let schema = this.propertySchema?.nodes?.[nodeType];
+        
+        // Check if it's a control node
+        if (!schema && this.isControlNode(node)) {
+            schema = this.createControlNodeSchema(nodeType);
+        }
         
         // Check if it's an individual transform node
-        if (!schema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[nodeType]) {
+        if (!schema && this.propertySchema?.transformNodes?.[nodeType]) {
             schema = this.createTransformNodeSchema(nodeType);
+        }
+        
+        // Debug logging for schema lookup
+        if (!schema) {
+            console.log(`Schema lookup for node type: ${nodeType}`, {
+                hasNodes: !!this.propertySchema?.nodes,
+                hasTransformNodes: !!this.propertySchema?.transformNodes,
+                hasControlNodes: !!this.controlNodesSchema?.controlNodes,
+                availableNodes: Object.keys(this.propertySchema?.nodes || {}),
+                availableTransformNodes: Object.keys(this.propertySchema?.transformNodes || {}),
+                availableControlNodes: Object.keys(this.controlNodesSchema?.controlNodes || {})
+            });
         }
         
         if (!schema) {
@@ -1292,7 +1452,11 @@ class NodeManager {
 
         // Initialize node properties if not exists
         if (!node.properties.strudelProperties) {
-            node.properties.strudelProperties = this.getDefaultProperties(nodeType);
+            if (this.isControlNode(node)) {
+                node.properties.strudelProperties = this.getDefaultControlNodeProperties(nodeType);
+            } else {
+                node.properties.strudelProperties = this.getDefaultProperties(nodeType);
+            }
         }
 
         // Update side panel content
@@ -1309,7 +1473,26 @@ class NodeManager {
     }
 
     getDefaultProperties(nodeType) {
-        const schema = this.propertySchema.nodes[nodeType];
+        let schema = this.propertySchema.nodes[nodeType];
+        
+        // Check if it's a transform node
+        if (!schema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[nodeType]) {
+            const transformDef = this.propertySchema.transformNodes[nodeType];
+            const defaults = {};
+            
+            // Extract default values from transform node properties
+            Object.keys(transformDef.properties).forEach(propKey => {
+                const propDef = transformDef.properties[propKey];
+                if (propDef.default !== undefined) {
+                    defaults[propKey] = propDef.default;
+                } else {
+                    defaults[propKey] = this.getDefaultValueForType(propDef.type);
+                }
+            });
+            
+            return defaults;
+        }
+        
         const defaults = {};
         
         if (schema && schema.sections) {
@@ -1324,6 +1507,27 @@ class NodeManager {
                 });
             });
         }
+        
+        return defaults;
+    }
+
+    getDefaultControlNodeProperties(nodeType) {
+        if (!this.controlNodesSchema || !this.controlNodesSchema.controlNodes || !this.controlNodesSchema.controlNodes[nodeType]) {
+            return {};
+        }
+
+        const controlNodeDef = this.controlNodesSchema.controlNodes[nodeType];
+        const defaults = {};
+        
+        // Extract default values from control node properties
+        Object.keys(controlNodeDef.properties).forEach(propKey => {
+            const propDef = controlNodeDef.properties[propKey];
+            if (propDef.default !== undefined) {
+                defaults[propKey] = propDef.default;
+            } else {
+                defaults[propKey] = this.getDefaultValueForType(propDef.type);
+            }
+        });
         
         return defaults;
     }
@@ -1364,8 +1568,14 @@ class NodeManager {
             
             // Map property types to UI control types
             let uiType = 'number'; // default
-            if (propDef.type === 'number' && (propKey === 'factor' || propKey === 'frequency' || propKey === 'rate')) {
-                uiType = 'knob';
+            if (propDef.type === 'number') {
+                if (propKey === 'factor' || propKey === 'frequency' || propKey === 'rate') {
+                    uiType = 'knob';
+                } else if (propKey === 'chance' || propKey === 'probability') {
+                    uiType = 'slider'; // Use slider for probability values
+                } else if (propKey === 'amount' && (transformType.includes('often') || transformType.includes('sometimes') || transformType.includes('rarely'))) {
+                    uiType = 'slider'; // Use slider for probability values
+                }
             }
             
             properties[propKey] = {
@@ -1383,6 +1593,56 @@ class NodeManager {
             schema.sections.push({
                 id: 'transform',
                 label: 'Transform Settings',
+                properties: properties
+            });
+        }
+
+        return schema;
+    }
+
+    createControlNodeSchema(controlType) {
+        if (!this.controlNodesSchema || !this.controlNodesSchema.controlNodes || !this.controlNodesSchema.controlNodes[controlType]) {
+            return null;
+        }
+
+        const controlDef = this.controlNodesSchema.controlNodes[controlType];
+        
+        // Convert control node definition to the expected schema format
+        const schema = {
+            title: controlDef.label || controlType,
+            sections: []
+        };
+
+        // Create a properties section for the control node
+        const properties = {};
+        
+        Object.keys(controlDef.properties).forEach(propKey => {
+            const propDef = controlDef.properties[propKey];
+            
+            // Map property types to UI control types
+            let uiType = 'number'; // default
+            if (propDef.type === 'number') {
+                if (propKey === 'rate' || propKey === 'frequency') {
+                    uiType = 'knob'; // Use knob for frequency/rate values
+                } else if (propKey === 'chance' || propKey === 'probability') {
+                    uiType = 'slider'; // Use slider for probability values
+                }
+            }
+            
+            properties[propKey] = {
+                label: propDef.label || propKey,
+                type: uiType,
+                min: propDef.min,
+                max: propDef.max,
+                step: propDef.step,
+                default: propDef.default
+            };
+        });
+
+        if (Object.keys(properties).length > 0) {
+            schema.sections.push({
+                id: 'control',
+                label: 'Control Settings',
                 properties: properties
             });
         }
@@ -1724,6 +1984,34 @@ class NodeManager {
             }
         }
         
+        // Show control node properties
+        if (this.isControlNode(node)) {
+            const controlDef = this.getControlNodeDefinition(node.type);
+            const category = controlDef?.category || 'control';
+            const label = controlDef?.label || node.type;
+            
+            effectsHTML += `
+                <div class="property-value" data-property="control">
+                    ${label.toUpperCase()} (${category})
+                </div>
+            `;
+            
+            // Show key control properties
+            Object.keys(props).forEach(propKey => {
+                if (props[propKey] !== undefined && props[propKey] !== null) {
+                    const value = props[propKey];
+                    const propDef = controlDef?.properties?.[propKey];
+                    const displayLabel = propDef?.label || propKey;
+                    
+                    effectsHTML += `
+                        <div class="property-value" data-property="control">
+                            ${displayLabel}: ${value}
+                        </div>
+                    `;
+                }
+            });
+        }
+        
         return effectsHTML;
     }
 
@@ -1819,10 +2107,14 @@ class NodeManager {
         }
 
         // Convert value to appropriate type
-        const schema = this.propertySchema.nodes[targetNode.type];
+        let schema = this.propertySchema.nodes[targetNode.type];
         let propSchema = null;
         
-        if (schema && schema.sections) {
+        // Check if it's a transform node
+        if (!schema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[targetNode.type]) {
+            const transformDef = this.propertySchema.transformNodes[targetNode.type];
+            propSchema = transformDef.properties[propKey];
+        } else if (schema && schema.sections) {
             schema.sections.forEach(section => {
                 if (section.properties[propKey]) {
                     propSchema = section.properties[propKey];
@@ -1850,6 +2142,11 @@ class NodeManager {
         
         // Special handling for symbol/instrument changes - update node display
         if (propKey === 'symbol' || propKey === 'sound') {
+            targetNode.instrument = convertedValue;
+        }
+        
+        // Special handling for Transform nodes - update subtitle when type changes
+        if (targetNode.type === 'Transform' && propKey === 'type') {
             targetNode.instrument = convertedValue;
         }
         
@@ -2054,6 +2351,9 @@ class NodeManager {
         } else if (this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
             // Handle individual transform nodes
             pattern = this.buildIndividualTransformPattern(node);
+        } else if (this.isControlNode(node)) {
+            // Handle control nodes
+            pattern = this.buildControlNodePattern(node);
         } else if (node.type === 'note') {
             pattern = `note("${node.properties.note}")`;
         } else {
@@ -2115,6 +2415,67 @@ class NodeManager {
         } else {
             // Fallback for unknown transform types
             pattern = `.${transformType}()`;
+        }
+        
+        return pattern;
+    }
+
+    buildControlNodePattern(node) {
+        const props = node.properties.strudelProperties || {};
+        const controlType = node.type;
+        const controlDef = this.getControlNodeDefinition(controlType);
+        
+        if (!controlDef) {
+            return '';
+        }
+
+        const serialization = controlDef.serialization;
+        if (!serialization) {
+            return '';
+        }
+
+        let pattern = '';
+        
+        switch (serialization.type) {
+            case 'literal':
+                // Direct value replacement
+                pattern = serialization.template.replace('{value}', props.value || 0);
+                break;
+                
+            case 'function':
+                // Function call with arguments
+                const func = serialization.function;
+                const args = serialization.args || [];
+                const argValues = args.map(argName => {
+                    const value = props[argName];
+                    return typeof value === 'string' ? `"${value}"` : value;
+                }).join(', ');
+                pattern = `${func}(${argValues})`;
+                break;
+                
+            case 'method':
+                // Method call on input
+                const method = serialization.function;
+                const methodArgs = serialization.args || [];
+                const methodArgValues = methodArgs.map(argName => {
+                    const value = props[argName];
+                    return typeof value === 'string' ? `"${value}"` : value;
+                }).join(', ');
+                pattern = `.${method}(${methodArgValues})`;
+                break;
+                
+            default:
+                // Fallback for template-based serialization
+                if (serialization.template) {
+                    pattern = serialization.template;
+                    // Replace placeholders with actual values
+                    Object.keys(props).forEach(propKey => {
+                        const placeholder = `{${propKey}}`;
+                        const value = props[propKey];
+                        pattern = pattern.replace(placeholder, typeof value === 'string' ? `"${value}"` : value);
+                    });
+                }
+                break;
         }
         
         return pattern;

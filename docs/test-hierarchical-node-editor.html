@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strudel Pattern Hierarchical Node Editor</title>
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e0e7ff;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #1a1a2e;
+            border-right: 1px solid #2d3748;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .properties-panel {
+            width: 280px;
+            background: #1a1a2e;
+            border-left: 1px solid #2d3748;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #0f0f1b;
+            overflow: hidden;
+        }
+        
+        #node-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: default;
+        }
+        
+        h1 {
+            color: #00ff41;
+            font-size: 20px;
+            margin: 0 0 20px 0;
+        }
+        
+        h2 {
+            color: #00d9ff;
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+        }
+        
+        h3 {
+            color: #00d9ff;
+            font-size: 14px;
+            margin: 15px 0 8px 0;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .btn:hover {
+            background: #00d9ff;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #1e293b;
+            color: #e0e7ff;
+        }
+        
+        .btn-secondary:hover {
+            background: #334155;
+        }
+        
+        .pattern-input {
+            width: 100%;
+            padding: 12px;
+            background: #0f0f1b;
+            border: 1px solid #2d3748;
+            color: #e0e7ff;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.4;
+        }
+        
+        .example-patterns {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .pattern-example {
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00ff41;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .pattern-example:hover {
+            background: #2d3748;
+            border-left-color: #00d9ff;
+            border-color: #00d9ff;
+            transform: translateX(4px);
+        }
+        
+        .pattern-example h4 {
+            color: #00ff41;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .pattern-example code {
+            color: #00d9ff;
+            font-size: 12px;
+            background: #0f0f1b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .pattern-example p {
+            color: #94a3b8;
+            font-size: 11px;
+            margin: 0;
+            line-height: 1.3;
+        }
+        
+        .info-panel {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .info-panel h3 {
+            color: #00d9ff;
+            margin: 0 0 12px 0;
+            font-size: 15px;
+        }
+        
+        .info-panel p {
+            color: #94a3b8;
+            font-size: 12px;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        
+        .node-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        
+        .legend-container { background: #00ff41; }
+        .legend-operation { background: #ffa500; }
+        .legend-instrument { background: #00d9ff; }
+        .legend-note { background: #9400d3; }
+        .legend-rest { background: #666; }
+        .legend-multiplier { background: #ff006e; }
+        .legend-group { background: #8b5cf6; }
+        
+        /* Hierarchical Node Styles */
+        .node {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            z-index: 10;
+        }
+        
+        .node-container {
+            background: #1a1a2e;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            min-width: 160px;
+            max-width: 240px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .node-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .node-container.selected {
+            border-color: #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .node-container.dragging {
+            z-index: 1000;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .node-operation {
+            background: linear-gradient(135deg, #2d3748, #374151);
+            border: 2px solid #ffa500;
+            border-radius: 12px;
+            min-width: 140px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+            position: relative;
+        }
+        
+        .node-operation:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+        }
+        
+        .node-operation.selected {
+            border-color: #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4), 0 4px 12px rgba(255, 165, 0, 0.3);
+        }
+        
+        .node-title {
+            background: linear-gradient(135deg, #2d3748, #374151);
+            color: #e0e7ff;
+            padding: 8px 12px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #374151;
+            cursor: move;
+            position: relative;
+        }
+        
+        .container-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #00ff41;
+            color: #000;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 2px solid #0f0f1b;
+            box-shadow: 0 2px 6px rgba(0, 255, 65, 0.3);
+            z-index: 20;
+        }
+        
+        .node-content {
+            padding: 12px;
+            position: relative;
+        }
+        
+        .node-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        
+        .node-io {
+            background: #0f0f1b;
+            border: 2px solid #374151;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            position: absolute;
+            cursor: crosshair;
+            transition: all 0.2s;
+        }
+        
+        .node-io.input {
+            background: #00d9ff;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .node-io.input:hover {
+            background: #00ff41;
+            transform: translateY(-50%) scale(1.2);
+        }
+        
+        .node-io.output {
+            background: #00ff41;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .node-io.output:hover {
+            background: #00d9ff;
+            transform: translateY(-50%) scale(1.2);
+        }
+        
+        .operation-icon {
+            font-size: 24px;
+            color: #ffa500;
+            margin-bottom: 8px;
+        }
+        
+        .operation-label {
+            color: #e0e7ff;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .operation-subtitle {
+            color: #94a3b8;
+            font-size: 11px;
+            text-align: center;
+            margin-top: 4px;
+        }
+        
+        /* Node type specific styling */
+        .node-container.sound-container .node-title {
+            border-left: 4px solid #00ff41;
+        }
+        
+        .node-container.note-container .node-title {
+            border-left: 4px solid #9400d3;
+        }
+        
+        .node-container.rest-container .node-title {
+            border-left: 4px solid #666;
+        }
+        
+        .node-container.multiplier-container .node-title {
+            border-left: 4px solid #ff006e;
+        }
+        
+        .node-container.group-container .node-title {
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .node-operation.stack-operation {
+            border-color: #00ff41;
+        }
+        
+        .node-operation.stack-operation .operation-icon {
+            color: #00ff41;
+        }
+        
+        .node-operation.parallel-operation {
+            border-color: #ffa500;
+        }
+        
+        .node-operation.parallel-operation .operation-icon {
+            color: #ffa500;
+        }
+        
+        /* Properties Panel */
+        .properties-panel h2 {
+            color: #00ff41;
+            margin: 0 0 15px 0;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 8px;
+        }
+        
+        .property-section {
+            margin-bottom: 20px;
+        }
+        
+        .property-item {
+            margin-bottom: 12px;
+        }
+        
+        .property-label {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        
+        .property-value {
+            background: #0f0f1b;
+            border: 1px solid #374151;
+            color: #e0e7ff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .property-value:focus {
+            border-color: #00ff41;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.2);
+        }
+        
+        .property-description {
+            color: #666;
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        .selected-node-info {
+            background: #0f0f1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        
+        .selected-node-title {
+            color: #00ff41;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .selected-node-type {
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .empty-properties {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+        
+        .empty-properties i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.5;
+        }
+        
+        /* Connection Styles */
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .connection-line.container-connection {
+            z-index: 5;
+        }
+        
+        .connection-line.container-connection .connection-path {
+            stroke: #00ff41;
+            stroke-width: 3;
+            stroke-dasharray: 5, 3;
+        }
+        
+        .connection-path {
+            stroke: #475569;
+            stroke-width: 3;
+            fill: none;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        .connection-path.active {
+            stroke: #00ff41;
+            stroke-width: 4;
+        }
+        
+        /* Canvas Controls */
+        .canvas-toolbar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .toolbar-btn {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e0e7ff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #4b5563;
+            border-color: #00ff41;
+        }
+        
+        .toolbar-btn.active {
+            background: #00ff41;
+            color: #000;
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff006e;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(255, 0, 110, 0.4);
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .status-message {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 26, 46, 0.9);
+            color: #94a3b8;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 100;
+            border: 1px solid #374151;
+        }
+        
+        .canvas-panning {
+            cursor: grab;
+        }
+        
+        .canvas-panning:active {
+            cursor: grabbing;
+        }
+        
+        .canvas-content {
+            width: 3000px;
+            height: 2000px;
+            position: absolute;
+            transform-origin: 0 0;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 100;
+        }
+        
+        .zoom-btn {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e0e7ff;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background: #4b5563;
+            border-color: #00ff41;
+        }
+        
+        .zoom-level {
+            color: #94a3b8;
+            font-size: 11px;
+            text-align: center;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="sidebar">
+            <h1>🎵 Strudel Pattern Editor</h1>
+            
+            <div class="info-panel">
+                <h3>Hierarchical Node Editor</h3>
+                <p>Pattern components are grouped in containers that connect to operation nodes. Click any node to view properties.</p>
+            </div>
+            
+            <div class="controls">
+                <h2>Pattern Generator</h2>
+                <textarea class="pattern-input" id="pattern-input" 
+                          placeholder="Enter Strudel pattern to generate nodes...">s("hh*4").stack(note("c4(5,8)"))</textarea>
+                <button class="btn" id="generate-pattern">Generate Nodes</button>
+                <button class="btn btn-secondary" id="clear-editor">Clear Canvas</button>
+            </div>
+            
+            <h2>Quick Examples</h2>
+            <div class="example-patterns">
+                <div class="pattern-example" data-pattern='s("hh*4").stack(note("c4(5,8)"))'>
+                    <h4>Stack Pattern</h4>
+                    <code>s("hh*4").stack(note("c4(5,8)"))</code>
+                    <p>Hi-hat container stacked with note container</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='s("bd sd [~ bd] sd,hh*8")'>
+                    <h4>Parallel Pattern</h4>
+                    <code>s("bd sd [~ bd] sd,hh*8")</code>
+                    <p>Drum container parallel to hi-hat container</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='note("d d a# a").s("sawtooth")'>
+                    <h4>Note with Wave</h4>
+                    <code>note("d d a# a").s("sawtooth")</code>
+                    <p>Note container connected to wave container</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='s("bd*4 sd*4")'>
+                    <h4>Multipliers</h4>
+                    <code>s("bd*4 sd*4")</code>
+                    <p>Two containers with multipliers</p>
+                </div>
+                
+                <div class="pattern-example" data-pattern='[bd sd] hh*2'>
+                    <h4>Group Pattern</h4>
+                    <code>[bd sd] hh*2</code>
+                    <p>Group container with multiplier</p>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Node Types</h3>
+                <div class="node-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-container"></div>
+                        <span>Sound Containers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-operation"></div>
+                        <span>Operations</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-note"></div>
+                        <span>Note Containers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-multiplier"></div>
+                        <span>Multipliers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-group"></div>
+                        <span>Groups</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-toolbar">
+                <button class="toolbar-btn" id="pan-mode" title="Pan Mode (Space)">
+                    <i class="fas fa-hand-paper"></i>
+                </button>
+                <button class="toolbar-btn" id="select-mode" title="Select Mode (V)">
+                    <i class="fas fa-mouse-pointer"></i>
+                </button>
+                <button class="toolbar-btn" id="center-view" title="Center View">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+            </div>
+            
+            <div id="node-canvas">
+                <div class="canvas-content" id="canvas-content">
+                    <!-- Nodes and connections will be rendered here -->
+                </div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in">+</button>
+                <div class="zoom-level" id="zoom-level">100%</div>
+                <button class="zoom-btn" id="zoom-out">-</button>
+            </div>
+            
+            <div class="status-message" id="status-message">
+                Hierarchical Node Editor Ready - Click nodes to view properties
+            </div>
+        </div>
+        
+        <div class="properties-panel">
+            <h2>Properties</h2>
+            <div id="properties-content">
+                <div class="empty-properties">
+                    <i class="fas fa-mouse-pointer"></i>
+                    Click on any node to view its properties and connections
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class HierarchicalStrudelEditor {
+            constructor() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.nodeIdCounter = 0;
+                this.connectionIdCounter = 0;
+                this.draggedNode = null;
+                this.dragOffset = { x: 0, y: 0 };
+                this.isConnecting = false;
+                this.connectionStart = null;
+                this.tempConnection = null;
+                this.canvas = document.getElementById('node-canvas');
+                this.canvasContent = document.getElementById('canvas-content');
+                this.propertiesPanel = document.getElementById('properties-content');
+                this.panMode = false;
+                this.panStart = { x: 0, y: 0 };
+                this.viewOffset = { x: 0, y: 0 };
+                this.zoomLevel = 1;
+                
+                this.initEditor();
+            }
+            
+            initEditor() {
+                this.setupEventListeners();
+                this.loadDefaultPattern();
+                this.updateStatus('Hierarchical Node Editor Ready - Click nodes to view properties');
+            }
+            
+            setupEventListeners() {
+                // Pattern generation
+                document.getElementById('generate-pattern').addEventListener('click', () => {
+                    const pattern = document.getElementById('pattern-input').value.trim();
+                    if (pattern) {
+                        this.generateFromPattern(pattern);
+                    }
+                });
+                
+                // Clear editor
+                document.getElementById('clear-editor').addEventListener('click', () => {
+                    this.clearEditor();
+                });
+                
+                // Example patterns
+                document.querySelectorAll('.pattern-example').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const pattern = btn.dataset.pattern;
+                        document.getElementById('pattern-input').value = pattern;
+                        this.generateFromPattern(pattern);
+                    });
+                });
+                
+                // Canvas interaction
+                this.setupCanvasEvents();
+                
+                // Toolbar
+                this.setupToolbarEvents();
+                
+                // Zoom controls
+                this.setupZoomControls();
+                
+                // Keyboard shortcuts
+                this.setupKeyboardShortcuts();
+            }
+            
+            setupCanvasEvents() {
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (e.target === this.canvas || e.target === this.canvasContent) {
+                        if (this.panMode || e.button === 1) {
+                            this.startPanning(e);
+                        } else if (!this.panMode) {
+                            this.deselectAllNodes();
+                        }
+                    }
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (this.draggedNode) {
+                        this.updateNodePosition(e);
+                    } else if (this.isConnecting && this.tempConnection) {
+                        this.updateTempConnection(e);
+                    } else if (this.panMode) {
+                        this.updatePanning(e);
+                    }
+                });
+                
+                document.addEventListener('mouseup', (e) => {
+                    if (this.draggedNode) {
+                        this.stopDragging();
+                    }
+                    if (this.isConnecting) {
+                        this.finishConnection(e);
+                    }
+                    if (this.panMode) {
+                        this.stopPanning();
+                    }
+                });
+                
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+            }
+            
+            setupToolbarEvents() {
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                const centerBtn = document.getElementById('center-view');
+                
+                panBtn.addEventListener('click', () => {
+                    this.togglePanMode();
+                });
+                
+                selectBtn.addEventListener('click', () => {
+                    this.toggleSelectMode();
+                });
+                
+                centerBtn.addEventListener('click', () => {
+                    this.centerView();
+                });
+            }
+            
+            setupZoomControls() {
+                document.getElementById('zoom-in').addEventListener('click', () => {
+                    this.zoomIn();
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', () => {
+                    this.zoomOut();
+                });
+            }
+            
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.togglePanMode();
+                    } else if (e.key === 'v' || e.key === 'V') {
+                        this.toggleSelectMode();
+                    } else if (e.ctrlKey || e.metaKey) {
+                        if (e.key === '=') {
+                            e.preventDefault();
+                            this.zoomIn();
+                        } else if (e.key === '-') {
+                            e.preventDefault();
+                            this.zoomOut();
+                        } else if (e.key === '0') {
+                            e.preventDefault();
+                            this.resetZoom();
+                        }
+                    }
+                });
+            }
+            
+            loadDefaultPattern() {
+                const pattern = 's("hh*4").stack(note("c4(5,8)"))';
+                document.getElementById('pattern-input').value = pattern;
+                this.generateFromPattern(pattern);
+            }
+            
+            clearEditor() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.canvasContent.innerHTML = '';
+                this.updatePropertiesPanel();
+                this.updateStatus('Canvas cleared');
+            }
+            
+            generateFromPattern(pattern) {
+                this.clearEditor();
+                
+                try {
+                    const parsed = this.parseStrudelPattern(pattern);
+                    this.createNodesFromParsedPattern(parsed, 100, 100);
+                    this.updateStatus(`Generated hierarchical nodes from pattern: ${pattern}`);
+                } catch (error) {
+                    console.error('Pattern parsing error:', error);
+                    this.showError(`Failed to parse pattern: ${error.message}`);
+                }
+            }
+            
+            parseStrudelPattern(pattern) {
+                const result = { type: 'root', children: [] };
+                
+                // Handle stack patterns
+                const stackMatch = pattern.match(/s?\("([^"]+)"\)\.stack\(([^)]+)\)/);
+                if (stackMatch) {
+                    const [, leftPattern, rightPattern] = stackMatch;
+                    result.children.push({
+                        type: 'stack',
+                        left: this.parseSimplePattern(leftPattern),
+                        right: this.parseSimplePattern(rightPattern)
+                    });
+                    return result;
+                }
+                
+                // Handle parallel patterns
+                const parallelMatch = pattern.match(/s?\("([^,]+),([^"]+)"\)/);
+                if (parallelMatch) {
+                    const [, leftPattern, rightPattern] = parallelMatch;
+                    result.children.push({
+                        type: 'parallel',
+                        left: this.parseSimplePattern(leftPattern),
+                        right: this.parseSimplePattern(rightPattern)
+                    });
+                    return result;
+                }
+                
+                // Simple pattern
+                const cleanPattern = pattern.replace(/s?\("?([^"]+)"?\)/, '$1');
+                result.children.push({
+                    type: 'simple',
+                    pattern: this.parseSimplePattern(cleanPattern)
+                });
+                
+                return result;
+            }
+            
+            parseSimplePattern(patternStr) {
+                const elements = [];
+                let i = 0;
+                
+                while (i < patternStr.length) {
+                    if (patternStr[i] === ' ') {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Handle groups
+                    if (patternStr[i] === '[') {
+                        i++;
+                        let content = '';
+                        
+                        while (i < patternStr.length && patternStr[i] !== ']') {
+                            content += patternStr[i];
+                            i++;
+                        }
+                        
+                        if (patternStr[i] === ']') {
+                            i++;
+                        }
+                        
+                        elements.push({
+                            type: 'group',
+                            content: content.trim()
+                        });
+                        continue;
+                    }
+                    
+                    // Parse element
+                    let element = '';
+                    while (i < patternStr.length && patternStr[i] !== ' ') {
+                        element += patternStr[i];
+                        i++;
+                    }
+                    
+                    if (element) {
+                        elements.push(this.parseElement(element));
+                    }
+                }
+                
+                return { type: 'sequence', elements };
+            }
+            
+            parseElement(element) {
+                // Multipliers
+                const multMatch = element.match(/^([a-zA-Z_]+)\*(\d+)$/);
+                if (multMatch) {
+                    const [, instrument, count] = multMatch;
+                    return {
+                        type: 'multiplier',
+                        instrument: instrument,
+                        count: parseInt(count)
+                    };
+                }
+                
+                // Notes with properties
+                const notePropsMatch = element.match(/^([a-gA-G][#b]?\d*)\(([^)]+)\)$/);
+                if (notePropsMatch) {
+                    const [, note, props] = notePropsMatch;
+                    return {
+                        type: 'note_with_props',
+                        note: note,
+                        properties: props
+                    };
+                }
+                
+                // Simple notes
+                if (/^[a-gA-G][#b]?\d*$/.test(element)) {
+                    return {
+                        type: 'note',
+                        note: element
+                    };
+                }
+                
+                // Rests
+                if (element === '~' || element === '[]') {
+                    return { type: 'rest' };
+                }
+                
+                // Default to instrument
+                return {
+                    type: 'instrument',
+                    instrument: element
+                };
+            }
+            
+            createNodesFromParsedPattern(pattern, startX, startY) {
+                let currentX = startX;
+                
+                pattern.children.forEach(child => {
+                    if (child.type === 'stack') {
+                        this.createStackHierarchy(child, currentX, startY);
+                        currentX += 500;
+                    } else if (child.type === 'parallel') {
+                        this.createParallelHierarchy(child, currentX, startY);
+                        currentX += 500;
+                    } else if (child.type === 'simple') {
+                        this.createSimpleHierarchy(child.pattern, currentX, startY);
+                        currentX += 300;
+                    }
+                });
+            }
+            
+            createStackHierarchy(stackPattern, x, y) {
+                // Create stack operation node
+                const stackNode = this.createOperationNode('stack', x + 200, y + 100);
+                
+                // Create left container (sound pattern)
+                const leftContainer = this.createContainerNode('sound-container', 'Sound Pattern', 's("...")', x, y);
+                const leftNodes = this.createSequenceNodes(stackPattern.left, x + 20, y + 60);
+                
+                // Create right container (note pattern)
+                const rightContainer = this.createContainerNode('note-container', 'Note Pattern', 'note("...")', x + 300, y);
+                const rightNodes = this.createSequenceNodes(stackPattern.right, x + 320, y + 60);
+                
+                // Connect containers to stack operation
+                this.createConnection(leftContainer, stackNode);
+                this.createConnection(stackNode, rightContainer);
+            }
+            
+            createParallelHierarchy(parallelPattern, x, y) {
+                // Create parallel operation node
+                const parallelNode = this.createOperationNode('parallel', x + 200, y + 100);
+                
+                // Create left container (drum pattern)
+                const leftContainer = this.createContainerNode('sound-container', 'Drum Pattern', 's("...")', x, y);
+                const leftNodes = this.createSequenceNodes(parallelPattern.left, x + 20, y + 60);
+                
+                // Create right container (hi-hat pattern)
+                const rightContainer = this.createContainerNode('sound-container', 'Hi-hat Pattern', 's("...")', x + 300, y);
+                const rightNodes = this.createSequenceNodes(parallelPattern.right, x + 320, y + 60);
+                
+                // Connect containers to parallel operation
+                this.createConnection(leftContainer, parallelNode);
+                this.createConnection(parallelNode, rightContainer);
+            }
+            
+            createSimpleHierarchy(sequencePattern, x, y) {
+                this.createSequenceNodes(sequencePattern, x, y);
+            }
+            
+            createOperationNode(operationType, x, y) {
+                const node = document.createElement('div');
+                node.className = `node-operation ${operationType}-operation`;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.dataset.nodeId = (++this.nodeIdCounter).toString();
+                
+                let icon = '';
+                let label = '';
+                let subtitle = '';
+                
+                if (operationType === 'stack') {
+                    icon = 'fas fa-layer-group';
+                    label = 'STACK';
+                    subtitle = 'Layer patterns';
+                } else if (operationType === 'parallel') {
+                    icon = 'fas fa-code-branch';
+                    label = 'PARALLEL';
+                    subtitle = 'Run simultaneously';
+                }
+                
+                node.innerHTML = `
+                    <div class="operation-icon">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="operation-label">${label}</div>
+                    <div class="operation-subtitle">${subtitle}</div>
+                    <div class="node-io input"></div>
+                    <div class="node-io output"></div>
+                `;
+                
+                this.setupNodeEvents(node);
+                this.canvasContent.appendChild(node);
+                this.nodes.push(node);
+                return node;
+            }
+            
+            createContainerNode(containerType, title, subtitle, x, y) {
+                const node = document.createElement('div');
+                node.className = `node-container ${containerType}`;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.dataset.nodeId = (++this.nodeIdCounter).toString();
+                
+                // Determine container type abbreviation for badge
+                let badgeText = 'C';
+                if (containerType === 'sound-container') badgeText = 'S';
+                else if (containerType === 'note-container') badgeText = 'N';
+                else if (containerType === 'rest-container') badgeText = 'R';
+                else if (containerType === 'multiplier-container') badgeText = 'M';
+                else if (containerType === 'group-container') badgeText = 'G';
+                
+                node.innerHTML = `
+                    <div class="node-title">${title}</div>
+                    <div class="node-content">
+                        <div class="node-subtitle">${subtitle}</div>
+                        <div class="node-io input"></div>
+                        <div class="node-io output"></div>
+                    </div>
+                    <div class="container-badge" title="Container Node">${badgeText}</div>
+                `;
+                
+                this.setupNodeEvents(node);
+                this.canvasContent.appendChild(node);
+                this.nodes.push(node);
+                return node;
+            }
+            
+            createSequenceNodes(sequencePattern, startX, startY) {
+                const nodes = [];
+                let currentX = startX;
+                
+                sequencePattern.elements.forEach(element => {
+                    if (element.type === 'group') {
+                        const groupNode = this.createContainerNode('group-container', 'Group', `[${element.content}]`, currentX, startY);
+                        nodes.push(groupNode);
+                        currentX += 140;
+                    } else if (element.type === 'multiplier') {
+                        const multiplierNode = this.createContainerNode('multiplier-container', 'Multiplier', `${element.instrument}*${element.count}`, currentX, startY);
+                        
+                        const instrumentNode = this.createContainerNode('sound-container', 'Instrument', element.instrument.toUpperCase(), currentX - 80, startY);
+                        
+                        this.createConnection(instrumentNode, multiplierNode);
+                        nodes.push(multiplierNode);
+                        currentX += 140;
+                    } else {
+                        const node = this.createElementNode(element, currentX, startY);
+                        nodes.push(node);
+                        currentX += 120;
+                    }
+                });
+                
+                // Connect sequential nodes
+                for (let i = 0; i < nodes.length - 1; i++) {
+                    this.createConnection(nodes[i], nodes[i + 1]);
+                }
+                
+                return nodes;
+            }
+            
+            createElementNode(element, x, y) {
+                let title = 'Instrument';
+                let subtitle = '';
+                let containerType = 'sound-container';
+                
+                if (element.type === 'note') {
+                    title = 'Note';
+                    subtitle = element.note;
+                    containerType = 'note-container';
+                } else if (element.type === 'note_with_props') {
+                    title = 'Note';
+                    subtitle = `${element.note}(${element.properties})`;
+                    containerType = 'note-container';
+                } else if (element.type === 'rest') {
+                    title = 'Rest';
+                    subtitle = '~';
+                    containerType = 'rest-container';
+                } else if (element.type === 'instrument') {
+                    title = 'Instrument';
+                    subtitle = element.instrument.toUpperCase();
+                    containerType = 'sound-container';
+                }
+                
+                // Create the container node with data attributes for property extraction
+                const node = this.createContainerNode(containerType, title, subtitle, x, y);
+                
+                // Add data attributes to help with property extraction
+                if (element.type === 'note' || element.type === 'note_with_props') {
+                    node.dataset.note = element.note;
+                    if (element.properties) {
+                        node.dataset.properties = element.properties;
+                    }
+                } else if (element.type === 'instrument') {
+                    node.dataset.instrument = element.instrument;
+                }
+                
+                return node;
+            }
+            
+            setupNodeEvents(node) {
+                node.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('node-title') || e.target.closest('.operation-icon') || 
+                        (node.classList.contains('node-operation') && !e.target.classList.contains('node-io'))) {
+                        this.startDragging(node, e);
+                    } else if (e.target.classList.contains('node-io')) {
+                        this.startConnection(node, e);
+                    } else {
+                        this.selectNode(node);
+                    }
+                });
+            }
+            
+            startDragging(node, e) {
+                this.draggedNode = node;
+                this.draggedNode.classList.add('dragging');
+                
+                const rect = node.getBoundingClientRect();
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                this.dragOffset.x = e.clientX - rect.left;
+                this.dragOffset.y = e.clientY - rect.top;
+                
+                e.preventDefault();
+            }
+            
+            updateNodePosition(e) {
+                if (!this.draggedNode) return;
+                
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                let newX = e.clientX - canvasRect.left - this.dragOffset.x;
+                let newY = e.clientY - canvasRect.top - this.dragOffset.y;
+                
+                newX = (newX - this.viewOffset.x) / this.zoomLevel;
+                newY = (newY - this.viewOffset.y) / this.zoomLevel;
+                
+                newX = Math.max(0, Math.min(newX, this.canvasContent.offsetWidth - 160));
+                newY = Math.max(0, Math.min(newY, this.canvasContent.offsetHeight - 100));
+                
+                this.draggedNode.style.left = newX + 'px';
+                this.draggedNode.style.top = newY + 'px';
+                
+                this.updateConnections();
+            }
+            
+            stopDragging() {
+                if (this.draggedNode) {
+                    this.draggedNode.classList.remove('dragging');
+                    this.draggedNode = null;
+                }
+            }
+            
+            startConnection(node, e) {
+                this.isConnecting = true;
+                this.connectionStart = node;
+                this.tempConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.tempConnection.setAttribute('class', 'connection-path');
+                this.tempConnection.style.strokeDasharray = '5,5';
+                
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'connection-line');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.appendChild(this.tempConnection);
+                
+                this.canvasContent.appendChild(svg);
+                this.tempConnection = this.tempConnection;
+            }
+            
+            updateTempConnection(e) {
+                if (!this.tempConnection || !this.connectionStart) return;
+                
+                const startSocket = this.connectionStart.querySelector('.node-io.output') || this.connectionStart.querySelector('.node-io.input');
+                const startRect = startSocket.getBoundingClientRect();
+                const canvasRect = this.canvasContent.getBoundingClientRect();
+                
+                const startX = startRect.left - canvasRect.left + startRect.width / 2;
+                const startY = startRect.top - canvasRect.top + startRect.height / 2;
+                
+                const endX = e.clientX - canvasRect.left;
+                const endY = e.clientY - canvasRect.top;
+                
+                const midX = (startX + endX) / 2;
+                const d = `M ${startX} ${startY} Q ${midX} ${startY} ${midX} ${(startY + endY) / 2} T ${endX} ${endY}`;
+                this.tempConnection.setAttribute('d', d);
+            }
+            
+            finishConnection(e) {
+                if (!this.isConnecting || !this.connectionStart) return;
+                
+                const targetNode = e.target.closest('.node');
+                if (targetNode && targetNode !== this.connectionStart) {
+                    this.createConnection(this.connectionStart, targetNode);
+                }
+                
+                if (this.tempConnection) {
+                    this.tempConnection.parentNode.remove();
+                }
+                
+                this.isConnecting = false;
+                this.connectionStart = null;
+                this.tempConnection = null;
+            }
+            
+            createConnection(fromNode, toNode) {
+                const connection = {
+                    from: fromNode,
+                    to: toNode,
+                    id: (++this.connectionIdCounter).toString()
+                };
+                
+                this.connections.push(connection);
+                this.renderConnection(connection);
+            }
+            
+            renderConnection(connection) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'connection-line');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'connection-path');
+                path.dataset.connectionId = connection.id;
+                
+                svg.appendChild(path);
+                this.canvasContent.appendChild(svg);
+                connection.svg = svg;
+                connection.path = path;
+                
+                this.updateConnectionPath(connection);
+            }
+            
+            updateConnectionPath(connection) {
+                if (!connection.from || !connection.to) return;
+                
+                // Find output socket from 'from' node and input socket from 'to' node
+                const fromSocket = connection.from.querySelector('.node-io.output') || connection.from.querySelector('.node-io.input');
+                const toSocket = connection.to.querySelector('.node-io.input') || connection.to.querySelector('.node-io.output');
+                
+                if (!fromSocket || !toSocket) {
+                    console.warn('Missing sockets for connection', connection);
+                    return;
+                }
+                
+                const fromRect = fromSocket.getBoundingClientRect();
+                const toRect = toSocket.getBoundingClientRect();
+                const canvasRect = this.canvasContent.getBoundingClientRect();
+                
+                const x1 = fromRect.left - canvasRect.left + fromRect.width / 2;
+                const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
+                const x2 = toRect.left - canvasRect.left + toRect.width / 2;
+                const y2 = toRect.top - canvasRect.top + toRect.height / 2;
+                
+                const midX = (x1 + x2) / 2;
+                const d = `M ${x1} ${y1} Q ${midX} ${y1} ${midX} ${(y1 + y2) / 2} T ${x2} ${y2}`;
+                
+                connection.path.setAttribute('d', d);
+            }
+            
+            updateConnections() {
+                this.connections.forEach(connection => {
+                    this.updateConnectionPath(connection);
+                });
+            }
+            
+            selectNode(node) {
+                this.deselectAllNodes();
+                node.classList.add('selected');
+                this.selectedNode = node;
+                this.updatePropertiesPanel();
+            }
+            
+            deselectAllNodes() {
+                this.nodes.forEach(node => {
+                    node.classList.remove('selected');
+                });
+                this.selectedNode = null;
+            }
+            
+            updatePropertiesPanel() {
+                if (!this.selectedNode) {
+                    this.propertiesPanel.innerHTML = `
+                        <div class="empty-properties">
+                            <i class="fas fa-mouse-pointer"></i>
+                            Click on any node to view its properties and connections
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const node = this.selectedNode;
+                let content = `
+                    <div class="selected-node-info">
+                        <div class="selected-node-title">${this.getNodeTitle(node)}</div>
+                        <div class="selected-node-type">${this.getNodeType(node)}</div>
+                    </div>
+                `;
+                
+                // Add specific properties based on node type
+                if (node.classList.contains('sound-container')) {
+                    content += this.createPropertiesSection('Sound Properties', [
+                        { label: 'Pattern Type', value: 's("...")', description: 'Sound pattern container' },
+                        { label: 'Instrument', value: this.extractNodeData(node, 'instrument') || 'hh', description: 'The instrument to play' }
+                    ]);
+                } else if (node.classList.contains('note-container')) {
+                    content += this.createPropertiesSection('Note Properties', [
+                        { label: 'Pattern Type', value: 'note("...")', description: 'Note pattern container' },
+                        { label: 'Note', value: this.extractNodeData(node, 'note') || 'c4', description: 'Musical note to play' },
+                        { label: 'Properties', value: this.extractNodeData(node, 'properties') || '5,8', description: 'Note properties (attack, decay)' }
+                    ]);
+                } else if (node.classList.contains('multiplier-container')) {
+                    content += this.createPropertiesSection('Multiplier Properties', [
+                        { label: 'Pattern Type', value: 'instrument*count', description: 'Multiplier pattern' },
+                        { label: 'Count', value: this.extractNodeData(node, 'count') || '4', description: 'Number of repetitions' }
+                    ]);
+                } else if (node.classList.contains('group-container')) {
+                    content += this.createPropertiesSection('Group Properties', [
+                        { label: 'Pattern Type', value: '[...]', description: 'Group pattern' },
+                        { label: 'Content', value: this.extractNodeData(node, 'content') || 'bd sd', description: 'Grouped elements' }
+                    ]);
+                } else if (node.classList.contains('stack-operation')) {
+                    content += this.createPropertiesSection('Stack Operation', [
+                        { label: 'Operation', value: '.stack()', description: 'Layer patterns on top of each other' },
+                        { label: 'Type', value: 'Hierarchical', description: 'Combines left and right patterns' }
+                    ]);
+                } else if (node.classList.contains('parallel-operation')) {
+                    content += this.createPropertiesSection('Parallel Operation', [
+                        { label: 'Operation', value: ',', description: 'Run patterns in parallel' },
+                        { label: 'Type', value: 'Simultaneous', description: 'Executes left and right patterns together' }
+                    ]);
+                }
+                
+                // Add connection information
+                const incomingConnections = this.connections.filter(c => c.to === node);
+                const outgoingConnections = this.connections.filter(c => c.from === node);
+                
+                if (incomingConnections.length > 0) {
+                    content += this.createConnectionsSection('Incoming Connections', incomingConnections);
+                }
+                
+                if (outgoingConnections.length > 0) {
+                    content += this.createConnectionsSection('Outgoing Connections', outgoingConnections);
+                }
+                
+                this.propertiesPanel.innerHTML = content;
+            }
+            
+            createPropertiesSection(title, properties) {
+                let section = `<div class="property-section"><h3>${title}</h3>`;
+                
+                properties.forEach(prop => {
+                    section += `
+                        <div class="property-item">
+                            <div class="property-label">${prop.label}</div>
+                            <div class="property-value" contenteditable="true" data-property="${prop.label.toLowerCase().replace(' ', '_')}">${prop.value}</div>
+                            <div class="property-description">${prop.description}</div>
+                        </div>
+                    `;
+                });
+                
+                section += '</div>';
+                return section;
+            }
+            
+            createConnectionsSection(title, connections) {
+                let section = `<div class="property-section"><h3>${title}</h3>`;
+                
+                connections.forEach(conn => {
+                    const otherNode = conn.from === this.selectedNode ? conn.to : conn.from;
+                    const nodeTitle = this.getNodeTitle(otherNode);
+                    const nodeType = this.getNodeType(otherNode);
+                    
+                    section += `
+                        <div class="property-item">
+                            <div class="property-label">Connected To</div>
+                            <div class="property-value">${nodeTitle}</div>
+                            <div class="property-description">${nodeType}</div>
+                        </div>
+                    `;
+                });
+                
+                section += '</div>';
+                return section;
+            }
+            
+            getNodeTitle(node) {
+                if (node.classList.contains('node-operation')) {
+                    const label = node.querySelector('.operation-label');
+                    return label ? label.textContent : 'Operation';
+                } else {
+                    const title = node.querySelector('.node-title');
+                    return title ? title.textContent : 'Container';
+                }
+            }
+            
+            getNodeType(node) {
+                if (node.classList.contains('sound-container')) return 'Sound Container';
+                if (node.classList.contains('note-container')) return 'Note Container';
+                if (node.classList.contains('rest-container')) return 'Rest Container';
+                if (node.classList.contains('multiplier-container')) return 'Multiplier Container';
+                if (node.classList.contains('group-container')) return 'Group Container';
+                if (node.classList.contains('stack-operation')) return 'Stack Operation';
+                if (node.classList.contains('parallel-operation')) return 'Parallel Operation';
+                return 'Unknown';
+            }
+            
+            extractNodeData(node, property) {
+                // First try to get data from node's data attributes
+                if (node.dataset[property]) {
+                    return node.dataset[property];
+                }
+                
+                // Try to extract data from node content or attributes
+                const element = node.querySelector(`[data-property="${property}"]`);
+                if (element) return element.textContent;
+                
+                // Fallback: try to extract from subtitle
+                const subtitle = node.querySelector('.node-subtitle');
+                if (subtitle) {
+                    if (property === 'instrument') {
+                        const match = subtitle.textContent.match(/([a-zA-Z]+)/);
+                        return match ? match[1] : null;
+                    } else if (property === 'note') {
+                        const match = subtitle.textContent.match(/([a-gA-G][#b]?\d*)/);
+                        return match ? match[1] : null;
+                    } else if (property === 'properties') {
+                        const match = subtitle.textContent.match(/\(([^)]+)\)/);
+                        return match ? match[1] : null;
+                    } else if (property === 'count') {
+                        const match = subtitle.textContent.match(/\*(\d+)/);
+                        return match ? match[1] : null;
+                    } else if (property === 'content') {
+                        const match = subtitle.textContent.match(/\[([^\]]+)\]/);
+                        return match ? match[1] : null;
+                    }
+                }
+                
+                return null;
+            }
+            
+            // Pan and zoom functionality
+            startPanning(e) {
+                this.panStart = { x: e.clientX, y: e.clientY };
+                this.canvas.classList.add('canvas-panning');
+            }
+            
+            updatePanning(e) {
+                if (!this.panStart.x) return;
+                
+                const deltaX = e.clientX - this.panStart.x;
+                const deltaY = e.clientY - this.panStart.y;
+                
+                this.viewOffset.x += deltaX;
+                this.viewOffset.y += deltaY;
+                
+                this.updateCanvasTransform();
+                
+                this.panStart.x = e.clientX;
+                this.panStart.y = e.clientY;
+            }
+            
+            stopPanning() {
+                this.panStart = { x: 0, y: 0 };
+                this.canvas.classList.remove('canvas-panning');
+            }
+            
+            updateCanvasTransform() {
+                this.canvasContent.style.transform = 
+                    `translate(${this.viewOffset.x}px, ${this.viewOffset.y}px) scale(${this.zoomLevel})`;
+            }
+            
+            zoomIn() {
+                this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3);
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            zoomOut() {
+                this.zoomLevel = Math.max(this.zoomLevel / 1.2, 0.3);
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            resetZoom() {
+                this.zoomLevel = 1;
+                this.viewOffset = { x: 0, y: 0 };
+                this.updateZoomDisplay();
+                this.updateCanvasTransform();
+            }
+            
+            updateZoomDisplay() {
+                document.getElementById('zoom-level').textContent = Math.round(this.zoomLevel * 100) + '%';
+            }
+            
+            togglePanMode() {
+                this.panMode = !this.panMode;
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                
+                if (this.panMode) {
+                    panBtn.classList.add('active');
+                    selectBtn.classList.remove('active');
+                    this.updateStatus('Pan mode active - drag to pan canvas');
+                } else {
+                    panBtn.classList.remove('active');
+                    this.updateStatus('Select mode active');
+                }
+            }
+            
+            toggleSelectMode() {
+                this.panMode = false;
+                const panBtn = document.getElementById('pan-mode');
+                const selectBtn = document.getElementById('select-mode');
+                
+                panBtn.classList.remove('active');
+                selectBtn.classList.add('active');
+                this.updateStatus('Select mode active');
+            }
+            
+            centerView() {
+                if (this.nodes.length === 0) return;
+                
+                const bounds = this.getNodesBounds();
+                const canvasBounds = this.canvas.getBoundingClientRect();
+                
+                const centerX = (bounds.left + bounds.right) / 2;
+                const centerY = (bounds.top + bounds.bottom) / 2;
+                
+                this.viewOffset.x = canvasBounds.width / 2 - centerX * this.zoomLevel;
+                this.viewOffset.y = canvasBounds.height / 2 - centerY * this.zoomLevel;
+                
+                this.updateCanvasTransform();
+            }
+            
+            getNodesBounds() {
+                const rects = this.nodes.map(node => node.getBoundingClientRect());
+                const canvasRect = this.canvas.getBoundingClientRect();
+                
+                const left = Math.min(...rects.map(r => r.left - canvasRect.left));
+                const right = Math.max(...rects.map(r => r.right - canvasRect.left));
+                const top = Math.min(...rects.map(r => r.top - canvasRect.top));
+                const bottom = Math.max(...rects.map(r => r.bottom - canvasRect.top));
+                
+                return { left, right, top, bottom };
+            }
+            
+            updateStatus(message) {
+                document.getElementById('status-message').textContent = message;
+            }
+            
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 4000);
+            }
+        }
+        
+        // Initialize the editor when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new HierarchicalStrudelEditor();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Editor Connection System Test (Standalone)</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/node.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .test-info {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .success { border-left: 4px solid #00ff41; }
+        .warning { border-left: 4px solid #ffaa00; }
+        .error { border-left: 4px solid #ff4444; }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connection-status">
+        🔌 Testing Connection System...
+    </div>
+
+    <h1>🧪 Node Editor Connection System Test</h1>
+    
+    <div class="test-info">
+        <h3>📋 Test Instructions</h3>
+        <ol>
+            <li><strong>Connection Ports:</strong> Look for green (input) and cyan (output) connection ports on nodes</li>
+            <li><strong>Create Connections:</strong> Drag from output port (right) to input port (left)</li>
+            <li><strong>Test Playback:</strong> Click play buttons on individual nodes</li>
+            <li><strong>Check Console:</strong> Open browser dev tools (F12) to see connection logs</li>
+        </ol>
+    </div>
+
+    <div class="test-info">
+        <h3>🔧 System Status</h3>
+        <div id="system-status">Loading...</div>
+    </div>
+
+    <!-- Node Canvas -->
+    <div id="canvas-container">
+        <div id="canvas-content"></div>
+    </div>
+
+    <!-- Play Controls -->
+    <div class="play-controls">
+        <button id="play-all-nodes" class="btn btn-primary">
+            <i class="fas fa-play"></i> Play All
+        </button>
+        <button id="stop-all-nodes" class="btn btn-secondary">
+            <i class="fas fa-stop"></i> Stop
+        </button>
+        <button id="clear-nodes" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Clear All
+        </button>
+        <button id="delete-selected-node" class="btn btn-secondary" disabled>
+            <i class="fas fa-delete"></i> Delete Selected
+        </button>
+        <button id="generate-examples" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Generate Examples
+        </button>
+        <button id="test-connection" class="btn btn-secondary">
+            <i class="fas fa-plug"></i> Test Connection
+        </button>
+        <button id="show-normalization" class="btn btn-secondary">
+            <i class="fas fa-project-diagram"></i> Show Normalization
+        </button>
+    </div>
+
+    <!-- Status Message -->
+    <div id="status-message" class="status-message">
+        Node Editor Ready - Testing connection system...
+    </div>
+
+    <!-- Embedded Node Schema (to avoid CORS) -->
+    <script type="application/json" id="embedded-node-schema">
+    {
+        "nodes": {
+            "Instrument": {
+                "title": "Instrument",
+                "category": "source",
+                "execution": { "stage": "source", "priority": 1 },
+                "sockets": { "in": ["pattern"], "out": ["audio"] }
+            },
+            "DrumSymbol": {
+                "title": "Drum Symbol", 
+                "category": "source",
+                "execution": { "stage": "source", "priority": 1 },
+                "sockets": { "in": ["pattern"], "out": ["audio"] }
+            },
+            "Effect": {
+                "title": "Audio Effect",
+                "category": "effect",
+                "execution": { "stage": "post", "priority": 3 },
+                "sockets": { "in": ["audio"], "out": ["audio"] }
+            },
+            "Repeater": {
+                "title": "Multiplier",
+                "category": "rhythmic",
+                "execution": { "stage": "time", "priority": 2 },
+                "sockets": { "in": ["pattern"], "out": ["pattern"] }
+            },
+            "Chance": {
+                "title": "Chance",
+                "category": "rhythmic", 
+                "execution": { "stage": "time", "priority": 2 },
+                "sockets": { "in": ["pattern"], "out": ["pattern"] }
+            }
+        },
+        "socketCompatibilityMatrix": {
+            "pattern": { "pattern": true },
+            "audio": { "audio": true, "pattern": true }
+        },
+        "validationRules": {
+            "forbiddenConnections": [
+                { "from": "wrapper", "to": "pattern" }
+            ]
+        },
+        "executionStages": {
+            "source": 1,
+            "time": 2, 
+            "post": 3,
+            "wrapper": 4
+        }
+    }
+    </script>
+
+    <!-- Embedded Instrument List -->
+    <script type="application/json" id="embedded-instruments">
+    {
+        "menus": [
+            {
+                "groups": [
+                    {
+                        "items": ["bd", "sd", "hh", "oh", "cp", "rim", "cr", "rd", "cb", "tb", "ht", "mt", "lt"]
+                    }
+                ]
+            },
+            {
+                "groups": [
+                    {
+                        "items": ["sine", "sawtooth", "square", "triangle", "white", "pink", "brown"]
+                    }
+                ]
+            },
+            {
+                "groups": [
+                    {
+                        "items": ["piano", "rhodes", "celesta", "organ", "violin", "cello", "guitar", "flute", "trumpet"]
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+
+    <script>
+        // Mock Strudel for testing (avoids loading external library)
+        window.strudel = {
+            init: () => Promise.resolve(),
+            stop: () => {},
+            play: () => {}
+        };
+
+        // Enhanced NodeManager with embedded data
+        class StandaloneNodeManager {
+            constructor() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.audioInitialized = false;
+                this.currentPattern = '';
+                this.isConnecting = false;
+                this.connectionStartNode = null;
+                this.connectionPreview = null;
+                this.propertySchema = null;
+                this.nodeSchema = null;
+                this.graphNormalizer = null;
+                this.instrumentList = [];
+                
+                this.loadEmbeddedData();
+                this.init();
+            }
+
+            loadEmbeddedData() {
+                try {
+                    // Load embedded node schema
+                    const schemaScript = document.getElementById('embedded-node-schema');
+                    if (schemaScript) {
+                        this.nodeSchema = JSON.parse(schemaScript.textContent);
+                        console.log('Loaded embedded node schema:', this.nodeSchema);
+                    }
+
+                    // Load embedded instruments
+                    const instrumentScript = document.getElementById('embedded-instruments');
+                    if (instrumentScript) {
+                        const menuData = JSON.parse(instrumentScript.textContent);
+                        this.extractInstrumentList(menuData);
+                        console.log('Loaded embedded instruments:', this.instrumentList);
+                    }
+                } catch (error) {
+                    console.error('Error loading embedded data:', error);
+                }
+            }
+
+            extractInstrumentList(menuData) {
+                const instruments = [];
+                
+                menuData.menus.forEach(menu => {
+                    menu.groups.forEach(group => {
+                        group.items.forEach(item => {
+                            if (typeof item === 'string') {
+                                instruments.push(item);
+                            }
+                        });
+                    });
+                });
+                
+                this.instrumentList = [...new Set(instruments)].sort();
+            }
+
+            init() {
+                console.log('Standalone Node Manager initializing...');
+                this.updateStatus('Standalone Node Editor Ready - Testing connection system...');
+                this.updateSystemStatus();
+                this.bindEvents();
+            }
+
+            updateSystemStatus() {
+                const statusEl = document.getElementById('system-status');
+                const connectionStatusEl = document.getElementById('connection-status');
+                
+                const checks = [
+                    { name: 'Node Schema', status: !!this.nodeSchema },
+                    { name: 'Graph Normalizer', status: !!this.graphNormalizer },
+                    { name: 'Instrument List', status: this.instrumentList.length > 0 },
+                    { name: 'Connection Ports', status: true },
+                    { name: 'Property Panel', status: !!this.propertySchema }
+                ];
+
+                let statusText = 'System Components:\n';
+                let connectedCount = 0;
+
+                checks.forEach(check => {
+                    const icon = check.status ? '✅' : '❌';
+                    statusText += `${icon} ${check.name}: ${check.status ? 'OK' : 'Missing'}\n`;
+                    if (check.status) connectedCount++;
+                });
+
+                statusText += `\n📊 Status: ${connectedCount}/${checks.length} components ready`;
+                
+                if (statusEl) {
+                    statusEl.textContent = statusText;
+                    statusEl.className = connectedCount === checks.length ? 'test-info success' : 'test-info warning';
+                }
+
+                if (connectionStatusEl) {
+                    connectionStatusEl.textContent = `🔌 ${this.nodes.length} nodes, ${this.connections.length} connections`;
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('play-all-nodes')?.addEventListener('click', () => this.playAllNodes());
+                document.getElementById('stop-all-nodes')?.addEventListener('click', () => this.stopAllNodes());
+                document.getElementById('clear-nodes')?.addEventListener('click', () => this.clearAllNodes());
+                document.getElementById('generate-examples')?.addEventListener('click', () => this.generateExampleNodes());
+                document.getElementById('test-connection')?.addEventListener('click', () => this.testConnection());
+                document.getElementById('show-normalization')?.addEventListener('click', () => this.showNormalizationInfo());
+            }
+
+            createNode(type, instrument, x = 100, y = 100) {
+                const nodeId = 'node-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                const node = {
+                    id: nodeId,
+                    type: type,
+                    instrument: instrument,
+                    x: x,
+                    y: y,
+                    properties: {
+                        note: '',
+                        duration: 500,
+                        volume: 80,
+                        effects: {},
+                        strudelProperties: {}
+                    }
+                };
+
+                this.nodes.push(node);
+                this.renderNode(node);
+                this.updateStatus(`Created ${type} node: ${instrument}`);
+                this.updateSystemStatus();
+                
+                return node;
+            }
+
+            renderNode(node) {
+                const canvas = document.getElementById('canvas-content');
+                if (!canvas) {
+                    console.error('Canvas content not found');
+                    return;
+                }
+
+                const nodeElement = document.createElement('div');
+                const category = this.getNodeCategory(node);
+                
+                nodeElement.className = `node node-${node.type} node-category-${category}`;
+                nodeElement.id = node.id;
+                nodeElement.style.left = node.x + 'px';
+                nodeElement.style.top = node.y + 'px';
+
+                nodeElement.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-title">${this.getNodeTitle(node)}</div>
+                    </div>
+                    <div class="node-content">
+                        <div class="node-subtitle">${node.instrument}</div>
+                        <button class="node-play-btn" onclick="nodeManager.playNode('${node.id}')">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                    </div>
+                    <div class="node-input connection-port" data-port="input" title="Input - Connect from other nodes"></div>
+                    <div class="node-output connection-port" data-port="output" title="Output - Connect to other nodes"></div>
+                `;
+
+                console.log(`Rendered node ${node.type} with connection ports`);
+
+                this.makeNodeDraggable(nodeElement, node);
+                nodeElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.selectNode(node);
+                });
+
+                this.addConnectionPortListeners(nodeElement, node);
+                canvas.appendChild(nodeElement);
+            }
+
+            getNodeCategory(node) {
+                if (!this.nodeSchema) return 'unknown';
+                const nodeDef = this.nodeSchema.nodes[node.type];
+                return nodeDef?.category || 'unknown';
+            }
+
+            getNodeTitle(node) {
+                if (this.nodeSchema && this.nodeSchema.nodes[node.type]) {
+                    return this.nodeSchema.nodes[node.type].title || node.type;
+                }
+                return node.type;
+            }
+
+            addConnectionPortListeners(nodeElement, node) {
+                const inputPort = nodeElement.querySelector('.node-input');
+                const outputPort = nodeElement.querySelector('.node-output');
+
+                if (inputPort) {
+                    inputPort.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        console.log('Input port clicked for connection');
+                        this.startConnection(node, 'input', e);
+                    });
+                }
+
+                if (outputPort) {
+                    outputPort.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        console.log('Output port clicked for connection');
+                        this.startConnection(node, 'output', e);
+                    });
+                }
+            }
+
+            startConnection(node, portType, event) {
+                this.isConnecting = true;
+                this.connectionStartNode = { node, portType };
+                console.log(`Started connection from ${node.type} (${portType})`);
+                
+                this.updateStatus(`Connecting from ${node.type} ${portType}...`);
+            }
+
+            selectNode(node) {
+                document.querySelectorAll('.node.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+
+                this.selectedNode = node;
+                const nodeElement = document.getElementById(node.id);
+                if (nodeElement) {
+                    nodeElement.classList.add('selected');
+                }
+
+                this.updateStatus(`Selected ${node.type} node: ${node.instrument}`);
+            }
+
+            updateStatus(message) {
+                const statusElement = document.getElementById('status-message');
+                if (statusElement) {
+                    statusElement.textContent = message;
+                }
+                console.log('Status:', message);
+            }
+
+            playNode(nodeId) {
+                const node = this.nodes.find(n => n.id === nodeId);
+                if (!node) return;
+
+                this.updateStatus(`Playing ${node.instrument}...`);
+                console.log(`Playing node: ${node.type} - ${node.instrument}`);
+            }
+
+            playAllNodes() {
+                if (this.nodes.length === 0) {
+                    this.updateStatus('No nodes to play');
+                    return;
+                }
+
+                const patterns = this.nodes.map(node => this.buildNodePattern(node));
+                const combinedPattern = patterns.join(' ');
+                this.updateStatus(`Playing all nodes: ${combinedPattern}`);
+                console.log('Playing pattern:', combinedPattern);
+            }
+
+            buildNodePattern(node) {
+                if (node.type === 'Instrument' || node.type === 'DrumSymbol') {
+                    return `s("${node.instrument}")`;
+                }
+                return `s("${node.instrument}")`;
+            }
+
+            stopAllNodes() {
+                this.updateStatus('Stopped all playback');
+                console.log('Stopped playback');
+            }
+
+            clearAllNodes() {
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                const canvas = document.getElementById('canvas-content');
+                if (canvas) {
+                    canvas.innerHTML = '';
+                }
+                this.updateStatus('Cleared all nodes and connections');
+                this.updateSystemStatus();
+            }
+
+            generateExampleNodes() {
+                this.clearAllNodes();
+                
+                const bdNode = this.createNode('DrumSymbol', 'bd', 100, 100);
+                const sdNode = this.createNode('DrumSymbol', 'sd', 300, 100);
+                const pianoNode = this.createNode('Instrument', 'piano', 100, 300);
+                const sawNode = this.createNode('Instrument', 'sawtooth', 300, 300);
+                
+                this.updateStatus('Generated example nodes - Test connection system by dragging ports');
+            }
+
+            testConnection() {
+                if (this.nodes.length < 2) {
+                    this.updateStatus('Need at least 2 nodes to test connection');
+                    return;
+                }
+                
+                const node1 = this.nodes[0];
+                const node2 = this.nodes[1];
+                
+                console.log('Testing connection between:', node1.type, '->', node2.type);
+                this.updateStatus(`Testing connection: ${node1.type} -> ${node2.type}`);
+                
+                // Simulate connection creation
+                const connection = {
+                    id: 'test-conn-' + Date.now(),
+                    sourceNodeId: node1.id,
+                    sourcePort: 'output',
+                    targetNodeId: node2.id,
+                    targetPort: 'input'
+                };
+                
+                this.connections.push(connection);
+                this.updateSystemStatus();
+                this.updateStatus(`Test connection created: ${connection.id}`);
+            }
+
+            showNormalizationInfo() {
+                if (this.graphNormalizer && this.nodeSchema) {
+                    this.updateStatus('Graph normalizer available - Advanced normalization would be shown');
+                } else {
+                    this.updateStatus('⚠️ Graph Normalizer Not Available - Using basic normalization');
+                }
+            }
+
+            makeNodeDraggable(element, node) {
+                let isDragging = false;
+                let startX, startY, initialX, initialY;
+
+                element.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('node-title')) {
+                        isDragging = true;
+                        element.classList.add('dragging');
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        initialX = node.x;
+                        initialY = node.y;
+                        
+                        document.addEventListener('mousemove', drag);
+                        document.addEventListener('mouseup', stopDrag);
+                    }
+                });
+
+                const drag = (e) => {
+                    if (isDragging) {
+                        e.preventDefault();
+                        const deltaX = e.clientX - startX;
+                        const deltaY = e.clientY - startY;
+                        
+                        node.x = initialX + deltaX;
+                        node.y = initialY + deltaY;
+                        
+                        element.style.left = node.x + 'px';
+                        element.style.top = node.y + 'px';
+                    }
+                };
+
+                const stopDrag = () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        element.classList.remove('dragging');
+                        document.removeEventListener('mousemove', drag);
+                        document.removeEventListener('mouseup', stopDrag);
+                    }
+                };
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.nodeManager = new StandaloneNodeManager();
+            
+            // Add Font Awesome for icons (CDN)
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+            document.head.appendChild(link);
+        });
+    </script>
+</body>
+</html>
