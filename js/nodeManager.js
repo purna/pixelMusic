@@ -18,6 +18,15 @@ class NodeManager {
         this.graphNormalizer = null;
         this.instrumentList = [];
         
+        // Canvas transformation state
+        this.canvasScale = 1;
+        this.canvasOffsetX = 0;
+        this.canvasOffsetY = 0;
+        this.isPanning = false;
+        this.panToolActive = true;  // Pan tool is active by default
+        this.lastPanX = 0;
+        this.lastPanY = 0;
+        
         this.init();
     }
 
@@ -31,10 +40,43 @@ class NodeManager {
         // Initialize delete button state
         this.updateDeleteButtonState();
         
+        // Initialize canvas zoom level display and pan tool
+        setTimeout(() => {
+            const zoomLevel = document.getElementById('zoom-level');
+            if (zoomLevel) {
+                zoomLevel.textContent = '100%';
+            }
+            this.updatePanToolButton();
+        }, 100);
+        
         // Initialize audio on first user interaction
-        document.getElementById('initAudioBtn')?.addEventListener('click', () => {
-            this.initializeAudio();
+        document.getElementById('initAudioBtn')?.addEventListener('click', async () => {
+            const btn = document.getElementById('initAudioBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Initializing...';
+            }
+            
+            try {
+                await this.initializeAudio();
+            } finally {
+                if (btn && !this.audioInitialized) {
+                    btn.disabled = false;
+                    btn.textContent = 'Enable Audio';
+                }
+            }
         });
+        
+        // Auto-initialize audio after a delay if Strudel loads
+        setTimeout(async () => {
+            if (typeof strudel !== 'undefined' && !this.audioInitialized) {
+                try {
+                    await this.initializeAudio();
+                } catch (error) {
+                    console.log('Auto-initialization failed:', error.message);
+                }
+            }
+        }, 2000);
     }
 
     async loadPropertySchema() {
@@ -43,7 +85,7 @@ class NodeManager {
             const response = await fetch('strudel-node-properties.json');
             if (response.ok) {
                 this.propertySchema = await response.json();
-                console.log('Property schema loaded');
+                console.log('Property schema loaded with', Object.keys(this.propertySchema.nodes || {}).length, 'node types and', Object.keys(this.propertySchema.transformNodes || {}).length, 'transform types');
             }
         } catch (error) {
             console.warn('Could not load property schema:', error);
@@ -67,11 +109,23 @@ class NodeManager {
             const response = await fetch('strudel-node-schema.json');
             if (response.ok) {
                 this.nodeSchema = await response.json();
-                this.graphNormalizer = new GraphNormalizer(this.nodeSchema);
                 console.log('Node schema loaded with', Object.keys(this.nodeSchema.nodes).length, 'node types');
+                
+                // Initialize GraphNormalizer
+                try {
+                    this.graphNormalizer = new GraphNormalizer(this.nodeSchema);
+                    console.log('Graph normalizer initialized successfully');
+                } catch (normalizerError) {
+                    console.warn('Graph normalizer initialization failed:', normalizerError);
+                    this.graphNormalizer = null;
+                }
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
             console.warn('Could not load node schema:', error);
+            this.nodeSchema = null;
+            this.graphNormalizer = null;
         }
     }
 
@@ -132,6 +186,50 @@ class NodeManager {
             if (e.key === 'Delete' && this.selectedNode) {
                 this.deleteNode(this.selectedNode.id);
             }
+            
+            // Keyboard shortcuts for canvas controls
+            if (e.target.tagName.toLowerCase() !== 'input' && e.target.tagName.toLowerCase() !== 'textarea') {
+                switch (e.key) {
+                    case '=':
+                    case '+':
+                        if (e.ctrlKey || e.metaKey) {
+                            e.preventDefault();
+                            this.zoomIn();
+                        }
+                        break;
+                    case '-':
+                        if (e.ctrlKey || e.metaKey) {
+                            e.preventDefault();
+                            this.zoomOut();
+                        }
+                        break;
+                    case '0':
+                        if (e.ctrlKey || e.metaKey) {
+                            e.preventDefault();
+                            this.resetZoom();
+                        }
+                        break;
+                    case ' ':
+                        // Space bar to temporarily activate pan tool
+                        if (!e.repeat && this.panToolActive) {
+                            document.body.style.cursor = 'grab';
+                        }
+                        break;
+                    case 'h':
+                    case 'H':
+                        // H key to toggle pan tool
+                        if (!e.repeat) {
+                            this.togglePanTool();
+                        }
+                        break;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === ' ') {
+                document.body.style.cursor = '';
+            }
         });
 
         // Connection click events (for deletion)
@@ -144,6 +242,9 @@ class NodeManager {
                 }
             }
         });
+
+        // Canvas pan and zoom controls
+        this.bindCanvasControls();
     }
 
 
@@ -154,10 +255,19 @@ class NodeManager {
         try {
             this.updateStatus('Initializing audio...');
             
-            // Wait for strudel to be available
+            // Check if Strudel is available
             if (typeof strudel === 'undefined') {
-                this.updateStatus('Loading Strudel library...');
-                await this.waitForStrudel();
+                this.updateStatus('Loading Strudel library from CDN...');
+                await this.loadStrudelFromCDN();
+            }
+
+            // Double-check Strudel availability and structure
+            if (!strudel) {
+                throw new Error('Strudel library is not available after loading attempt');
+            }
+            
+            if (typeof strudel.init !== 'function') {
+                throw new Error('Strudel library is loaded but missing init method');
             }
 
             // Initialize strudel
@@ -165,20 +275,108 @@ class NodeManager {
             this.audioInitialized = true;
             this.updateStatus('Audio initialized - Ready to play sounds');
             
+            // Re-enable audio features if they were disabled
+            this.enableAudioFeatures();
+            
         } catch (error) {
             console.error('Audio initialization failed:', error);
-            this.updateStatus('Audio initialization failed: ' + error.message);
+            this.updateStatus('Audio initialization failed: ' + error.message + ' - Node editor will work without audio');
+            
+            // Disable audio-related UI elements
+            this.disableAudioFeatures();
         }
     }
 
+    enableAudioFeatures() {
+        // Re-enable play buttons and audio-related controls
+        const playButtons = document.querySelectorAll('.node-play-btn, #play-all-nodes');
+        playButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.title = '';
+        });
+        
+        const initAudioBtn = document.getElementById('initAudioBtn');
+        if (initAudioBtn) {
+            initAudioBtn.disabled = false;
+            initAudioBtn.textContent = 'Audio Ready';
+        }
+    }
+
+    disableAudioFeatures() {
+        // Disable play buttons and audio-related controls
+        const playButtons = document.querySelectorAll('.node-play-btn, #play-all-nodes');
+        playButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.title = 'Audio not available';
+        });
+        
+        const initAudioBtn = document.getElementById('initAudioBtn');
+        if (initAudioBtn) {
+            initAudioBtn.disabled = true;
+            initAudioBtn.textContent = 'Audio Unavailable';
+        }
+    }
+
+    async loadStrudelFromCDN() {
+        console.log('Loading Strudel from CDN...');
+        
+        // Check if script is already being loaded
+        const existingScript = document.querySelector('script[src*="strudel"]');
+        if (existingScript) {
+            console.log('Strudel script already exists, waiting for it to load...');
+            return this.waitForStrudel(30);
+        }
+        
+        // Create and load the script
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/strudel@0.12.2/dist/strudel.web.js';
+            script.async = true;
+            
+            script.onload = () => {
+                console.log('Strudel CDN script loaded successfully');
+                // Wait a bit for global to be set
+                setTimeout(() => {
+                    if (typeof strudel !== 'undefined' && strudel) {
+                        console.log('Strudel global is available after load');
+                        resolve();
+                    } else {
+                        reject(new Error('Strudel global not available after script load'));
+                    }
+                }, 500);
+            };
+            
+            script.onerror = (error) => {
+                console.error('Failed to load Strudel from CDN:', error);
+                reject(new Error('Failed to load Strudel from CDN - check network connection'));
+            };
+            
+            document.head.appendChild(script);
+            console.log('Strudel script tag added to head');
+        });
+    }
+
     async waitForStrudel(maxAttempts = 50) {
+        console.log('Waiting for Strudel library to be available...');
+        
         for (let i = 0; i < maxAttempts; i++) {
-            if (typeof strudel !== 'undefined') {
+            console.log(`Attempt ${i + 1}/${maxAttempts}: Checking for Strudel...`, {
+                strudelDefined: typeof strudel !== 'undefined',
+                strudelValue: typeof strudel !== 'undefined' ? typeof strudel : 'undefined',
+                hasInit: typeof strudel !== 'undefined' && strudel && typeof strudel.init === 'function'
+            });
+            
+            if (typeof strudel !== 'undefined' && strudel && typeof strudel.init === 'function') {
+                console.log('Strudel library is ready!');
                 return true;
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Wait before next attempt
+            await new Promise(resolve => setTimeout(resolve, 300));
         }
-        throw new Error('Strudel library not loaded');
+        
+        console.error('Strudel library not ready after', maxAttempts, 'attempts');
+        throw new Error(`Strudel library not available after ${maxAttempts} attempts`);
     }
 
     createNode(type, instrument, x = 100, y = 100) {
@@ -193,9 +391,22 @@ class NodeManager {
                 note: '',
                 duration: 500,
                 volume: 80,
-                effects: {}
+                effects: {},
+                strudelProperties: {}
             }
         };
+
+        // Initialize strudelProperties based on node type
+        if (this.propertySchema && this.propertySchema.nodes[type]) {
+            node.properties.strudelProperties = this.getDefaultProperties(type);
+        }
+
+        // Set initial instrument/sound properties based on type
+        if (type === 'DrumSymbol') {
+            node.properties.strudelProperties.symbol = instrument;
+        } else if (type === 'Instrument') {
+            node.properties.strudelProperties.sound = instrument;
+        }
 
         this.nodes.push(node);
         this.renderNode(node);
@@ -292,6 +503,11 @@ class NodeManager {
             return this.nodeSchema.nodes[node.type].title || node.type;
         }
         
+        // Check for individual transform nodes
+        if (this.propertySchema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
+            return this.propertySchema.transformNodes[node.type].label || node.type;
+        }
+        
         // Legacy titles for backward compatibility
         const titles = {
             'DrumSymbol': 'Instrument',
@@ -317,7 +533,16 @@ class NodeManager {
     getNodeCategory(node) {
         if (!this.nodeSchema) return 'unknown';
         const nodeDef = this.nodeSchema.nodes[node.type];
-        return nodeDef?.category || 'unknown';
+        if (nodeDef) {
+            return nodeDef.category || 'unknown';
+        }
+        
+        // Check for individual transform nodes
+        if (this.propertySchema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
+            return this.propertySchema.transformNodes[node.type].category || 'transform';
+        }
+        
+        return 'unknown';
     }
 
     getNodeExecutionStage(node) {
@@ -603,24 +828,40 @@ class NodeManager {
         // Legacy validation for backward compatibility
         const validConnections = {
             'Effect': {
-                'output': ['Effect', 'Instrument']
+                'output': ['Effect', 'Instrument', 'Transform']
             },
             'Instrument': {
-                'input': ['Effect', 'Repeater', 'Chance', 'Group'],
+                'input': ['Effect', 'Repeater', 'Chance', 'Group', 'Transform'],
                 'output': []
             },
             'DrumSymbol': {
-                'input': ['Effect', 'Repeater', 'Chance', 'Group'],
+                'input': ['Effect', 'Repeater', 'Chance', 'Group', 'Transform'],
                 'output': []
             },
             'Repeater': {
-                'output': ['Instrument', 'Effect', 'DrumSymbol']
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform']
             },
             'Chance': {
-                'output': ['Instrument', 'Effect', 'DrumSymbol']
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform'],
+                'input': ['wrapIn']
+            },
+            'Often': {
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform'],
+                'input': ['wrapIn']
+            },
+            'Sometimes': {
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform'],
+                'input': ['wrapIn']
+            },
+            'Rarely': {
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform'],
+                'input': ['wrapIn']
             },
             'Group': {
-                'output': ['Instrument', 'Effect', 'DrumSymbol']
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform']
+            },
+            'Transform': {
+                'output': ['Instrument', 'Effect', 'DrumSymbol', 'Transform']
             }
         };
 
@@ -628,6 +869,12 @@ class NodeManager {
         if (!sourceRules) return false;
 
         const allowedTargets = sourceRules[sourcePort] || [];
+        
+        // Special handling for wrapper nodes (chance nodes)
+        if (['Chance', 'Often', 'Sometimes', 'Rarely'].includes(targetNode.type)) {
+            return targetPort === 'input' && allowedTargets.includes('wrapIn');
+        }
+        
         return allowedTargets.includes(targetNode.type);
     }
 
@@ -819,7 +1066,41 @@ class NodeManager {
         
         const chanceNode = this.createNode('Chance', 'sometimes', 700, 300);
         if (chanceNode.properties.strudelProperties) {
+            chanceNode.properties.strudelProperties.type = 'sometimes';
             chanceNode.properties.strudelProperties.probability = 0.6;
+            chanceNode.properties.strudelProperties.interval = 4;
+        }
+        
+        // Dedicated probability wrapper nodes
+        const oftenNode = this.createNode('Often', 'high_prob', 900, 200);
+        if (oftenNode.properties.strudelProperties) {
+            oftenNode.properties.strudelProperties.probability = 0.75;
+        }
+        
+        const rarelyNode = this.createNode('Rarely', 'low_prob', 900, 400);
+        if (rarelyNode.properties.strudelProperties) {
+            rarelyNode.properties.strudelProperties.probability = 0.25;
+        }
+        
+        // Transform nodes - individual transform types
+        const chopTransformNode = this.createNode('chop', 'slices', 500, 400);
+        if (chopTransformNode.properties.strudelProperties) {
+            chopTransformNode.properties.strudelProperties.slices = 8;
+        }
+        
+        const stutterTransformNode = this.createNode('stutter', 'repeats', 700, 400);
+        if (stutterTransformNode.properties.strudelProperties) {
+            stutterTransformNode.properties.strudelProperties.repeats = 3;
+        }
+        
+        const lpfTransformNode = this.createNode('lpf', 'frequency', 900, 400);
+        if (lpfTransformNode.properties.strudelProperties) {
+            lpfTransformNode.properties.strudelProperties.frequency = 800;
+        }
+        
+        const delayTransformNode = this.createNode('delay', 'time', 1100, 400);
+        if (delayTransformNode.properties.strudelProperties) {
+            delayTransformNode.properties.strudelProperties.time = 0.25;
         }
         
         // Create some example connections
@@ -827,9 +1108,16 @@ class NodeManager {
         this.createConnection(chanceNode, 'output', pianoNode, 'input');
         this.createConnection(sawNode, 'output', delayNode, 'input');
         this.createConnection(delayNode, 'output', reverbNode, 'input');
+        this.createConnection(bdNode, 'output', chopTransformNode, 'input');
+        this.createConnection(chopTransformNode, 'output', lpfTransformNode, 'input');
+        this.createConnection(lpfTransformNode, 'output', delayTransformNode, 'input');
+        
+        // Wrapper connections (chance nodes wrap other nodes)
+        this.createConnection(pianoNode, 'output', oftenNode, 'input');
+        this.createConnection(sdNode, 'output', rarelyNode, 'input');
         
         // Update visual displays
-        [bdNode, sdNode, hhNode, pianoNode, sawNode, vocalNode, delayNode, reverbNode, repeatNode, chanceNode].forEach(node => {
+        [bdNode, sdNode, hhNode, pianoNode, sawNode, vocalNode, delayNode, reverbNode, repeatNode, chanceNode, chopTransformNode, stutterTransformNode, lpfTransformNode, delayTransformNode, oftenNode, rarelyNode].forEach(node => {
             this.updateNodeDisplay(node);
         });
         
@@ -990,7 +1278,12 @@ class NodeManager {
         }
 
         const nodeType = node.type;
-        const schema = this.propertySchema.nodes[nodeType];
+        let schema = this.propertySchema.nodes[nodeType];
+        
+        // Check if it's an individual transform node
+        if (!schema && this.propertySchema.transformNodes && this.propertySchema.transformNodes[nodeType]) {
+            schema = this.createTransformNodeSchema(nodeType);
+        }
         
         if (!schema) {
             console.warn(`No schema found for node type: ${nodeType}`);
@@ -1048,6 +1341,81 @@ class NodeManager {
             default:
                 return '';
         }
+    }
+
+    createTransformNodeSchema(transformType) {
+        if (!this.propertySchema.transformNodes || !this.propertySchema.transformNodes[transformType]) {
+            return null;
+        }
+
+        const transformDef = this.propertySchema.transformNodes[transformType];
+        
+        // Convert transform node definition to the expected schema format
+        const schema = {
+            title: transformDef.label || transformType,
+            sections: []
+        };
+
+        // Create a properties section for the transform node
+        const properties = {};
+        
+        Object.keys(transformDef.properties).forEach(propKey => {
+            const propDef = transformDef.properties[propKey];
+            
+            // Map property types to UI control types
+            let uiType = 'number'; // default
+            if (propDef.type === 'number' && (propKey === 'factor' || propKey === 'frequency' || propKey === 'rate')) {
+                uiType = 'knob';
+            }
+            
+            properties[propKey] = {
+                label: propDef.label || propKey,
+                type: uiType,
+                min: propDef.min,
+                max: propDef.max,
+                step: propDef.step,
+                default: propDef.default,
+                mapsTo: this.getTransformMapTo(transformType, propKey)
+            };
+        });
+
+        if (Object.keys(properties).length > 0) {
+            schema.sections.push({
+                id: 'transform',
+                label: 'Transform Settings',
+                properties: properties
+            });
+        }
+
+        return schema;
+    }
+
+    getTransformMapTo(transformType, propKey) {
+        // Map transform properties to Strudel methods
+        const mapToMap = {
+            'chop': { 'slices': 'arg' },
+            'stutter': { 'repeats': 'arg' },
+            'trunc': { 'amount': 'arg' },
+            'speed': { 'factor': 'arg' },
+            'note': { 'semitones': 'arg' },
+            'coarse': { 'octaves': 'arg' },
+            'vibrato': { 'rate': 'arg', 'depth': '.depth' },
+            'tremolo': { 'rate': 'arg', 'depth': '.depth' },
+            'lpf': { 'frequency': 'arg' },
+            'hpf': { 'frequency': 'arg' },
+            'lpq': { 'q': 'arg' },
+            'gain': { 'amount': 'arg' },
+            'delay': { 'time': 'arg' },
+            'delayfb': { 'amount': 'arg' },
+            'reverb': { 'amount': 'arg' },
+            'room': { 'size': 'arg' },
+            'often': { 'chance': 'arg' },
+            'sometimes': { 'chance': 'arg' },
+            'rarely': { 'chance': 'arg' }
+        };
+
+        const transformMap = mapToMap[transformType];
+        return transformMap && transformMap[propKey] ? transformMap[propKey] : 'arg';
     }
 
     generatePropertiesHTML(node, schema) {
@@ -1162,11 +1530,11 @@ class NodeManager {
         const checked = value ? 'checked' : '';
         return `
             <div class="property-control">
-                <label class="toggle-label">
+                <label class="toggle-label" for="${id}">
                     <input type="checkbox" id="${id}" class="toggle" 
                            ${checked} data-prop="${propKey}">
                     <span class="toggle-slider"></span>
-                    ${label}
+                    <span class="toggle-text">${label}</span>
                 </label>
             </div>
         `;
@@ -1311,6 +1679,33 @@ class NodeManager {
             `;
         }
         
+        // Show individual transform node properties
+        if (this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
+            const transformDef = this.propertySchema.transformNodes[node.type];
+            const label = transformDef.label || node.type;
+            
+            effectsHTML += `
+                <div class="property-value" data-property="transform">
+                    ${label.toUpperCase()}
+                </div>
+            `;
+            
+            // Show key properties
+            Object.keys(props).forEach(propKey => {
+                if (props[propKey] !== undefined && props[propKey] !== null) {
+                    const value = props[propKey];
+                    const propDef = transformDef.properties[propKey];
+                    const displayLabel = propDef?.label || propKey;
+                    
+                    effectsHTML += `
+                        <div class="property-value" data-property="transform">
+                            ${displayLabel}: ${value}
+                        </div>
+                    `;
+                }
+            });
+        }
+        
         // Show pitch properties
         if (node.type === 'Pitch') {
             if (props.note !== undefined && props.note !== 0) {
@@ -1343,6 +1738,9 @@ class NodeManager {
         // Store the current node in the properties content for event handling
         newPropertiesContent.dataset.nodeId = node.id;
 
+        // Set initial values for all controls based on node properties
+        this.initializePropertyControls(newPropertiesContent, node, schema);
+
         // Bind all property controls
         newPropertiesContent.addEventListener('input', (e) => {
             if (e.target.dataset.prop) {
@@ -1371,6 +1769,44 @@ class NodeManager {
                 }
             }
         });
+    }
+
+    initializePropertyControls(propertiesContent, node, schema) {
+        if (!node.properties.strudelProperties) {
+            node.properties.strudelProperties = this.getDefaultProperties(node.type);
+        }
+
+        const props = node.properties.strudelProperties;
+        
+        // Set initial values for all controls
+        Object.keys(props).forEach(propKey => {
+            const control = propertiesContent.querySelector(`[data-prop="${propKey}"]`);
+            if (control) {
+                if (control.type === 'checkbox') {
+                    control.checked = props[propKey];
+                } else {
+                    control.value = props[propKey];
+                }
+                
+                // Update value display for sliders and knobs
+                const valueDisplay = control.parentElement?.querySelector('.knob-value, .slider-value');
+                if (valueDisplay) {
+                    valueDisplay.textContent = props[propKey];
+                }
+            }
+        });
+
+        // Special handling for node instrument/properties that affect display
+        if (node.instrument) {
+            // Update the node subtitle to match the current instrument
+            const nodeElement = document.getElementById(node.id);
+            if (nodeElement) {
+                const subtitle = nodeElement.querySelector('.node-subtitle');
+                if (subtitle) {
+                    subtitle.textContent = node.instrument;
+                }
+            }
+        }
     }
 
     updateNodeProperty(node, propKey, value, isCheckbox = false) {
@@ -1411,17 +1847,33 @@ class NodeManager {
         }
 
         targetNode.properties.strudelProperties[propKey] = convertedValue;
+        
+        // Special handling for symbol/instrument changes - update node display
+        if (propKey === 'symbol' || propKey === 'sound') {
+            targetNode.instrument = convertedValue;
+        }
+        
         this.updateStatus(`Updated ${targetNode.type} ${propKey}: ${convertedValue}`);
         
         // Update the visual display on the node
         this.updateNodeDisplay(targetNode);
+        
+        // Refresh the property panel to reflect the new values
+        if (this.selectedNode && this.selectedNode.id === targetNode.id) {
+            this.updateSidePanel(targetNode);
+        }
     }
 
 
 
     async playNode(nodeId) {
         if (!this.audioInitialized) {
-            await this.initializeAudio();
+            try {
+                await this.initializeAudio();
+            } catch (error) {
+                this.updateStatus('Cannot play: Audio not available - ' + error.message);
+                return;
+            }
         }
 
         const node = this.nodes.find(n => n.id === nodeId);
@@ -1553,14 +2005,20 @@ class NodeManager {
             const amount = props.amount || 4;
             pattern = `*(${amount})`;
         } else if (node.type === 'Chance') {
-            const prob = props.probability || 0.5;
-            if (prob > 0.7) {
-                pattern = 'often';
-            } else if (prob < 0.3) {
-                pattern = 'rarely';
-            } else {
-                pattern = 'sometimes';
-            }
+            const probType = props.type || 'sometimes';
+            const probability = props.probability || 0.5;
+            const interval = props.interval || 4;
+            
+            // Map chance types to Strudel functions
+            const chanceMap = {
+                'often': `often(${probability})`,
+                'sometimes': `sometimes(${probability})`,
+                'rarely': `rarely(${probability})`,
+                'chance': `when(${probability})`,
+                'every': `every(${interval})`
+            };
+            
+            pattern = chanceMap[probType] || `sometimes(${probability})`;
         } else if (node.type === 'Effect') {
             pattern = this.buildEffectPattern(node);
         } else if (node.type === 'Pitch') {
@@ -1571,10 +2029,92 @@ class NodeManager {
             const type = props.type || 'rand';
             const max = props.max || 8;
             pattern = `${type}(${max})`;
+        } else if (node.type === 'Transform') {
+            const transformType = props.type || 'chop';
+            const amount = props.amount !== undefined ? props.amount : 0.5;
+            const speed = props.speed !== undefined && props.speed !== 1 ? `.speed(${props.speed})` : '';
+            
+            // Map transform types to Strudel methods
+            const transformMap = {
+                'chop': `.chop(${Math.round(amount * 16)})`,
+                'stutter': `.stutter(${Math.round(amount * 16)})`,
+                'density': `.density(${amount})`,
+                'linger': `.linger(${amount})`,
+                'rarely': `.rarely(${amount})`,
+                'sometimes': `.sometimes(${amount})`,
+                'often': `.often(${amount})`,
+                'slow': `.slow(${Math.max(1, Math.round(amount * 4))})`,
+                'fast': `.fast(${Math.max(1, Math.round(amount * 4))})`,
+                'rev': `.rev()`,
+                'palindrome': `.palindrome()`
+            };
+            
+            pattern = transformMap[transformType] || `.${transformType}(${amount})`;
+            if (speed) pattern += speed;
+        } else if (this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
+            // Handle individual transform nodes
+            pattern = this.buildIndividualTransformPattern(node);
         } else if (node.type === 'note') {
             pattern = `note("${node.properties.note}")`;
         } else {
             pattern = `s("${node.instrument}")`;
+        }
+        
+        return pattern;
+    }
+
+    buildIndividualTransformPattern(node) {
+        const props = node.properties.strudelProperties || {};
+        const transformType = node.type;
+        const transformDef = this.propertySchema.transformNodes[transformType];
+        
+        if (!transformDef) {
+            return '';
+        }
+
+        let pattern = '';
+        
+        // Map transform types to Strudel methods with proper parameters
+        const transformMap = {
+            'chop': () => `.chop(${props.slices || 8})`,
+            'stutter': () => `.stutter(${props.repeats || 2})`,
+            'trunc': () => `.trunc(${props.amount || 0.5})`,
+            'speed': () => `.speed(${props.factor || 1})`,
+            'note': () => `.note(${props.semitones || 0})`,
+            'coarse': () => `.coarse(${props.octaves || 0})`,
+            'vibrato': () => {
+                let p = `.vibrato(${props.rate || 4})`;
+                if (props.depth !== undefined && props.depth !== 0.02) {
+                    p += `.depth(${props.depth})`;
+                }
+                return p;
+            },
+            'tremolo': () => {
+                let p = `.tremolo(${props.rate || 8})`;
+                if (props.depth !== undefined && props.depth !== 0.5) {
+                    p += `.depth(${props.depth})`;
+                }
+                return p;
+            },
+            'lpf': () => `.lpf(${props.frequency || 800})`,
+            'hpf': () => `.hpf(${props.frequency || 200})`,
+            'lpq': () => `.lpq(${props.q || 0.7})`,
+            'gain': () => `.gain(${props.amount || 1})`,
+            'delay': () => `.delay(${props.time || 0.25})`,
+            'delayfb': () => `.delayfb(${props.amount || 0.4})`,
+            'reverb': () => `.reverb(${props.amount || 0.3})`,
+            'room': () => `.room(${props.size || 0.5})`,
+            'often': () => `.often(${props.chance || 0.75})`,
+            'sometimes': () => `.sometimes(${props.chance || 0.5})`,
+            'rarely': () => `.rarely(${props.chance || 0.25})`
+        };
+        
+        const transformFunc = transformMap[transformType];
+        if (transformFunc) {
+            pattern = transformFunc();
+        } else {
+            // Fallback for unknown transform types
+            pattern = `.${transformType}()`;
         }
         
         return pattern;
@@ -1623,8 +2163,9 @@ class NodeManager {
         }
 
         try {
-            // Use new authoritative canonical code generation
-            if (this.graphNormalizer) {
+            // Check if graph normalizer is available
+            if (this.graphNormalizer && this.nodeSchema) {
+                console.log('Using advanced graph normalization');
                 const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
                 
                 if (result.success && result.code) {
@@ -1639,13 +2180,16 @@ class NodeManager {
                     this.updateStatus(`Playing canonical pattern: ${result.code} | ${chainInfo} | ${ruleInfo}`);
                     return;
                 } else {
-                    this.updateStatus(`Normalization failed: ${result.error}`);
-                    console.error('Graph normalization failed:', result.error);
+                    console.warn('Graph normalization failed:', result.error);
+                    this.updateStatus(`Normalization failed: ${result.error} - Using basic pattern generation`);
                 }
+            } else {
+                console.warn('Graph normalizer not available - using basic pattern generation');
+                this.updateStatus('Graph normalizer not available - Using basic pattern generation');
             }
 
-            // Fallback to legacy pattern generation if normalization fails
-            console.warn('Falling back to legacy pattern generation');
+            // Fallback to legacy pattern generation
+            console.log('Falling back to legacy pattern generation');
             const rootNodes = this.findRootNodes();
 
             if (rootNodes.length === 0) {
@@ -1778,25 +2322,32 @@ class NodeManager {
     }
 
     normalizeGraph() {
-        // Use the new authoritative Graph Normalization Pipeline
-        if (!this.graphNormalizer) {
-            console.warn('Graph normalizer not available, using basic normalization');
-            return this.basicNormalizeGraph();
-        }
-
-        const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
-        
-        if (result.success) {
-            console.log('Graph normalization successful:', {
-                chains: result.chains.length,
-                codeLength: result.code.length,
-                metadata: result.metadata
-            });
-            return result.chains;
+        // Check if graph normalizer is available
+        if (this.graphNormalizer && this.nodeSchema) {
+            try {
+                const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
+                
+                if (result.success) {
+                    console.log('Graph normalization successful:', {
+                        chains: result.chains.length,
+                        codeLength: result.code.length,
+                        metadata: result.metadata
+                    });
+                    return result.chains;
+                } else {
+                    console.error('Graph normalization failed:', result.error);
+                    this.updateStatus(`Normalization failed: ${result.error}`);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Graph normalization error:', error);
+                this.updateStatus(`Normalization error: ${error.message}`);
+                return [];
+            }
         } else {
-            console.error('Graph normalization failed:', result.error);
-            this.updateStatus(`Normalization failed: ${result.error}`);
-            return [];
+            console.warn('Graph normalizer not available, using basic normalization');
+            this.updateStatus('Graph normalizer not available - Using basic normalization');
+            return this.basicNormalizeGraph();
         }
     }
 
@@ -1858,25 +2409,32 @@ class NodeManager {
     }
 
     generateCanonicalCode() {
-        // Use the new authoritative Graph Normalization Pipeline
-        if (!this.graphNormalizer) {
-            console.warn('Graph normalizer not available, using basic code generation');
-            return this.basicGenerateCanonicalCode();
-        }
-
-        const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
-        
-        if (result.success) {
-            console.log('Canonical code generated:', {
-                code: result.code,
-                chains: result.chains.length,
-                normalizationMetadata: result.metadata
-            });
-            return result.code;
+        // Check if graph normalizer is available
+        if (this.graphNormalizer && this.nodeSchema) {
+            try {
+                const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
+                
+                if (result.success) {
+                    console.log('Canonical code generated:', {
+                        code: result.code,
+                        chains: result.chains.length,
+                        normalizationMetadata: result.metadata
+                    });
+                    return result.code;
+                } else {
+                    console.error('Canonical code generation failed:', result.error);
+                    this.updateStatus(`Code generation failed: ${result.error}`);
+                    return '';
+                }
+            } catch (error) {
+                console.error('Canonical code generation error:', error);
+                this.updateStatus(`Code generation error: ${error.message}`);
+                return '';
+            }
         } else {
-            console.error('Canonical code generation failed:', result.error);
-            this.updateStatus(`Code generation failed: ${result.error}`);
-            return '';
+            console.warn('Graph normalizer not available, using basic code generation');
+            this.updateStatus('Graph normalizer not available - Using basic code generation');
+            return this.basicGenerateCanonicalCode();
         }
     }
 
@@ -1927,7 +2485,22 @@ class NodeManager {
         const wrapperMap = {
             'Often': `often(${props.probability || 0.7})`,
             'Sometimes': `sometimes(${props.probability || 0.5})`,
-            'Rarely': `rarely(${props.probability || 0.3})`
+            'Rarely': `rarely(${props.probability || 0.3})`,
+            'Chance': (() => {
+                const probType = props.type || 'sometimes';
+                const probability = props.probability || 0.5;
+                const interval = props.interval || 4;
+                
+                const chanceMap = {
+                    'often': `often(${probability})`,
+                    'sometimes': `sometimes(${probability})`,
+                    'rarely': `rarely(${probability})`,
+                    'chance': `when(${probability})`,
+                    'every': `every(${interval})`
+                };
+                
+                return chanceMap[probType] || `sometimes(${probability})`;
+            })()
         };
         
         const wrapperFunc = wrapperMap[wrapperNode.type] || wrapperNode.type.toLowerCase();
@@ -1940,39 +2513,42 @@ class NodeManager {
     }
 
     showNormalizationInfo() {
-        if (!this.graphNormalizer) {
-            this.updateStatus('Graph normalizer not available');
-            return;
-        }
-
-        const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
-        
-        if (result.success) {
-            const info = `
-                🔌 Strudel Graph Normalization Results:
+        if (this.graphNormalizer && this.nodeSchema) {
+            try {
+                const result = this.graphNormalizer.normalizeGraph(this.nodes, this.connections);
                 
-                📊 Pipeline Steps Applied:
-                1. ✅ Prune & Validate (${this.nodes.length} nodes processed)
-                2. ✅ Linearize Chains (${result.chains.length} execution paths)
-                3. ✅ Resolve Structural Merges (handled multi-input nodes)
-                4. ✅ Sort Effects by Stage (execution priority applied)
-                5. ✅ Lift Wrapper Nodes (outermost wrappers preserved)
-                6. ✅ Collapse Redundancies (optimized effect chain)
-                7. ✅ Emit Canonical Code (deterministic output)
-                
-                🎵 Generated Pattern:
-                ${result.code}
-                
-                🧾 Normalization Metadata:
-                • Rules Applied: ${result.metadata.normalization.rulesApplied.join(', ')}
-                • Chains: ${result.metadata.normalization.inputChains}
-                • Timestamp: ${result.metadata.normalization.timestamp}
-                
-                ✅ Graph is valid and ready for playback!
-            `;
-            this.updateStatus(info);
+                if (result.success) {
+                    const info = `
+                        🔌 Strudel Graph Normalization Results:
+                        
+                        📊 Pipeline Steps Applied:
+                        1. ✅ Prune & Validate (${this.nodes.length} nodes processed)
+                        2. ✅ Linearize Chains (${result.chains.length} execution paths)
+                        3. ✅ Resolve Structural Merges (handled multi-input nodes)
+                        4. ✅ Sort Effects by Stage (execution priority applied)
+                        5. ✅ Lift Wrapper Nodes (outermost wrappers preserved)
+                        6. ✅ Collapse Redundancies (optimized effect chain)
+                        7. ✅ Emit Canonical Code (deterministic output)
+                        
+                        🎵 Generated Pattern:
+                        ${result.code}
+                        
+                        🧾 Normalization Metadata:
+                        • Rules Applied: ${result.metadata.normalization.rulesApplied.join(', ')}
+                        • Chains: ${result.metadata.normalization.inputChains}
+                        • Timestamp: ${result.metadata.normalization.timestamp}
+                        
+                        ✅ Graph is valid and ready for playback!
+                    `;
+                    this.updateStatus(info);
+                } else {
+                    this.updateStatus(`❌ Normalization Failed: ${result.error}`);
+                }
+            } catch (error) {
+                this.updateStatus(`❌ Normalization Error: ${error.message}`);
+            }
         } else {
-            this.updateStatus(`❌ Normalization Failed: ${result.error}`);
+            this.updateStatus('⚠️ Graph Normalizer Not Available - Using basic normalization');
         }
     }
 
@@ -2019,6 +2595,7 @@ class NodeManager {
         // Rhythmic nodes (Time slicing) - will be sorted by stage
         const chopNode = this.createNode('Chop', 'granular', 500, 100);
         const stutterNode = this.createNode('Stutter', 'repeats', 500, 300);
+        const transformNode = this.createNode('Transform', 'chop', 500, 500);
         
         // Effect nodes (Chainable transforms) - will be sorted by stage priority
         const lpfNode = this.createNode('LPF', 'lowpass', 700, 100);
@@ -2061,6 +2638,12 @@ class NodeManager {
         
         if (stutterNode.properties.strudelProperties) {
             stutterNode.properties.strudelProperties.amount = 4;
+        }
+        
+        if (transformNode.properties.strudelProperties) {
+            transformNode.properties.strudelProperties.type = 'density';
+            transformNode.properties.strudelProperties.amount = 0.7;
+            transformNode.properties.strudelProperties.speed = 1.1;
         }
         
         if (lpfNode.properties.strudelProperties) {
@@ -2114,6 +2697,10 @@ class NodeManager {
         // Chain 3: piano (direct connection to wrapper)
         this.createConnection(pianoNode, 'output', sometimesNode, 'input');
         
+        // Chain 4: transform demo - bd -> transform -> often
+        this.createConnection(bdNode, 'output', transformNode, 'input');
+        this.createConnection(transformNode, 'output', oftenNode, 'input');
+        
         // Structural merge: stack combines bd and sd
         this.createConnection(bdNode, 'output', stackNode, 'input');
         this.createConnection(sdNode, 'output', stackNode, 'input');
@@ -2122,13 +2709,195 @@ class NodeManager {
         // lfoNode and randomNode have no connections - will be removed in normalization
         
         // Update visual displays
-        [bdNode, sdNode, pianoNode, stackNode, chopNode, stutterNode, 
+        [bdNode, sdNode, pianoNode, stackNode, chopNode, stutterNode, transformNode,
          lpfNode, hpfNode, delayNode, reverbNode, oftenNode, sometimesNode,
          lfoNode, randomNode].forEach(node => {
             this.updateNodeDisplay(node);
         });
         
         this.updateStatus('Generated complex example demonstrating all normalization features: pruning, chain linearization, stage sorting, wrapper lifting, and redundancy collapse');
+    }
+
+    /* ============================
+       CANVAS PAN & ZOOM CONTROLS
+    ============================ */
+
+    bindCanvasControls() {
+        // Zoom controls
+        document.getElementById('zoom-in')?.addEventListener('click', () => {
+            this.zoomIn();
+        });
+
+        document.getElementById('zoom-out')?.addEventListener('click', () => {
+            this.zoomOut();
+        });
+
+        // Pan tool toggle
+        const panToolBtn = document.getElementById('pan-tool');
+        if (panToolBtn) {
+            panToolBtn.addEventListener('click', () => {
+                this.togglePanTool();
+            });
+        }
+
+        // Canvas panning with mouse - simplified
+        const canvas = document.getElementById('canvas-content');
+        if (canvas) {
+            // Start panning when pan tool is active
+            canvas.addEventListener('mousedown', (e) => {
+                if (this.panToolActive && e.button === 0) {
+                    this.startPanning(e);
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (this.isPanning) {
+                    this.updatePanning(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                this.stopPanning();
+            });
+
+            // Zoom with mouse wheel
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                this.zoom(delta, e.clientX, e.clientY);
+            });
+        }
+
+        // Update pan tool button state
+        this.updatePanToolButton();
+    }
+
+    zoomIn() {
+        this.zoom(0.1);
+    }
+
+    zoomOut() {
+        this.zoom(-0.1);
+    }
+
+    zoom(delta, centerX = null, centerY = null) {
+        const newScale = Math.max(0.1, Math.min(3, this.canvasScale + delta));
+        
+        if (centerX !== null && centerY !== null) {
+            // Zoom towards cursor position
+            const canvas = document.getElementById('canvas-content');
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = centerX - rect.left;
+            const canvasY = centerY - rect.top;
+            
+            // Adjust offset to zoom towards cursor
+            this.canvasOffsetX = canvasX - (canvasX - this.canvasOffsetX) * (newScale / this.canvasScale);
+            this.canvasOffsetY = canvasY - (canvasY - this.canvasOffsetY) * (newScale / this.canvasScale);
+        }
+        
+        this.canvasScale = newScale;
+        this.updateCanvasTransform();
+    }
+
+    resetZoom() {
+        this.canvasScale = 1;
+        this.canvasOffsetX = 0;
+        this.canvasOffsetY = 0;
+        this.updateCanvasTransform();
+    }
+
+    togglePanTool() {
+        this.panToolActive = !this.panToolActive;
+        this.updatePanToolButton();
+        this.updateStatus(this.panToolActive ? 'Pan tool active - Click and drag to move canvas' : 'Pan tool inactive - Select nodes to interact');
+    }
+
+    updatePanToolButton() {
+        const panToolBtn = document.getElementById('pan-tool');
+        const canvas = document.getElementById('canvas-content');
+        
+        if (panToolBtn) {
+            if (this.panToolActive) {
+                panToolBtn.classList.add('active');
+                panToolBtn.innerHTML = '<i class="fas fa-hand-paper"></i>';
+                panToolBtn.title = 'Pan Tool (Active - Click and drag to move canvas)';
+                if (canvas) {
+                    canvas.classList.add('pan-tool-active');
+                }
+            } else {
+                panToolBtn.classList.remove('active');
+                panToolBtn.innerHTML = '<i class="fas fa-mouse-pointer"></i>';
+                panToolBtn.title = 'Select Tool (Inactive - Click nodes to interact)';
+                if (canvas) {
+                    canvas.classList.remove('pan-tool-active');
+                }
+            }
+        }
+    }
+
+    startPanning(event) {
+        this.isPanning = true;
+        this.lastPanX = event.clientX;
+        this.lastPanY = event.clientY;
+        
+        document.body.style.cursor = 'grabbing';
+        event.preventDefault();
+    }
+
+    updatePanning(event) {
+        const deltaX = event.clientX - this.lastPanX;
+        const deltaY = event.clientY - this.lastPanY;
+        
+        this.canvasOffsetX += deltaX;
+        this.canvasOffsetY += deltaY;
+        
+        this.lastPanX = event.clientX;
+        this.lastPanY = event.clientY;
+        
+        this.updateCanvasTransform();
+    }
+
+    stopPanning() {
+        if (this.isPanning) {
+            this.isPanning = false;
+            document.body.style.cursor = '';
+        }
+    }
+
+    updateCanvasTransform() {
+        const canvas = document.getElementById('canvas-content');
+        if (canvas) {
+            const transform = `translate(${this.canvasOffsetX}px, ${this.canvasOffsetY}px) scale(${this.canvasScale})`;
+            canvas.style.transform = transform;
+            
+            // Add zoomed class when not at 100%
+            if (this.canvasScale !== 1) {
+                canvas.classList.add('zoomed');
+            } else {
+                canvas.classList.remove('zoomed');
+            }
+            
+            // Update zoom level display
+            const zoomLevel = document.getElementById('zoom-level');
+            if (zoomLevel) {
+                zoomLevel.textContent = `${Math.round(this.canvasScale * 100)}%`;
+            }
+            
+            // Update all connection positions when zoomed/panned
+            this.updateAllConnections();
+        }
+    }
+
+    updateAllConnections() {
+        // Update all connection lines when canvas is transformed
+        const connections = document.querySelectorAll('.connection-line');
+        connections.forEach(line => {
+            const connectionId = line.dataset.connectionId;
+            const connection = this.connections.find(c => c.id === connectionId);
+            if (connection) {
+                this.updateConnectionPosition(connection);
+            }
+        });
     }
 }
 

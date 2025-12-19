@@ -326,15 +326,6 @@
     }
 }
 
-/* Canvas Panning */
-.canvas-panning {
-    cursor: grab;
-}
-
-.canvas-panning:active {
-    cursor: grabbing;
-}
-
 /* Node Properties Panel - Essential Styles */
 #node-properties {
     color: #e0e7ff;
@@ -612,4 +603,130 @@
 
 #clear-effects:hover {
     background: #4b5563;
+}
+
+/* Canvas Controls - Pan and Zoom */
+.canvas-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+.control-group {
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+}
+
+.control-btn {
+    background: #374151;
+    border: 1px solid #4b5563;
+    color: #e0e7ff;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.control-btn:hover {
+    background: #4b5563;
+    border-color: #00ff41;
+    transform: translateY(-1px);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.control-btn.active {
+    background: #00ff41;
+    color: #000;
+    border-color: #00ff41;
+}
+
+.pan-btn.active {
+    background: #00d9ff;
+    color: #000;
+}
+
+.zoom-level {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 8px;
+    min-width: 45px;
+    text-align: center;
+    border-left: 1px solid #4b5563;
+    margin-left: 4px;
+    padding-left: 8px;
+}
+
+/* Canvas Transformation Styles */
+.canvas-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-image:
+        linear-gradient(var(--bg-darkest) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bg-darkest) 1px, transparent 1px);
+    background-size: 20px 20px;
+    transition: transform 0.2s ease;
+    cursor: default;
+}
+
+.canvas-content.pan-tool-active {
+    cursor: grab;
+}
+
+.canvas-content.pan-tool-active:active {
+    cursor: grabbing;
+}
+
+.canvas-content.zoomed {
+    transform-origin: 0 0;
+}
+
+/* Canvas Panning Cursor States */
+.canvas-panning {
+    cursor: grab;
+}
+
+.canvas-panning:active {
+    cursor: grabbing;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .canvas-controls {
+        top: 5px;
+        right: 5px;
+    }
+    
+    .control-group {
+        padding: 4px;
+        gap: 4px;
+    }
+    
+    .control-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .zoom-level {
+        font-size: 11px;
+        padding: 0 6px;
+        min-width: 40px;
+    }
 }

@@ -125,6 +125,22 @@
                     <div class="canvas-content" id="canvas-content">
                         <!-- Nodes and connections will be rendered here -->
                     </div>
+                    
+                    <!-- Canvas Controls -->
+                    <div class="canvas-controls">
+                        <div class="control-group">
+                            <button id="pan-tool" class="control-btn pan-btn active" title="Pan Tool (Drag to move canvas)">
+                                <i class="fas fa-hand-paper"></i>
+                            </button>
+                            <button id="zoom-in" class="control-btn" title="Zoom In">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button id="zoom-out" class="control-btn" title="Zoom Out">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <span id="zoom-level" class="zoom-level">100%</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="play-controls">
                     <button id="play-all-nodes" class="btn btn-play-all"><i class="fas fa-play"></i> Play All Nodes</button>
@@ -662,7 +678,10 @@
     <!-- Music Manager - Audio effects processing -->
     <script src="js/musicManager.js"></script>
     <!-- Strudel.cc Library - Load as regular script instead of module -->
-    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js" 
+            onerror="this.onerror=null; this.src='js/strudel.esm.min.js'; console.log('Falling back to local Strudel file');"
+            onload="console.log('Strudel CDN loaded successfully')">
+    </script>
     
     <!-- Tooltip System -->
     <script src="js/tooltip.js"></script>

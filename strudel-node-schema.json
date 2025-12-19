@@ -297,6 +297,7 @@
         "priority": 80,
         "wraps": true
       },
+      "minChildren": 1,
       "properties": {
         "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.7, "mapsTo": "arg"}
       }
@@ -316,6 +317,7 @@
         "priority": 80,
         "wraps": true
       },
+      "minChildren": 1,
       "properties": {
         "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": "arg"}
       }
@@ -335,8 +337,31 @@
         "priority": 80,
         "wraps": true
       },
+      "minChildren": 1,
       "properties": {
-        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.3, "mapsTo": "arg"}
+        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.25, "mapsTo": "arg"}
+      }
+    },
+
+    "Chance": {
+      "id": "Chance",
+      "category": "wrapper",
+      "title": "Probability",
+      "description": "Probability wrapper with multiple modes",
+      "sockets": {
+        "in": ["wrapIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80,
+        "wraps": true
+      },
+      "minChildren": 1,
+      "properties": {
+        "type": {"type": "select", "values": ["often", "sometimes", "rarely", "chance", "every"], "default": "sometimes", "mapsTo": "method"},
+        "probability": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": "arg"},
+        "interval": {"type": "number", "min": 1, "max": 16, "default": 4, "mapsTo": "arg"}
       }
     },
 
@@ -397,6 +422,28 @@
       "properties": {
         "semitones": {"type": "number", "min": -24, "max": 24, "default": 0, "mapsTo": "arg"},
         "octaves": {"type": "number", "min": -3, "max": 3, "default": 0, "mapsTo": ".octave"}
+      }
+    },
+
+    "Transform": {
+      "id": "Transform",
+      "category": "modulation",
+      "title": "Transform",
+      "description": "Pattern transformation operations",
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40,
+        "wraps": false
+      },
+      "maxPerChain": 2,
+      "properties": {
+        "type": {"type": "select", "values": ["chop", "stutter", "density", "linger", "rarely", "sometimes", "often", "slow", "fast", "rev", "palindrome"], "default": "chop", "mapsTo": "method"},
+        "amount": {"type": "knob", "min": 0, "max": 1, "default": 0.5, "mapsTo": "arg"},
+        "speed": {"type": "knob", "min": 0.25, "max": 4, "default": 1, "mapsTo": ".speed"}
       }
     }
   },
