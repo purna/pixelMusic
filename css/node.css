@@ -100,6 +100,144 @@
     transform: translateY(-1px);
 }
 
+/* Child Port for Hierarchical Nodes */
+.child-port {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: #00ff41;
+    border: 2px solid #1a1a2e;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #000;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 255, 65, 0.3);
+}
+
+.child-port:hover {
+    background: #00d9ff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
+}
+
+.child-port .child-count {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: #ff006e;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1a1a2e;
+}
+
+/* Hierarchical Node States */
+.node.dimmed {
+    opacity: 0.3;
+    filter: grayscale(50%);
+    pointer-events: none;
+}
+
+.node.child-level {
+    border-color: #00d9ff;
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+}
+
+.node.child-level .node-header {
+    border-left-color: #00d9ff;
+}
+
+/* Enhanced Node Subtitle for Hierarchical Content */
+.node-subtitle {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.node-subtitle .hierarchical-content {
+    color: #00d9ff;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 217, 255, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-left: 8px;
+    border-left: 2px solid #00d9ff;
+}
+
+.node-subtitle .child-summary {
+    display: block;
+    color: #00ff41;
+    font-size: 10px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Navigation Breadcrumb */
+.navigation-breadcrumb {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(26, 26, 46, 0.95);
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #e0e7ff;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+.navigation-breadcrumb .breadcrumb-item {
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.navigation-breadcrumb .breadcrumb-item:hover {
+    color: #00ff41;
+}
+
+.navigation-breadcrumb .breadcrumb-separator {
+    color: #374151;
+    margin: 0 6px;
+}
+
+.navigation-breadcrumb .current-level {
+    color: #00ff41;
+    font-weight: 600;
+}
+
+/* Double-click hint */
+.node .double-click-hint {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.node:hover .double-click-hint {
+    opacity: 1;
+}
+
 /* Node Category Color Coding - Based on Execution Stages */
 .node-category-source .node-header {
     border-left: 4px solid #00d9ff;
@@ -653,6 +791,26 @@
     background: #00ff41;
     color: #000;
     border-color: #00ff41;
+}
+
+.back-btn {
+    background: #ff006e;
+    color: white;
+    border-color: #ff006e;
+}
+
+.back-btn:hover {
+    background: #ff4081;
+    border-color: #ff4081;
+    transform: translateY(-1px);
+}
+
+.back-btn:disabled {
+    background: #374151;
+    color: #666;
+    border-color: #374151;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .pan-btn.active {

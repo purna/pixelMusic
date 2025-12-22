@@ -1,0 +1,632 @@
+{
+  "schemaVersion": "1.0.0",
+
+  "uiControls": {
+    "knob": { "component": "Knob" },
+    "slider": { "component": "Slider" },
+    "select": { "component": "Select" },
+    "toggle": { "component": "Toggle" },
+    "pattern": { "component": "PatternInput" },
+    "number": { "component": "NumberInput" }
+  },
+
+  "transformNodes": {
+    "chop": {
+      "label": "Chop",
+      "category": "rhythmic",
+      "stage": "rhythmic",
+      "wraps": false,
+      "properties": {
+        "slices": {
+          "type": "number",
+          "label": "Slices",
+          "min": 1,
+          "max": 16,
+          "step": 1,
+          "default": 8
+        }
+      }
+    },
+
+    "stutter": {
+      "label": "Stutter",
+      "category": "rhythmic",
+      "stage": "rhythmic",
+      "properties": {
+        "repeats": {
+          "type": "number",
+          "label": "Repeats",
+          "min": 1,
+          "max": 8,
+          "step": 1,
+          "default": 2
+        }
+      }
+    },
+
+    "trunc": {
+      "label": "Truncate",
+      "category": "rhythmic",
+      "stage": "rhythmic",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "label": "Tail Cut",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      }
+    },
+
+    "speed": {
+      "label": "Playback Speed",
+      "category": "pitch",
+      "stage": "pitch",
+      "properties": {
+        "factor": {
+          "type": "number",
+          "label": "Speed",
+          "min": 0.1,
+          "max": 2,
+          "step": 0.01,
+          "default": 1
+        }
+      }
+    },
+
+    "note": {
+      "label": "Pitch",
+      "category": "pitch",
+      "stage": "pitch",
+      "properties": {
+        "semitones": {
+          "type": "number",
+          "label": "Semitones",
+          "min": -24,
+          "max": 24,
+          "step": 1,
+          "default": 0
+        }
+      }
+    },
+
+    "coarse": {
+      "label": "Octave Shift",
+      "category": "pitch",
+      "stage": "pitch",
+      "properties": {
+        "octaves": {
+          "type": "number",
+          "label": "Octaves",
+          "min": -2,
+          "max": 2,
+          "step": 1,
+          "default": 0
+        }
+      }
+    },
+
+    "vibrato": {
+      "label": "Vibrato",
+      "category": "modulation",
+      "stage": "modulation",
+      "properties": {
+        "rate": {
+          "type": "number",
+          "label": "Rate (Hz)",
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "default": 4
+        },
+        "depth": {
+          "type": "number",
+          "label": "Depth",
+          "min": 0,
+          "max": 0.1,
+          "step": 0.001,
+          "default": 0.02
+        }
+      }
+    },
+
+    "tremolo": {
+      "label": "Tremolo",
+      "category": "modulation",
+      "stage": "modulation",
+      "properties": {
+        "rate": {
+          "type": "number",
+          "label": "Rate (Hz)",
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "default": 8
+        },
+        "depth": {
+          "type": "number",
+          "label": "Depth",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      }
+    },
+
+    "lpf": {
+      "label": "Low-Pass Filter",
+      "category": "spectral",
+      "stage": "spectral",
+      "properties": {
+        "frequency": {
+          "type": "number",
+          "label": "Cutoff (Hz)",
+          "min": 20,
+          "max": 20000,
+          "step": 10,
+          "default": 800
+        }
+      }
+    },
+
+    "hpf": {
+      "label": "High-Pass Filter",
+      "category": "spectral",
+      "stage": "spectral",
+      "properties": {
+        "frequency": {
+          "type": "number",
+          "label": "Cutoff (Hz)",
+          "min": 20,
+          "max": 20000,
+          "step": 10,
+          "default": 200
+        }
+      }
+    },
+
+    "lpq": {
+      "label": "Filter Resonance",
+      "category": "spectral",
+      "stage": "spectral",
+      "properties": {
+        "q": {
+          "type": "number",
+          "label": "Resonance (Q)",
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "default": 0.7
+        }
+      }
+    },
+
+    "gain": {
+      "label": "Gain",
+      "category": "spectral",
+      "stage": "spectral",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "label": "Volume",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "default": 1
+        }
+      }
+    },
+
+    "delay": {
+      "label": "Delay",
+      "category": "space",
+      "stage": "space",
+      "properties": {
+        "time": {
+          "type": "number",
+          "label": "Time (cycles)",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.25
+        }
+      }
+    },
+
+    "delayfb": {
+      "label": "Delay Feedback",
+      "category": "space",
+      "stage": "space",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "label": "Feedback",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.4
+        }
+      }
+    },
+
+    "reverb": {
+      "label": "Reverb",
+      "category": "space",
+      "stage": "space",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "label": "Amount",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.3
+        }
+      }
+    },
+
+    "room": {
+      "label": "Room Size",
+      "category": "space",
+      "stage": "space",
+      "properties": {
+        "size": {
+          "type": "number",
+          "label": "Room Size",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      }
+    },
+
+    "often": {
+      "label": "Often",
+      "category": "probability",
+      "stage": "wrapper",
+      "wraps": true,
+      "properties": {
+        "chance": {
+          "type": "number",
+          "label": "Probability",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.75
+        }
+      }
+    },
+
+    "sometimes": {
+      "label": "Sometimes",
+      "category": "probability",
+      "stage": "wrapper",
+      "wraps": true,
+      "properties": {
+        "chance": {
+          "type": "number",
+          "label": "Probability",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      }
+    },
+
+    "rarely": {
+      "label": "Rarely",
+      "category": "probability",
+      "stage": "wrapper",
+      "wraps": true,
+      "properties": {
+        "chance": {
+          "type": "number",
+          "label": "Probability",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.25
+        }
+      }
+    }
+
+  },
+
+  "nodes": {
+    "Instrument": {
+      "title": "Instrument",
+      "sections": [
+        {
+          "id": "sound",
+          "label": "Sound",
+          "properties": {
+            "sound": {
+              "label": "Sample",
+              "type": "select",
+              "source": "instrumentList",
+              "required": true,
+              "mapsTo": "s"
+            },
+            "n": {
+              "label": "Variant",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0,
+              "mapsTo": ".n"
+            }
+          }
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "properties": {
+            "gain": {
+              "label": "Gain",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 1,
+              "mapsTo": ".gain"
+            },
+            "pan": {
+              "label": "Pan",
+              "type": "slider",
+              "min": -1,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".pan"
+            }
+          }
+        },
+        {
+          "id": "envelope",
+          "label": "Envelope (ADSR)",
+          "properties": {
+            "attack": {
+              "label": "Attack",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.01,
+              "mapsTo": ".attack"
+            },
+            "decay": {
+              "label": "Decay",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.3,
+              "mapsTo": ".decay"
+            },
+            "sustain": {
+              "label": "Sustain",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.7,
+              "mapsTo": ".sustain"
+            },
+            "release": {
+              "label": "Release",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0.5,
+              "mapsTo": ".release"
+            }
+          }
+        },
+        {
+          "id": "effects",
+          "label": "Audio Effects",
+          "properties": {
+            "vowel": {
+              "label": "Vowel Filter",
+              "type": "toggle",
+              "default": false,
+              "mapsTo": ".vowel"
+            },
+            "lpf": {
+              "label": "Low Pass Filter",
+              "type": "knob",
+              "min": 50,
+              "max": 8000,
+              "step": 10,
+              "default": 8000,
+              "mapsTo": ".lpf"
+            },
+            "hpf": {
+              "label": "High Pass Filter",
+              "type": "knob",
+              "min": 20,
+              "max": 2000,
+              "step": 10,
+              "default": 20,
+              "mapsTo": ".hpf"
+            },
+            "bpf": {
+              "label": "Band Pass Filter",
+              "type": "knob",
+              "min": 100,
+              "max": 4000,
+              "step": 10,
+              "default": 1000,
+              "mapsTo": ".bpf"
+            },
+            "delay": {
+              "label": "Delay",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".delay"
+            },
+            "reverb": {
+              "label": "Reverb",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".reverb"
+            },
+            "distort": {
+              "label": "Distortion",
+              "type": "knob",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0,
+              "mapsTo": ".distort"
+            },
+            "crush": {
+              "label": "Bit Crush",
+              "type": "knob",
+              "min": 0,
+              "max": 16,
+              "step": 1,
+              "default": 0,
+              "mapsTo": ".crush"
+            },
+            "speed": {
+              "label": "Speed",
+              "type": "knob",
+              "min": 0.25,
+              "max": 4,
+              "step": 0.01,
+              "default": 1,
+              "mapsTo": ".speed"
+            }
+          }
+        }
+      ]
+    },
+
+    "DrumSymbol": {
+      "title": "Drum",
+      "sections": [
+        {
+          "id": "sound",
+          "label": "Drum Sound",
+          "properties": {
+            "symbol": {
+              "label": "Drum Type",
+              "type": "select",
+              "values": ["bd", "sd", "hh", "oh", "rim", "lt", "mt", "ht", "rd", "cr"],
+              "mapsTo": "s"
+            },
+            "bank": {
+              "label": "Drum Machine",
+              "type": "select",
+              "values": [
+                "RolandTR909",
+                "RolandTR808",
+                "RolandTR707",
+                "AkaiLinn",
+                "RhythmAce",
+                "ViscoSpaceDrum"
+              ],
+              "default": "RolandTR909",
+              "mapsTo": ".bank"
+            }
+          }
+        },
+        {
+          "id": "env",
+          "label": "Envelope",
+          "properties": {
+            "dec": {
+              "label": "Decay",
+              "type": "knob",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0.3,
+              "mapsTo": ".dec"
+            }
+          }
+        }
+      ]
+    },
+
+    "Repeater": {
+      "title": "Repeat",
+      "sections": [
+        {
+          "id": "repeat",
+          "label": "Repeat Settings",
+          "properties": {
+            "amount": {
+              "label": "Repeats",
+              "type": "number",
+              "min": 1,
+              "max": 32,
+              "step": 1,
+              "default": 4,
+              "mapsTo": "*"
+            }
+          }
+        }
+      ]
+    },
+
+    "Generator": {
+      "title": "Generator",
+      "sections": [
+        {
+          "id": "generator",
+          "label": "Generator",
+          "properties": {
+            "type": {
+              "label": "Generator Type",
+              "type": "select",
+              "values": ["irand", "rand", "range"],
+              "mapsTo": "fn"
+            },
+            "max": {
+              "label": "Max Value",
+              "type": "number",
+              "min": 1,
+              "max": 512,
+              "step": 1,
+              "default": 8,
+              "mapsTo": "arg"
+            }
+          }
+        }
+      ]
+    },
+
+    "Output": {
+      "title": "Output",
+      "sections": [
+        {
+          "id": "output",
+          "label": "Output",
+          "properties": {
+            "enabled": {
+              "label": "Enabled",
+              "type": "toggle",
+              "default": true,
+              "mapsTo": "active"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,419 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Strudel Mini-Notation Syntax - Domain-specific language for pattern strings",
+  
+  "syntax": {
+    "rest": {
+      "symbol": "~",
+      "name": "Rest",
+      "description": "Silence/rest in the pattern",
+      "examples": [
+        "bd ~ sd ~",
+        "0 ~ 1 ~ 2 ~"
+      ],
+      "category": "basic",
+      "precedence": 1
+    },
+
+    "hold": {
+      "symbol": "_",
+      "name": "Hold/Tie",
+      "description": "Extends the previous event",
+      "examples": [
+        "bd _ sd _",
+        "0 _ 1 _"
+      ],
+      "category": "basic",
+      "precedence": 1
+    },
+
+    "grouping": {
+      "symbol": "[ ]",
+      "name": "Group/Subdivision",
+      "description": "Groups events to subdivide time equally",
+      "examples": [
+        "bd [sd sd]",
+        "[0 1 2] 3",
+        "bd [sd [hh hh]]"
+      ],
+      "category": "structural",
+      "precedence": 10,
+      "nested": true
+    },
+
+    "parallel": {
+      "symbol": ",",
+      "name": "Parallel/Stack",
+      "description": "Plays multiple patterns simultaneously",
+      "examples": [
+        "[bd, sd]",
+        "[0, 4, 7]",
+        "[bd sd, hh oh]"
+      ],
+      "category": "structural",
+      "precedence": 5,
+      "context": "within brackets"
+    },
+
+    "alternate": {
+      "symbol": "< >",
+      "name": "Alternate/Cycle",
+      "description": "Alternates between options each cycle",
+      "examples": [
+        "bd <sd rim>",
+        "<0 2 4>",
+        "bd <sd [hh hh]>"
+      ],
+      "category": "variation",
+      "precedence": 8,
+      "nested": true
+    },
+
+    "multiply": {
+      "symbol": "*",
+      "name": "Multiply/Repeat",
+      "description": "Repeats an event N times within its timespan",
+      "examples": [
+        "bd*4",
+        "hh*8",
+        "bd*<2 3 4>"
+      ],
+      "category": "repetition",
+      "precedence": 3,
+      "suffix": true,
+      "arguments": {
+        "count": {
+          "type": "number",
+          "min": 1,
+          "max": 64,
+          "canBePattern": true
+        }
+      }
+    },
+
+    "divide": {
+      "symbol": "/",
+      "name": "Divide/Slow",
+      "description": "Slows down pattern by dividing time",
+      "examples": [
+        "bd/2",
+        "hh/4",
+        "<bd sd>/2"
+      ],
+      "category": "timing",
+      "precedence": 3,
+      "suffix": true,
+      "arguments": {
+        "divisor": {
+          "type": "number",
+          "min": 1,
+          "max": 32,
+          "canBePattern": true
+        }
+      }
+    },
+
+    "replicate": {
+      "symbol": "!",
+      "name": "Replicate",
+      "description": "Repeats entire pattern N times per cycle",
+      "examples": [
+        "bd!4",
+        "[bd sd]!2",
+        "<bd sd>!3"
+      ],
+      "category": "repetition",
+      "precedence": 2,
+      "suffix": true,
+      "arguments": {
+        "count": {
+          "type": "number",
+          "min": 1,
+          "max": 16
+        }
+      }
+    },
+
+    "elongate": {
+      "symbol": "@",
+      "name": "Elongate",
+      "description": "Extends event duration by N steps",
+      "examples": [
+        "bd@2 sd",
+        "0@3 1",
+        "~@4 bd"
+      ],
+      "category": "timing",
+      "precedence": 3,
+      "suffix": true,
+      "arguments": {
+        "duration": {
+          "type": "number",
+          "min": 1,
+          "max": 16,
+          "canBePattern": true
+        }
+      }
+    },
+
+    "euclidean": {
+      "symbol": "(pulses,steps)",
+      "name": "Euclidean Rhythm",
+      "description": "Generates euclidean rhythm distribution",
+      "examples": [
+        "bd(3,8)",
+        "sd(5,16)",
+        "hh(7,16,2)"
+      ],
+      "category": "rhythm",
+      "precedence": 4,
+      "suffix": true,
+      "arguments": {
+        "pulses": {
+          "type": "number",
+          "min": 1,
+          "max": 32
+        },
+        "steps": {
+          "type": "number",
+          "min": 1,
+          "max": 32
+        },
+        "rotation": {
+          "type": "number",
+          "min": 0,
+          "max": 32,
+          "optional": true
+        }
+      }
+    },
+
+    "probability": {
+      "symbol": "?",
+      "name": "Probability",
+      "description": "Event occurs with given probability (0-1)",
+      "examples": [
+        "bd?0.5",
+        "hh?0.8",
+        "sd?<0.3 0.7>"
+      ],
+      "category": "chance",
+      "precedence": 3,
+      "suffix": true,
+      "arguments": {
+        "chance": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "canBePattern": true
+        }
+      }
+    },
+
+    "degradeBy": {
+      "symbol": ":",
+      "name": "Degrade By",
+      "description": "Randomly removes events with given probability",
+      "examples": [
+        "bd:0.3",
+        "hh:0.5",
+        "[bd sd]:0.2"
+      ],
+      "category": "chance",
+      "precedence": 3,
+      "suffix": true,
+      "arguments": {
+        "amount": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "canBePattern": true
+        }
+      }
+    },
+
+    "fastcat": {
+      "symbol": "space",
+      "name": "Fast Concatenation",
+      "description": "Default separator - sequences events in time",
+      "examples": [
+        "bd sd hh oh",
+        "0 1 2 3",
+        "c4 e4 g4"
+      ],
+      "category": "basic",
+      "precedence": 1,
+      "implicit": true
+    },
+
+    "range": {
+      "symbol": "..",
+      "name": "Range",
+      "description": "Creates a range of numbers",
+      "examples": [
+        "n('0..7')",
+        "note('c3..c5')"
+      ],
+      "category": "utility",
+      "precedence": 6,
+      "infix": true
+    },
+
+    "bjorklund": {
+      "symbol": "{pulses,steps}",
+      "name": "Bjorklund",
+      "description": "Alternative euclidean syntax with curly braces",
+      "examples": [
+        "bd{3,8}",
+        "sd{5,16}"
+      ],
+      "category": "rhythm",
+      "precedence": 4,
+      "suffix": true,
+      "aliasFor": "euclidean"
+    }
+  },
+
+  "operatorPrecedence": [
+    {"level": 1, "operators": ["rest", "hold", "fastcat"]},
+    {"level": 2, "operators": ["replicate"]},
+    {"level": 3, "operators": ["multiply", "divide", "elongate", "probability", "degradeBy"]},
+    {"level": 4, "operators": ["euclidean", "bjorklund"]},
+    {"level": 5, "operators": ["parallel"]},
+    {"level": 6, "operators": ["range"]},
+    {"level": 8, "operators": ["alternate"]},
+    {"level": 10, "operators": ["grouping"]}
+  ],
+
+  "parsingRules": {
+    "whitespace": {
+      "significance": "separator",
+      "description": "Spaces separate events in fast concatenation"
+    },
+    "nesting": {
+      "allowed": ["grouping", "alternate"],
+      "maxDepth": 8
+    },
+    "escaping": {
+      "character": "\\",
+      "escapable": ["[", "]", "<", ">", "(", ")", ",", "*", "/", "!", "@", "?", ":", "~", "_"]
+    },
+    "comments": {
+      "lineComment": "//",
+      "blockComment": ["/*", "*/"]
+    }
+  },
+
+  "patternTypes": {
+    "sound": {
+      "description": "Sound sample names",
+      "examples": ["bd", "sd", "hh", "piano", "casio"],
+      "function": "s"
+    },
+    "note": {
+      "description": "Musical notes (scientific notation or MIDI)",
+      "examples": ["c4", "eb5", "60", "64", "67"],
+      "function": "note"
+    },
+    "number": {
+      "description": "Numeric values (sample variants, parameters)",
+      "examples": ["0", "1", "2", "0.5", "-1"],
+      "function": "n"
+    },
+    "chord": {
+      "description": "Chord symbols",
+      "examples": ["Cmaj7", "Dm", "G7", "Am"],
+      "function": "chord"
+    },
+    "scale": {
+      "description": "Scale degree numbers",
+      "examples": ["0", "2", "4", "7"],
+      "function": "scale",
+      "context": "requires scale context"
+    }
+  },
+
+  "examples": {
+    "basic": [
+      {
+        "pattern": "bd sd hh oh",
+        "description": "Simple sequence of four sounds"
+      },
+      {
+        "pattern": "bd ~ sd ~",
+        "description": "Four-step pattern with rests"
+      },
+      {
+        "pattern": "[bd sd] hh",
+        "description": "Subdivision - two sounds in first half"
+      }
+    ],
+    "advanced": [
+      {
+        "pattern": "bd*4 [sd cp]",
+        "description": "Repeat bd 4 times, then sd and cp"
+      },
+      {
+        "pattern": "<bd sd> <hh oh>",
+        "description": "Alternating patterns each cycle"
+      },
+      {
+        "pattern": "bd(3,8)",
+        "description": "Euclidean rhythm - 3 pulses in 8 steps"
+      },
+      {
+        "pattern": "[bd, hh*4]",
+        "description": "Parallel - bd with fast hi-hats"
+      },
+      {
+        "pattern": "bd@3 sd hh",
+        "description": "bd extended for 3 steps"
+      }
+    ],
+    "complex": [
+      {
+        "pattern": "<[x*<1 2> [~@3 x]] x>",
+        "description": "Nested alternation with variable repeats and elongated rest"
+      },
+      {
+        "pattern": "[bd sd, hh*8, ~ cp]",
+        "description": "Three-layer parallel pattern"
+      },
+      {
+        "pattern": "bd(5,8) sd(3,8,2)",
+        "description": "Two euclidean patterns with rotation"
+      },
+      {
+        "pattern": "<bd!2 [sd sd sd]!3>",
+        "description": "Alternating replicated patterns"
+      }
+    ]
+  },
+
+  "validationRules": {
+    "balancedBrackets": {
+      "types": ["[ ]", "< >", "( )", "{ }"],
+      "mustMatch": true
+    },
+    "validNumbers": {
+      "integer": "^-?\\d+$",
+      "float": "^-?\\d+\\.\\d+$",
+      "range": "-inf to +inf"
+    },
+    "validNoteNames": {
+      "pattern": "^[a-g][#b]?[0-9]$",
+      "examples": ["c4", "f#5", "bb3"]
+    }
+  },
+
+  "compatibility": {
+    "tidalCycles": {
+      "inherited": ["~", "_", "[ ]", "< >", "*", "/", "!", "@", "(,)", "?", ":"],
+      "differences": [
+        "Strudel uses s() instead of Tidal's sound function",
+        "Some Tidal operators have different precedence"
+      ]
+    }
+  }
+}

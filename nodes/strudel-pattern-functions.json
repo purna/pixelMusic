@@ -1,0 +1,497 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Strudel Pattern Constructor Functions - Pattern generation from values",
+  "constructors": {
+    "s": {
+      "label": "Sound",
+      "category": "source",
+      "description": "Creates a pattern from sound sample names",
+      "signature": "s(pattern)",
+      "returnType": "Pattern",
+      "examples": [
+        "s('bd')",
+        "s('bd sd hh oh')",
+        "s('<bd sd> hh')",
+        "s('~ [rim, sd:<2 3>]')"
+      ],
+      "arguments": {
+        "pattern": {
+          "type": "string",
+          "description": "Mini-notation pattern of sound names",
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "template": "s('{pattern}')"
+      },
+      "nodeEquivalent": "Instrument",
+      "execution": {
+        "stage": "source",
+        "priority": 10
+      }
+    },
+    "n": {
+      "label": "Number/Note",
+      "category": "source",
+      "description": "Creates a pattern from numeric values (sample variants, MIDI notes)",
+      "signature": "n(pattern)",
+      "returnType": "Pattern",
+      "examples": [
+        "n('0 1 2 3')",
+        "n('<0 1>')",
+        "n('[0 <1 3>]*<2!3 4>')",
+        "n('0..7')"
+      ],
+      "arguments": {
+        "pattern": {
+          "type": "string",
+          "description": "Mini-notation pattern of numbers",
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "template": "n('{pattern}')"
+      },
+      "chainable": true,
+      "execution": {
+        "stage": "source",
+        "priority": 10
+      }
+    },
+    "note": {
+      "label": "Note",
+      "category": "source",
+      "description": "Creates a pattern from musical note names",
+      "signature": "note(pattern)",
+      "returnType": "Pattern",
+      "examples": [
+        "note('c4 e4 g4')",
+        "note('<c3 eb3 g3>')",
+        "note('[c4, e4, g4]')"
+      ],
+      "arguments": {
+        "pattern": {
+          "type": "string",
+          "description": "Mini-notation pattern of note names (c4, d#5, etc.)",
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "template": "note('{pattern}')"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 10
+      }
+    },
+    "chord": {
+      "label": "Chord",
+      "category": "source",
+      "description": "Creates a pattern from chord symbols",
+      "signature": "chord(pattern)",
+      "returnType": "Pattern",
+      "examples": [
+        "chord('Cm7 Fm7 Bb7 Ebmaj7')",
+        "chord('<Cmaj7 Dm7 G7>')"
+      ],
+      "arguments": {
+        "pattern": {
+          "type": "string",
+          "description": "Mini-notation pattern of chord symbols",
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "template": "chord('{pattern}')"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 10
+      }
+    },
+    "scale": {
+      "label": "Scale Degrees",
+      "category": "source",
+      "description": "Creates a pattern of scale degrees",
+      "signature": "scale(pattern)",
+      "returnType": "Pattern",
+      "examples": [
+        "scale('0 2 4 7').scale('c:minor')",
+        "scale('<0 2> <4 7>').scale('d:major')"
+      ],
+      "arguments": {
+        "pattern": {
+          "type": "string",
+          "description": "Mini-notation pattern of scale degree numbers",
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "template": "scale('{pattern}')"
+      },
+      "requiresContext": "scale definition",
+      "execution": {
+        "stage": "source",
+        "priority": 10
+      }
+    },
+    "sound": {
+      "label": "Sound (Full)",
+      "category": "source",
+      "description": "Alias for s() - creates pattern from sound names",
+      "signature": "sound(pattern)",
+      "aliasFor": "s",
+      "returnType": "Pattern"
+    }
+  },
+  "patternMethods": {
+    "bank": {
+      "label": "Bank",
+      "category": "sound",
+      "description": "Sets the sound bank/kit for drum sounds",
+      "signature": "pattern.bank(bankName)",
+      "examples": [
+        "s('bd sd').bank('RolandTR909')",
+        "s('bd sd').bank('tr909')",
+        "stack(...).bank('tr909')"
+      ],
+      "arguments": {
+        "bankName": {
+          "type": "string",
+          "values": [
+            "RolandTR909",
+            "tr909",
+            "RolandTR808",
+            "tr808",
+            "RolandTR707",
+            "tr707",
+            "AkaiLinn",
+            "linn",
+            "RhythmAce",
+            "ViscoSpaceDrum"
+          ],
+          "default": "RolandTR909"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".bank('{bankName}')"
+      },
+      "appliesTo": [
+        "drum patterns"
+      ],
+      "execution": {
+        "stage": "source",
+        "priority": 11
+      }
+    },
+    "room": {
+      "label": "Room",
+      "category": "effect",
+      "description": "Sets room size for reverb effect",
+      "signature": "pattern.room(size)",
+      "examples": [
+        "s('bd sd').room(0.5)",
+        "s('hh').room('<0 .2>')",
+        "s('~ [rim, sd:<2 3>]').room('<0 .2>')"
+      ],
+      "arguments": {
+        "size": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "canBePattern": true,
+          "supportsMiniNotation": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".room({size})"
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70
+      }
+    },
+    "gain": {
+      "label": "Gain",
+      "category": "effect",
+      "description": "Sets volume/amplitude",
+      "signature": "pattern.gain(amount)",
+      "examples": [
+        "s('bd').gain(0.8)",
+        "s('hh').gain('<0.5 1>')"
+      ],
+      "arguments": {
+        "amount": {
+          "type": "number",
+          "min": 0,
+          "max": 2,
+          "default": 1,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".gain({amount})"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "pan": {
+      "label": "Pan",
+      "category": "effect",
+      "description": "Sets stereo panning position",
+      "signature": "pattern.pan(position)",
+      "examples": [
+        "s('bd').pan(0.5)",
+        "s('hh').pan('<0 1>')"
+      ],
+      "arguments": {
+        "position": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "canBePattern": true,
+          "description": "0 = left, 0.5 = center, 1 = right"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".pan({position})"
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70
+      }
+    },
+    "speed": {
+      "label": "Speed",
+      "category": "effect",
+      "description": "Sets playback speed (affects pitch)",
+      "signature": "pattern.speed(factor)",
+      "examples": [
+        "s('bd').speed(2)",
+        "s('bd').speed(0.5)"
+      ],
+      "arguments": {
+        "factor": {
+          "type": "number",
+          "min": 0.1,
+          "max": 4,
+          "default": 1,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".speed({factor})"
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "lpf": {
+      "label": "Low Pass Filter",
+      "category": "effect",
+      "description": "Applies low-pass filter",
+      "signature": "pattern.lpf(frequency)",
+      "examples": [
+        "s('bd sd').lpf(800)",
+        "s('hh').lpf('<400 2000>')"
+      ],
+      "arguments": {
+        "frequency": {
+          "type": "number",
+          "min": 20,
+          "max": 20000,
+          "default": 8000,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".lpf({frequency})"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "hpf": {
+      "label": "High Pass Filter",
+      "category": "effect",
+      "description": "Applies high-pass filter",
+      "signature": "pattern.hpf(frequency)",
+      "examples": [
+        "s('bd sd').hpf(200)",
+        "s('hh').hpf('<100 500>')"
+      ],
+      "arguments": {
+        "frequency": {
+          "type": "number",
+          "min": 20,
+          "max": 20000,
+          "default": 20,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".hpf({frequency})"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "delay": {
+      "label": "Delay",
+      "category": "effect",
+      "description": "Applies delay effect",
+      "signature": "pattern.delay(time)",
+      "examples": [
+        "s('bd sd').delay(0.25)",
+        "s('hh').delay('<0.125 0.5>')"
+      ],
+      "arguments": {
+        "time": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.25,
+          "canBePattern": true,
+          "unit": "cycles"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".delay({time})"
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70
+      }
+    },
+    "reverb": {
+      "label": "Reverb",
+      "category": "effect",
+      "description": "Applies reverb effect",
+      "signature": "pattern.reverb(amount)",
+      "examples": [
+        "s('bd sd').reverb(0.3)",
+        "s('hh').reverb('<0.1 0.5>')"
+      ],
+      "arguments": {
+        "amount": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".reverb({amount})"
+      },
+      "execution": {
+        "stage": "space",
+        "priority": 70
+      }
+    },
+    "sound": {
+      "label": "Sound/Synth",
+      "category": "source",
+      "description": "Sets the synthesizer or waveform type",
+      "signature": "pattern.sound(synthName)",
+      "examples": [
+        "note('c3').sound('sawtooth')",
+        "note('c3 e3 g3').sound('sine')"
+      ],
+      "arguments": {
+        "synthName": {
+          "type": "string",
+          "values": [
+            "sawtooth",
+            "sine",
+            "square",
+            "triangle"
+          ],
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".sound('{synthName}')"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 11
+      }
+    },
+    "attack": {
+      "label": "Attack",
+      "category": "envelope",
+      "description": "Sets envelope attack time",
+      "signature": "pattern.attack(time)",
+      "examples": [
+        "note('c3').attack(0.1)"
+      ],
+      "arguments": {
+        "time": {
+          "type": "number",
+          "min": 0,
+          "max": 2,
+          "default": 0.01,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".attack({time})"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 12
+      }
+    }
+  },
+  "miniNotationInMethods": {
+    "description": "Methods that accept mini-notation patterns as string arguments",
+    "examples": [
+      {
+        "method": "room",
+        "example": ".room('<0 .2>')",
+        "description": "Room size alternates between 0 and 0.2"
+      },
+      {
+        "method": "n",
+        "example": "n('[0 <1 3>]*<2!3 4>')",
+        "description": "Complex pattern with grouping, alternation, multiplication, and replication"
+      },
+      {
+        "method": "s",
+        "example": "s('~ [rim, sd:<2 3>]')",
+        "description": "Pattern with rest, grouping, and parallel with nested alternation"
+      }
+    ]
+  },
+  "chainablePatterns": {
+    "description": "Patterns can be chained with methods",
+    "examples": [
+      "s('bd').gain(0.8).pan(0.5)",
+      "n('0 1 2 3').s('hh').room(0.3)",
+      "s('bd').struct('x ~ x ~').bank('tr909')"
+    ]
+  }
+}

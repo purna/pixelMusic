@@ -7,7 +7,7 @@ class MenuLoader {
 
     async loadMenuData() {
         try {
-            const response = await fetch('strudel-node-instruments.json');
+            const response = await fetch('nodes/strudel-node-instruments.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -15,8 +15,150 @@ class MenuLoader {
             return this.menuData;
         } catch (error) {
             console.error('Failed to load strudel-node-instruments.json:', error);
-            return null;
+            console.warn('Using fallback menu data');
+            this.menuData = this.getFallbackMenuData();
+            return this.menuData;
         }
+    }
+
+    getFallbackMenuData() {
+        return {
+            menus: [
+                {
+                    id: 'instruments',
+                    label: 'Instruments',
+                    groups: [
+                        {
+                            id: 'drums',
+                            label: 'Drum Kit',
+                            nodeType: 'DrumSymbol',
+                            color: '#00d9ff',
+                            items: [
+                                { id: 'bd', label: 'Bass Drum', value: 'bd' },
+                                { id: 'sd', label: 'Snare Drum', value: 'sd' },
+                                { id: 'hh', label: 'Hi-Hat', value: 'hh' },
+                                { id: 'oh', label: 'Open Hat', value: 'oh' },
+                                { id: 'rim', label: 'Rimshot', value: 'rim' }
+                            ]
+                        },
+                        {
+                            id: 'percussion',
+                            label: 'Percussion',
+                            nodeType: 'Instrument',
+                            color: '#00d9ff',
+                            items: [
+                                'clap', 'conga', 'bongo', 'cowbell', 'shaker_large', 'shaker_small'
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'patternFunctions',
+                    label: 'Pattern Functions',
+                    groups: [
+                        {
+                            id: 'soundFunctions',
+                            label: 'Sound Functions',
+                            nodeType: 's',
+                            color: '#8b5cf6',
+                            items: [
+                                { id: 'bd', label: 'Bass Drum', value: 'bd' },
+                                { id: 'sd', label: 'Snare Drum', value: 'sd' },
+                                { id: 'hh', label: 'Hi-Hat', value: 'hh' },
+                                { id: 'oh', label: 'Open Hat', value: 'oh' },
+                                { id: 'rim', label: 'Rimshot', value: 'rim' },
+                                { id: 'custom', label: 'Custom Sound', value: 'custom' }
+                            ]
+                        },
+                        {
+                            id: 'noteFunctions',
+                            label: 'Note Functions',
+                            nodeType: 'note',
+                            color: '#00ff41',
+                            items: [
+                                { id: 'c4', label: 'C4', value: 'c4' },
+                                { id: 'd4', label: 'D4', value: 'd4' },
+                                { id: 'e4', label: 'E4', value: 'e4' },
+                                { id: 'f4', label: 'F4', value: 'f4' },
+                                { id: 'g4', label: 'G4', value: 'g4' },
+                                { id: 'a4', label: 'A4', value: 'a4' },
+                                { id: 'b4', label: 'B4', value: 'b4' },
+                                { id: 'custom_note', label: 'Custom Note', value: 'custom' }
+                            ]
+                        },
+                        {
+                            id: 'bankFunctions',
+                            label: 'Bank Selection',
+                            nodeType: 'bank',
+                            color: '#ff006e',
+                            items: [
+                                { id: 'tr909', label: 'Roland TR-909', value: 'tr909' },
+                                { id: 'tr808', label: 'Roland TR-808', value: 'tr808' },
+                                { id: 'tr707', label: 'Roland TR-707', value: 'tr707' },
+                                { id: 'linn', label: 'Akai Linn', value: 'linn' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'combinators',
+                    label: 'Combinators',
+                    groups: [
+                        {
+                            id: 'structural',
+                            label: 'Structural Combinators',
+                            nodeType: 'stack',
+                            color: '#8b5cf6',
+                            items: [
+                                { id: 'stack', label: 'Stack (Parallel)', value: 'stack' },
+                                { id: 'cat', label: 'Cat (Sequence)', value: 'cat' },
+                                { id: 'group', label: 'Group', value: 'group' }
+                            ]
+                        },
+                        {
+                            id: 'rhythmic',
+                            label: 'Rhythmic Combinators',
+                            nodeType: 'struct',
+                            color: '#ff006e',
+                            items: [
+                                { id: 'struct', label: 'Structure', value: 'struct' }
+                            ]
+                        },
+                        {
+                            id: 'temporal',
+                            label: 'Temporal Combinators',
+                            nodeType: 'slow',
+                            color: '#00d9ff',
+                            items: [
+                                { id: 'slow', label: 'Slow Down', value: 'slow' },
+                                { id: 'fast', label: 'Speed Up', value: 'fast' },
+                                { id: 'off', label: 'Offset', value: 'off' }
+                            ]
+                        },
+                        {
+                            id: 'pitch',
+                            label: 'Pitch Combinators',
+                            nodeType: 'add',
+                            color: '#9400d3',
+                            items: [
+                                { id: 'add', label: 'Add Value', value: 'add' },
+                                { id: 'scale', label: 'Musical Scale', value: 'scale' }
+                            ]
+                        },
+                        {
+                            id: 'conditional',
+                            label: 'Conditional Combinators',
+                            nodeType: 'every',
+                            color: '#00ff41',
+                            items: [
+                                { id: 'every', label: 'Every N Cycles', value: 'every' },
+                                { id: 'whenmod', label: 'When Modulo', value: 'whenmod' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
     }
 
     async initialize() {
@@ -166,7 +308,21 @@ class MenuLoader {
             'Effect': 'fa-sliders-h',
             'Generator': 'fa-magic',
             'Transform': 'fa-exchange-alt',
-            'Output': 'fa-volume-up'
+            'Output': 'fa-volume-up',
+            's': 'fa-wave-square',
+            'note': 'fa-music',
+            'bank': 'fa-database',
+            'dec': 'fa-hourglass-half',
+            'stack': 'fa-layer-group',
+            'struct': 'fa-th',
+            'slow': 'fa-turtle',
+            'fast': 'fa-bolt',
+            'every': 'fa-calendar',
+            'whenmod': 'fa-calculator',
+            'group': 'fa-object-group',
+            'scale': 'fa-music',
+            'off': 'fa-clock',
+            'add': 'fa-plus'
         };
         return iconMap[nodeType] || 'fa-music';
     }

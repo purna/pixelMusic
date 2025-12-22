@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "Strudel Pattern Language Schema Collection",
+  "description": "Complete schema definition for Strudel live coding music environment",
+  
+  "schemas": {
+    "nodeSchema": {
+      "file": "strudel-node-schema.json",
+      "version": "2.0",
+      "description": "Node types, sockets, execution stages, and signal flow",
+      "covers": [
+        "Node definitions (Instrument, Drum, Stack, etc.)",
+        "Socket types and compatibility",
+        "Execution stages and priorities",
+        "Validation rules for node graphs"
+      ]
+    },
+    
+    "nodeProperties": {
+      "file": "strudel-node-properties.json",
+      "version": "1.0.0",
+      "description": "UI controls and property mappings for nodes",
+      "covers": [
+        "Property definitions for each node type",
+        "UI control types (knobs, sliders, selects)",
+        "Parameter ranges and defaults",
+        "Mapping to Strudel API"
+      ]
+    },
+    
+    "nodeInstruments": {
+      "file": "strudel-node-instruments.json",
+      "version": "1.0",
+      "description": "Instrument library and menu organization",
+      "covers": [
+        "Instrument categories (drums, percussion, mallet, etc.)",
+        "Sound sample names",
+        "Menu structure for UI",
+        "Pattern and effect groupings"
+      ]
+    },
+    
+    "controlNodes": {
+      "file": "strudel-control-nodes.json",
+      "version": "1.0.0",
+      "description": "Control signal generators (LFOs, randoms, patterns)",
+      "covers": [
+        "LFO types (sine, saw, square)",
+        "Random generators (rand, irand)",
+        "Pattern generators",
+        "Control signal routing"
+      ]
+    },
+    
+    "miniNotation": {
+      "file": "strudel-mini-notation.json",
+      "version": "1.0.0",
+      "description": "Mini-notation syntax - DSL for pattern strings",
+      "covers": [
+        "Syntax operators (~, _, [ ], < >, *, /, !, @, etc.)",
+        "Operator precedence and parsing rules",
+        "Pattern types (sound, note, number, chord)",
+        "Nesting and escaping rules",
+        "Validation patterns"
+      ]
+    },
+    
+    "patternCombinators": {
+      "file": "strudel-pattern-combinators.json",
+      "version": "1.0.0",
+      "description": "Higher-order pattern composition functions",
+      "covers": [
+        "Structural combinators (stack, cat, seq)",
+        "Rhythmic functions (struct, mask, euclidean)",
+        "Temporal transforms (off, slow, fast)",
+        "Conditional functions (every, whenmod, sometimes)"
+      ]
+    },
+    
+    "patternFunctions": {
+      "file": "strudel-pattern-functions.json",
+      "version": "1.0.0",
+      "description": "Pattern constructor functions and chainable methods",
+      "covers": [
+        "Constructor functions (s, n, note, chord, scale)",
+        "Chainable methods (bank, room, gain, pan, speed)",
+        "Effect methods (lpf, hpf, delay, reverb)",
+        "Mini-notation support in method arguments"
+      ]
+    }
+  },
+  
+  "coverage": {
+    "yourExample": "stack(s('bd').struct('<[x*<1 2> [~@3 x]] x>'), s('~ [rim, sd:<2 3>]').room('<0 .2>'), n('[0 <1 3>]*<2!3 4>').s('hh')).bank('tr909')",
+    "breakdown": {
+      "stack": {
+        "covered": true,
+        "schema": "patternCombinators",
+        "details": "Structural combinator that layers patterns in parallel"
+      },
+      "s": {
+        "covered": true,
+        "schema": "patternFunctions",
+        "details": "Sound pattern constructor function"
+      },
+      "struct": {
+        "covered": true,
+        "schema": "patternCombinators",
+        "details": "Rhythmic structure application method"
+      },
+      "miniNotation": {
+        "covered": true,
+        "schema": "miniNotation",
+        "elements": [
+          "'<[x*<1 2> [~@3 x]] x>' - alternation, grouping, multiply, elongate",
+          "'~ [rim, sd:<2 3>]' - rest, grouping, parallel, nested alternation",
+          "'[0 <1 3>]*<2!3 4>' - grouping, alternation, multiply, replicate"
+        ]
+      },
+      "room": {
+        "covered": true,
+        "schema": "patternFunctions",
+        "details": "Reverb room size method, accepts mini-notation"
+      },
+      "n": {
+        "covered": true,
+        "schema": "patternFunctions",
+        "details": "Number/note pattern constructor"
+      },
+      "bank": {
+        "covered": true,
+        "schema": "patternFunctions",
+        "details": "Drum bank selection method"
+      }
+    }
+  },
+  
+  "languageLayers": {
+    "layer1_nodeGraph": {
+      "description": "Visual node-based composition",
+      "schemas": ["nodeSchema", "nodeProperties", "nodeInstruments", "controlNodes"],
+      "userInterface": "Drag-and-drop nodes with visual connections"
+    },
+    
+    "layer2_miniNotation": {
+      "description": "Compact pattern strings (TidalCycles-inspired)",
+      "schemas": ["miniNotation"],
+      "userInterface": "Text strings within s(), n(), note() functions"
+    },
+    
+    "layer3_combinators": {
+      "description": "Functional pattern composition",
+      "schemas": ["patternCombinators", "patternFunctions"],
+      "userInterface": "JavaScript function calls and method chaining"
+    }
+  },
+  
+  "usagePatterns": {
+    "simplePattern": {
+      "example": "s('bd sd hh oh')",
+      "schemas": ["patternFunctions", "miniNotation"]
+    },
+    
+    "withEffects": {
+      "example": "s('bd sd').room(0.5).gain(0.8)",
+      "schemas": ["patternFunctions"]
+    },
+    
+    "structured": {
+      "example": "s('bd').struct('x ~ x ~')",
+      "schemas": ["patternFunctions", "patternCombinators", "miniNotation"]
+    },
+    
+    "parallel": {
+      "example": "stack(s('bd'), s('hh*4'))",
+      "schemas": ["patternCombinators", "patternFunctions", "miniNotation"]
+    },
+    
+    "complex": {
+      "example": "stack(s('bd').struct('<[x*<1 2> [~@3 x]] x>'), s('~ [rim, sd:<2 3>]').room('<0 .2>'), n('[0 <1 3>]*<2!3 4>').s('hh')).bank('tr909')",
+      "schemas": ["all"],
+      "description": "Full language features: combinators, mini-notation, effects, chaining"
+    }
+  },
+  
+  "implementationGuidance": {
+    "parsing": {
+      "order": [
+        "1. Parse mini-notation strings into AST",
+        "2. Resolve pattern constructors (s, n, note, etc.)",
+        "3. Apply combinators (stack, cat, etc.)",
+        "4. Chain methods (struct, room, bank, etc.)",
+        "5. Build execution graph by stage priority"
+      ]
+    },
+    
+    "execution": {
+      "stageOrder": [
+        "source (10) - Sound generators",
+        "structural (20) - Pattern combinators",
+        "rhythmic (30) - Time/rhythm transforms",
+        "pitch (40) - Pitch modulation",
+        "modulation (50) - LFOs and control",
+        "spectral (60) - Filters and spectral effects",
+        "space (70) - Spatial effects (reverb, delay, pan)",
+        "wrapper (80) - Conditional/probabilistic"
+      ]
+    },
+    
+    "validation": {
+      "checks": [
+        "Balanced brackets in mini-notation",
+        "Valid socket connections in node graph",
+        "Stage ordering in execution chain",
+        "Parameter ranges",
+        "Required properties present"
+      ]
+    }
+  },
+  
+  "additionalNotes": {
+    "miniNotationContext": "Mini-notation can appear in string arguments to pattern functions AND in method arguments that accept patterns (like room('<0 .2>'))",
+    
+    "methodChaining": "Most pattern methods return a Pattern, allowing unlimited chaining: s('bd').struct('x ~').room(0.5).gain(0.8).bank('tr909')",
+    
+    "patternAsArgument": "Many methods accept patterns as arguments, not just constants: .room('<0 .2>') alternates room size",
+    
+    "nodeVsCode": "Node graphs are one way to compose; the same functionality exists in code via combinators and methods"
+  }
+}

@@ -7,46 +7,48 @@
     <title>Pixel Music Grid</title>
     <!-- Fonts & Icons -->
     <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
-      <!-- Google Fonts - Press Start 2P -->
+    <!-- Google Fonts - Press Start 2P -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-     <!-- Custom Font -->
-     <style>
-         @font-face {
-             font-family: 'Inter';
-             src: url('fonts/inter-normal.woff2') format('woff2');
-             font-weight: normal;
-             font-style: normal;
-             font-display: swap;
-         }
-         @font-face {
-             font-family: 'Inter';
-             src: url('fonts/inter-bold.woff2') format('woff2');
-             font-weight: bold;
-             font-style: normal;
-             font-display: swap;
-         }
-         @font-face {
-             font-family: 'Press Start 2P';
-             src: url('fonts/press-start-2p-regular.woff2') format('woff2');
-             font-weight: normal;
-             font-style: normal;
-             font-display: swap;
-         }
-     </style>
-     <!-- Local Font Awesome Implementation -->
-     <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
-     <link rel="stylesheet" href="css/styles.css">
-     <link rel="stylesheet" href="css/settings.css">
-     <link rel="stylesheet" href="css/modal.css">
-     <link rel="stylesheet" href="css/tutorials.css">
-     <link rel="stylesheet" href="css/node.css">
+    <!-- Custom Font -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/inter-normal.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/inter-bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Press Start 2P';
+            src: url('fonts/press-start-2p-regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <!-- Local Font Awesome Implementation -->
+    <link rel="stylesheet" href="fonts/fontawesome-free-6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/tutorials.css">
+    <link rel="stylesheet" href="css/node.css">
 </head>
 
 <body>
     <header>
         <div class="logo-area">
             <h1>Pixel Music</h1>
-            <span class="badge">Grid V1.0</span>
+            <span class="badge">Strudel V1.0</span>
         </div>
         <div class="header-controls">
             <button id="initAudioBtn" class="header-btn action"><i class="fas fa-volume-up"></i> Enable Audio</button>
@@ -73,14 +75,14 @@
                         <div class="category-tabs" id="category-tabs">
                             <!-- Dynamically loaded from strudel-node-instruments.json -->
                         </div>
-                        
+
                         <!-- Dynamic Instrument Content -->
                         <div id="instrument-content">
                             <!-- Dynamically loaded from strudel-node-instruments.json -->
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Node Type Legend -->
                 <div class="info-panel">
                     <h3>Node Type Legend</h3>
@@ -125,12 +127,16 @@
                     <div class="canvas-content" id="canvas-content">
                         <!-- Nodes and connections will be rendered here -->
                     </div>
-                    
+
                     <!-- Canvas Controls -->
                     <div class="canvas-controls">
                         <div class="control-group">
-                            <button id="pan-tool" class="control-btn pan-btn active" title="Pan Tool (Drag to move canvas)">
+                            <button id="pan-tool" class="control-btn pan-btn active"
+                                title="Pan Tool (Drag to move canvas)">
                                 <i class="fas fa-hand-paper"></i>
+                            </button>
+                            <button id="back-to-parent" class="control-btn back-btn" title="Back to Parent Level (ESC)">
+                                <i class="fas fa-arrow-up"></i>
                             </button>
                             <button id="zoom-in" class="control-btn" title="Zoom In">
                                 <i class="fas fa-search-plus"></i>
@@ -143,12 +149,14 @@
                     </div>
                 </div>
                 <div class="play-controls">
-                    <button id="play-all-nodes" class="btn btn-play-all"><i class="fas fa-play"></i> Play All Nodes</button>
+                    <button id="play-all-nodes" class="btn btn-play-all"><i class="fas fa-play"></i> Play All
+                        Nodes</button>
                     <button id="stop-all-nodes" class="btn btn-secondary"><i class="fas fa-stop"></i> Stop All</button>
-                    <button id="delete-selected-node" class="btn btn-secondary"><i class="fas fa-trash-alt"></i> Delete Selected</button>
+                    <button id="delete-selected-node" class="btn btn-secondary"><i class="fas fa-trash-alt"></i> Delete
+                        Selected</button>
                     <button id="clear-nodes" class="btn btn-secondary"><i class="fas fa-trash"></i> Clear Nodes</button>
                 </div>
-                
+
                 <!-- Status Message -->
                 <div class="status-message" id="status-message">
                     Node Editor Ready - Click play buttons on nodes to test sounds
@@ -181,24 +189,24 @@
                         <option value="crackle">Crackle</option>
                     </select>
                 </div>
-                
+
                 <div class="property-group">
                     <label for="node-note">Note (if applicable)</label>
                     <input type="text" id="node-note" placeholder="e.g., c4, f#3">
                 </div>
-                
+
                 <div class="property-group">
                     <label for="node-duration">Duration</label>
                     <input type="range" id="node-duration" min="100" max="2000" value="500">
                     <span class="value" id="node-duration-val">500</span>
                 </div>
-                
+
                 <div class="property-group">
                     <label for="node-volume">Volume</label>
                     <input type="range" id="node-volume" min="0" max="100" value="80">
                     <span class="value" id="node-volume-val">80</span>
                 </div>
-                
+
                 <div class="effects-section">
                     <h4>Effects</h4>
                     <div class="effects-list">
@@ -210,7 +218,7 @@
                             <input type="range" id="effect-lpf-value" min="20" max="20000" value="800" disabled>
                             <span class="effect-value" id="effect-lpf-val">800 Hz</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-hpf" data-effect="hpf">
@@ -219,7 +227,7 @@
                             <input type="range" id="effect-hpf-value" min="20" max="20000" value="200" disabled>
                             <span class="effect-value" id="effect-hpf-val">200 Hz</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-bpf" data-effect="bpf">
@@ -228,43 +236,47 @@
                             <input type="range" id="effect-bpf-value" min="20" max="20000" value="1200" disabled>
                             <span class="effect-value" id="effect-bpf-val">1200 Hz</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-delay" data-effect="delay">
                                 Delay
                             </label>
-                            <input type="range" id="effect-delay-value" min="0" max="1" step="0.01" value="0.25" disabled>
+                            <input type="range" id="effect-delay-value" min="0" max="1" step="0.01" value="0.25"
+                                disabled>
                             <span class="effect-value" id="effect-delay-val">0.25</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-reverb" data-effect="reverb">
                                 Reverb
                             </label>
-                            <input type="range" id="effect-reverb-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <input type="range" id="effect-reverb-value" min="0" max="1" step="0.01" value="0.3"
+                                disabled>
                             <span class="effect-value" id="effect-reverb-val">0.3</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-distort" data-effect="distort">
                                 Distortion
                             </label>
-                            <input type="range" id="effect-distort-value" min="0" max="1" step="0.01" value="0.3" disabled>
+                            <input type="range" id="effect-distort-value" min="0" max="1" step="0.01" value="0.3"
+                                disabled>
                             <span class="effect-value" id="effect-distort-val">0.3</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-speed" data-effect="speed">
                                 Playback Speed
                             </label>
-                            <input type="range" id="effect-speed-value" min="0.1" max="2" step="0.01" value="1" disabled>
+                            <input type="range" id="effect-speed-value" min="0.1" max="2" step="0.01" value="1"
+                                disabled>
                             <span class="effect-value" id="effect-speed-val">1.0x</span>
                         </div>
-                        
+
                         <div class="effect-item">
                             <label>
                                 <input type="checkbox" id="effect-pan" data-effect="pan">
@@ -275,424 +287,505 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="property-group">
                     <button class="btn btn-secondary" id="apply-effects">Apply Effects</button>
                     <button class="btn btn-secondary" id="clear-effects">Clear All Effects</button>
                 </div>
             </div>
         </div>
-    </div>
-</main>
-
-<!-- Panel Toggle Button -->
-<button id="panel-toggle">
-    <i class="fas fa-cog"></i>
-</button>
-
-<!-- Settings Modal -->
-<div class="modal-overlay" id="settings-modal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2><i class="fas fa-cog"></i> Settings</h2>
-            <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
         </div>
-        <div class="modal-content">
-            <!-- Settings Tabs -->
-            <div class="settings-tabs">
-                <button class="settings-tab active" data-tab="general">
-                    <i class="fas fa-cog"></i> General
-                </button>
-                <button class="settings-tab" data-tab="audio-effects">
-                    <i class="fas fa-sliders-h"></i> Audio Effects
-                </button>
+    </main>
+
+    <!-- Panel Toggle Button -->
+    <button id="panel-toggle">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
             </div>
-             
-            <!-- General Settings Tab -->
-            <div class="settings-tab-content active" data-tab-content="general">
-                <div class="property-group">
-                    <label for="gridSize">Grid Size</label>
-                    <select id="gridSize">
-                        <option value="2x2">2x2</option>
-                        <option value="4x4">4x4</option>
-                        <option value="8x8">8x8</option>
-                    </select>
+            <div class="modal-content">
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="general">
+                        <i class="fas fa-cog"></i> General
+                    </button>
+                    <button class="settings-tab" data-tab="audio-effects">
+                        <i class="fas fa-sliders-h"></i> Audio Effects
+                    </button>
                 </div>
-                <div class="property-group">
-                    <label for="bpm">BPM</label>
-                    <input type="range" id="bpm" min="60" max="200" value="120">
+
+                <!-- General Settings Tab -->
+                <div class="settings-tab-content active" data-tab-content="general">
+                    <div class="property-group">
+                        <label for="gridSize">Grid Size</label>
+                        <select id="gridSize">
+                            <option value="2x2">2x2</option>
+                            <option value="4x4">4x4</option>
+                            <option value="8x8">8x8</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label for="bpm">BPM</label>
+                        <input type="range" id="bpm" min="60" max="200" value="120">
+                    </div>
                 </div>
-            </div>
-             
-            <!-- Audio Effects Tab -->
-            <div class="settings-tab-content" data-tab-content="audio-effects">
-                <div class="settings-content">
-                    <!-- Core Amplitude & Envelope -->
-                    <div class="settings-section">
-                        <div class="section-heading">Core Amplitude & Envelope</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-volume-up"></i>
-                                    <span>Gain (Volume)</span>
-                                </label>
-                                <input type="range" id="settings-gain" class="settings-range" min="0" max="2" step="0.01" value="1">
-                                <div class="range-value" id="gain-value">1.0</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrow-down"></i>
-                                    <span>Decay</span>
-                                </label>
-                                <input type="range" id="settings-decay" class="settings-range" min="0" max="2" step="0.01" value="0.4">
-                                <div class="range-value" id="decay-value">0.4</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-wave-square"></i>
-                                    <span>Sustain</span>
-                                </label>
-                                <input type="range" id="settings-sustain" class="settings-range" min="0" max="1" step="0.01" value="0.2">
-                                <div class="range-value" id="sustain-value">0.2</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrow-up"></i>
-                                    <span>Attack</span>
-                                </label>
-                                <input type="range" id="settings-attack" class="settings-range" min="0" max="1" step="0.01" value="0.01">
-                                <div class="range-value" id="attack-value">0.01</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrow-down"></i>
-                                    <span>Release</span>
-                                </label>
-                                <input type="range" id="settings-release" class="settings-range" min="0" max="2" step="0.01" value="0.2">
-                                <div class="range-value" id="release-value">0.2</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrows-alt-h"></i>
-                                    <span>Pan (Stereo)</span>
-                                </label>
-                                <input type="range" id="settings-pan" class="settings-range" min="-1" max="1" step="0.01" value="0">
-                                <div class="range-value" id="pan-value">0</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Filters -->
-                    <div class="settings-section">
-                        <div class="section-heading">Filters</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-filter"></i>
-                                    <span>Low-Pass Filter (Hz)</span>
-                                </label>
-                                <input type="range" id="settings-lpf" class="settings-range" min="20" max="20000" step="10" value="800">
-                                <div class="range-value" id="lpf-value">800</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-filter"></i>
-                                    <span>High-Pass Filter (Hz)</span>
-                                </label>
-                                <input type="range" id="settings-hpf" class="settings-range" min="20" max="20000" step="10" value="200">
-                                <div class="range-value" id="hpf-value">200</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-filter"></i>
-                                    <span>Band-Pass Filter (Hz)</span>
-                                </label>
-                                <input type="range" id="settings-bpf" class="settings-range" min="20" max="20000" step="10" value="1200">
-                                <div class="range-value" id="bpf-value">1200</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-filter"></i>
-                                    <span>Filter Resonance (Q)</span>
-                                </label>
-                                <input type="range" id="settings-lpq" class="settings-range" min="0" max="10" step="0.1" value="0.7">
-                                <div class="range-value" id="lpq-value">0.7</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Time & Space Effects -->
-                    <div class="settings-section">
-                        <div class="section-heading">Time & Space Effects</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-clock"></i>
-                                    <span>Delay Time (cycles)</span>
-                                </label>
-                                <input type="range" id="settings-delay" class="settings-range" min="0" max="1" step="0.01" value="0.25">
-                                <div class="range-value" id="delay-value">0.25</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-redo"></i>
-                                    <span>Delay Feedback</span>
-                                </label>
-                                <input type="range" id="settings-delayfb" class="settings-range" min="0" max="1" step="0.01" value="0.4">
-                                <div class="range-value" id="delayfb-value">0.4</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-music"></i>
-                                    <span>Delay Triplet Feel</span>
-                                </label>
-                                <input type="range" id="settings-delayt" class="settings-range" min="0" max="1" step="0.01" value="0.33">
-                                <div class="range-value" id="delayt-value">0.33</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-mountain"></i>
-                                    <span>Reverb Amount</span>
-                                </label>
-                                <input type="range" id="settings-reverb" class="settings-range" min="0" max="1" step="0.01" value="0.3">
-                                <div class="range-value" id="reverb-value">0.3</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-cube"></i>
-                                    <span>Room Size</span>
-                                </label>
-                                <input type="range" id="settings-room" class="settings-range" min="0" max="1" step="0.01" value="0.5">
-                                <div class="range-value" id="room-value">0.5</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Distortion & Saturation -->
-                    <div class="settings-section">
-                        <div class="section-heading">Distortion & Saturation</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-fire"></i>
-                                    <span>Distortion</span>
-                                </label>
-                                <input type="range" id="settings-distort" class="settings-range" min="0" max="1" step="0.01" value="0.3">
-                                <div class="range-value" id="distort-value">0.3</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-compress"></i>
-                                    <span>Bitcrush</span>
-                                </label>
-                                <input type="range" id="settings-crush" class="settings-range" min="1" max="16" step="1" value="4">
-                                <div class="range-value" id="crush-value">4</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-wave-square"></i>
-                                    <span>Waveshaper</span>
-                                </label>
-                                <input type="range" id="settings-shape" class="settings-range" min="0" max="1" step="0.01" value="0.5">
-                                <div class="range-value" id="shape-value">0.5</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Pitch & Playback -->
-                    <div class="settings-section">
-                        <div class="section-heading">Pitch & Playback</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-tachometer-alt"></i>
-                                    <span>Playback Speed</span>
-                                </label>
-                                <input type="range" id="settings-speed" class="settings-range" min="0.1" max="2" step="0.01" value="1">
-                                <div class="range-value" id="speed-value">1.0</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-music"></i>
-                                    <span>Pitch (semitones)</span>
-                                </label>
-                                <input type="range" id="settings-note" class="settings-range" min="-24" max="24" step="1" value="0">
-                                <div class="range-value" id="note-value">0</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrows-alt-v"></i>
-                                    <span>Octave Shift</span>
-                                </label>
-                                <input type="range" id="settings-coarse" class="settings-range" min="-2" max="2" step="1" value="0">
-                                <div class="range-value" id="coarse-value">0</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Rhythmic & Glitch -->
-                    <div class="settings-section">
-                        <div class="section-heading">Rhythmic & Glitch</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-cut"></i>
-                                    <span>Chop (slices)</span>
-                                </label>
-                                <input type="range" id="settings-chop" class="settings-range" min="1" max="16" step="1" value="8">
-                                <div class="range-value" id="chop-value">8</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-redo"></i>
-                                    <span>Stutter (repeats)</span>
-                                </label>
-                                <input type="range" id="settings-stutter" class="settings-range" min="1" max="8" step="1" value="2">
-                                <div class="range-value" id="stutter-value">2</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-scissors"></i>
-                                    <span>Truncate (tail cut)</span>
-                                </label>
-                                <input type="range" id="settings-trunc" class="settings-range" min="0" max="1" step="0.01" value="0.5">
-                                <div class="range-value" id="trunc-value">0.5</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Modulation -->
-                    <div class="settings-section">
-                        <div class="section-heading">Modulation & Movement</div>
-                        <div class="settings-group">
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-wave-sine"></i>
-                                    <span>Vibrato (Hz)</span>
-                                </label>
-                                <input type="range" id="settings-vibrato" class="settings-range" min="1" max="20" step="1" value="4">
-                                <div class="range-value" id="vibrato-value">4</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrows-alt-v"></i>
-                                    <span>Vibrato Depth</span>
-                                </label>
-                                <input type="range" id="settings-vibdepth" class="settings-range" min="0" max="0.1" step="0.001" value="0.02">
-                                <div class="range-value" id="vibdepth-value">0.02</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-wave-square"></i>
-                                    <span>Tremolo (Hz)</span>
-                                </label>
-                                <input type="range" id="settings-tremolo" class="settings-range" min="1" max="20" step="1" value="8">
-                                <div class="range-value" id="tremolo-value">8</div>
-                            </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-arrows-alt-v"></i>
-                                    <span>Tremolo Depth</span>
-                                </label>
-                                <input type="range" id="settings-tremdepth" class="settings-range" min="0" max="1" step="0.01" value="0.5">
-                                <div class="range-value" id="tremdepth-value">0.5</div>
-                            </div>
-                        </div>
-                    </div>
-                      
-                    <!-- Probability & Variation -->
-                    <div class="settings-section">
-                        <div class="section-heading">Probability & Variation</div>
-                        <div class="settings-group">
-                            <div class="property-group">
-                                <label class="property-label">
-                                    <i class="fas fa-dice"></i>
-                                    <span>Random Effects</span>
-                                </label>
-                                <div class="setting-description">
-                                    These controls allow you to apply effects probabilistically to create variation in your sounds.
+
+                <!-- Audio Effects Tab -->
+                <div class="settings-tab-content" data-tab-content="audio-effects">
+                    <div class="settings-content">
+                        <!-- Core Amplitude & Envelope -->
+                        <div class="settings-section">
+                            <div class="section-heading">Core Amplitude & Envelope</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-volume-up"></i>
+                                        <span>Gain (Volume)</span>
+                                    </label>
+                                    <input type="range" id="settings-gain" class="settings-range" min="0" max="2"
+                                        step="0.01" value="1">
+                                    <div class="range-value" id="gain-value">1.0</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrow-down"></i>
+                                        <span>Decay</span>
+                                    </label>
+                                    <input type="range" id="settings-decay" class="settings-range" min="0" max="2"
+                                        step="0.01" value="0.4">
+                                    <div class="range-value" id="decay-value">0.4</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-wave-square"></i>
+                                        <span>Sustain</span>
+                                    </label>
+                                    <input type="range" id="settings-sustain" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.2">
+                                    <div class="range-value" id="sustain-value">0.2</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrow-up"></i>
+                                        <span>Attack</span>
+                                    </label>
+                                    <input type="range" id="settings-attack" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.01">
+                                    <div class="range-value" id="attack-value">0.01</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrow-down"></i>
+                                        <span>Release</span>
+                                    </label>
+                                    <input type="range" id="settings-release" class="settings-range" min="0" max="2"
+                                        step="0.01" value="0.2">
+                                    <div class="range-value" id="release-value">0.2</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrows-alt-h"></i>
+                                        <span>Pan (Stereo)</span>
+                                    </label>
+                                    <input type="range" id="settings-pan" class="settings-range" min="-1" max="1"
+                                        step="0.01" value="0">
+                                    <div class="range-value" id="pan-value">0</div>
                                 </div>
                             </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-percentage"></i>
-                                    <span>Often Probability</span>
-                                </label>
-                                <input type="range" id="settings-often" class="settings-range" min="0" max="1" step="0.01" value="0.75">
-                                <div class="range-value" id="often-value">75%</div>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="settings-section">
+                            <div class="section-heading">Filters</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Low-Pass Filter (Hz)</span>
+                                    </label>
+                                    <input type="range" id="settings-lpf" class="settings-range" min="20" max="20000"
+                                        step="10" value="800">
+                                    <div class="range-value" id="lpf-value">800</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-filter"></i>
+                                        <span>High-Pass Filter (Hz)</span>
+                                    </label>
+                                    <input type="range" id="settings-hpf" class="settings-range" min="20" max="20000"
+                                        step="10" value="200">
+                                    <div class="range-value" id="hpf-value">200</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Band-Pass Filter (Hz)</span>
+                                    </label>
+                                    <input type="range" id="settings-bpf" class="settings-range" min="20" max="20000"
+                                        step="10" value="1200">
+                                    <div class="range-value" id="bpf-value">1200</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Filter Resonance (Q)</span>
+                                    </label>
+                                    <input type="range" id="settings-lpq" class="settings-range" min="0" max="10"
+                                        step="0.1" value="0.7">
+                                    <div class="range-value" id="lpq-value">0.7</div>
+                                </div>
                             </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-percentage"></i>
-                                    <span>Sometimes Probability</span>
-                                </label>
-                                <input type="range" id="settings-sometimes" class="settings-range" min="0" max="1" step="0.01" value="0.5">
-                                <div class="range-value" id="sometimes-value">50%</div>
+                        </div>
+
+                        <!-- Time & Space Effects -->
+                        <div class="settings-section">
+                            <div class="section-heading">Time & Space Effects</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Delay Time (cycles)</span>
+                                    </label>
+                                    <input type="range" id="settings-delay" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.25">
+                                    <div class="range-value" id="delay-value">0.25</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-redo"></i>
+                                        <span>Delay Feedback</span>
+                                    </label>
+                                    <input type="range" id="settings-delayfb" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.4">
+                                    <div class="range-value" id="delayfb-value">0.4</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-music"></i>
+                                        <span>Delay Triplet Feel</span>
+                                    </label>
+                                    <input type="range" id="settings-delayt" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.33">
+                                    <div class="range-value" id="delayt-value">0.33</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-mountain"></i>
+                                        <span>Reverb Amount</span>
+                                    </label>
+                                    <input type="range" id="settings-reverb" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.3">
+                                    <div class="range-value" id="reverb-value">0.3</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-cube"></i>
+                                        <span>Room Size</span>
+                                    </label>
+                                    <input type="range" id="settings-room" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.5">
+                                    <div class="range-value" id="room-value">0.5</div>
+                                </div>
                             </div>
-                              
-                            <div class="property-group has-slider">
-                                <label class="property-label">
-                                    <i class="fas fa-percentage"></i>
-                                    <span>Rarely Probability</span>
-                                </label>
-                                <input type="range" id="settings-rarely" class="settings-range" min="0" max="1" step="0.01" value="0.25">
-                                <div class="range-value" id="rarely-value">25%</div>
+                        </div>
+
+                        <!-- Distortion & Saturation -->
+                        <div class="settings-section">
+                            <div class="section-heading">Distortion & Saturation</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-fire"></i>
+                                        <span>Distortion</span>
+                                    </label>
+                                    <input type="range" id="settings-distort" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.3">
+                                    <div class="range-value" id="distort-value">0.3</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-compress"></i>
+                                        <span>Bitcrush</span>
+                                    </label>
+                                    <input type="range" id="settings-crush" class="settings-range" min="1" max="16"
+                                        step="1" value="4">
+                                    <div class="range-value" id="crush-value">4</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-wave-square"></i>
+                                        <span>Waveshaper</span>
+                                    </label>
+                                    <input type="range" id="settings-shape" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.5">
+                                    <div class="range-value" id="shape-value">0.5</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pitch & Playback -->
+                        <div class="settings-section">
+                            <div class="section-heading">Pitch & Playback</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                        <span>Playback Speed</span>
+                                    </label>
+                                    <input type="range" id="settings-speed" class="settings-range" min="0.1" max="2"
+                                        step="0.01" value="1">
+                                    <div class="range-value" id="speed-value">1.0</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-music"></i>
+                                        <span>Pitch (semitones)</span>
+                                    </label>
+                                    <input type="range" id="settings-note" class="settings-range" min="-24" max="24"
+                                        step="1" value="0">
+                                    <div class="range-value" id="note-value">0</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrows-alt-v"></i>
+                                        <span>Octave Shift</span>
+                                    </label>
+                                    <input type="range" id="settings-coarse" class="settings-range" min="-2" max="2"
+                                        step="1" value="0">
+                                    <div class="range-value" id="coarse-value">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rhythmic & Glitch -->
+                        <div class="settings-section">
+                            <div class="section-heading">Rhythmic & Glitch</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-cut"></i>
+                                        <span>Chop (slices)</span>
+                                    </label>
+                                    <input type="range" id="settings-chop" class="settings-range" min="1" max="16"
+                                        step="1" value="8">
+                                    <div class="range-value" id="chop-value">8</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-redo"></i>
+                                        <span>Stutter (repeats)</span>
+                                    </label>
+                                    <input type="range" id="settings-stutter" class="settings-range" min="1" max="8"
+                                        step="1" value="2">
+                                    <div class="range-value" id="stutter-value">2</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-scissors"></i>
+                                        <span>Truncate (tail cut)</span>
+                                    </label>
+                                    <input type="range" id="settings-trunc" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.5">
+                                    <div class="range-value" id="trunc-value">0.5</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modulation -->
+                        <div class="settings-section">
+                            <div class="section-heading">Modulation & Movement</div>
+                            <div class="settings-group">
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-wave-sine"></i>
+                                        <span>Vibrato (Hz)</span>
+                                    </label>
+                                    <input type="range" id="settings-vibrato" class="settings-range" min="1" max="20"
+                                        step="1" value="4">
+                                    <div class="range-value" id="vibrato-value">4</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrows-alt-v"></i>
+                                        <span>Vibrato Depth</span>
+                                    </label>
+                                    <input type="range" id="settings-vibdepth" class="settings-range" min="0" max="0.1"
+                                        step="0.001" value="0.02">
+                                    <div class="range-value" id="vibdepth-value">0.02</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-wave-square"></i>
+                                        <span>Tremolo (Hz)</span>
+                                    </label>
+                                    <input type="range" id="settings-tremolo" class="settings-range" min="1" max="20"
+                                        step="1" value="8">
+                                    <div class="range-value" id="tremolo-value">8</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-arrows-alt-v"></i>
+                                        <span>Tremolo Depth</span>
+                                    </label>
+                                    <input type="range" id="settings-tremdepth" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.5">
+                                    <div class="range-value" id="tremdepth-value">0.5</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Probability & Variation -->
+                        <div class="settings-section">
+                            <div class="section-heading">Probability & Variation</div>
+                            <div class="settings-group">
+                                <div class="property-group">
+                                    <label class="property-label">
+                                        <i class="fas fa-dice"></i>
+                                        <span>Random Effects</span>
+                                    </label>
+                                    <div class="setting-description">
+                                        These controls allow you to apply effects probabilistically to create variation
+                                        in your sounds.
+                                    </div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-percentage"></i>
+                                        <span>Often Probability</span>
+                                    </label>
+                                    <input type="range" id="settings-often" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.75">
+                                    <div class="range-value" id="often-value">75%</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-percentage"></i>
+                                        <span>Sometimes Probability</span>
+                                    </label>
+                                    <input type="range" id="settings-sometimes" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.5">
+                                    <div class="range-value" id="sometimes-value">50%</div>
+                                </div>
+
+                                <div class="property-group has-slider">
+                                    <label class="property-label">
+                                        <i class="fas fa-percentage"></i>
+                                        <span>Rarely Probability</span>
+                                    </label>
+                                    <input type="range" id="settings-rarely" class="settings-range" min="0" max="1"
+                                        step="0.01" value="0.25">
+                                    <div class="range-value" id="rarely-value">25%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-actions">
-                <button class="modal-close">Cancel</button>
-                <button class="primary" id="saveSettings">Save</button>
+                <div class="modal-actions">
+                    <button class="modal-close">Cancel</button>
+                    <button class="primary" id="saveSettings">Save</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Tone.js Library - Using newer version that supports AudioWorkletNode -->
     <script src="https://cdn.jsdelivr.net/npm/tone@14.8.43/build/Tone.min.js"></script>
     <!-- Music Manager - Audio effects processing -->
     <script src="js/musicManager.js"></script>
     <!-- Strudel.cc Library - Load as regular script instead of module -->
-    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js" 
-            onerror="this.onerror=null; this.src='js/strudel.esm.min.js'; console.log('Falling back to local Strudel file');"
-            onload="console.log('Strudel CDN loaded successfully')">
-    </script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js"
+        onerror="this.onerror=null; this.src='js/strudel.esm.min.js'; console.log('Falling back to local Strudel file');"
+        onload="console.log('Strudel CDN loaded successfully')">
+        </script>
+
     <!-- Tooltip System -->
     <script src="js/tooltip.js"></script>
     <!-- Audio Effects Manager -->
     <script src="js/audioEffectsManager.js"></script>
     <!-- Dynamic Menu Loader -->
     <script src="js/menuLoader.js"></script>
-    <!-- Node Manager -->
-    <script src="js/nodeManager.js"></script>
+    <!-- Strudel Pattern Generator - Load before NodeManager -->
+    <script src="js/strudelPatternGenerator.js"></script>
+    <!-- Node System Modules -->
+    <script src="js/nodes/NodeCanvas.js"></script>
+    <script src="js/nodes/ConnectionManager.js"></script>
+    <script src="js/nodes/NodeFactory.js"></script>
+    <script src="js/nodes/NodeAudio.js"></script>
+    <script src="js/nodes/NodeManager.js"></script>
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
+
+    <!-- Footer with Strudel Example Input -->
+    <footer class="strudel-footer">
+        <div class="footer-content">
+            <div class="strudel-input-section">
+                <h3><i class="fas fa-code"></i> Strudel Pattern Generator</h3>
+                <div class="input-group">
+                    <input type="text" id="strudel-example-input"
+                        placeholder="Enter Strudel pattern, e.g., s('[bd <hh oh>]*2').bank('tr909').dec(.4)" />
+                </div>
+                <div class="example-buttons">
+                    <button class="example-btn" data-example="s('[bd <hh oh>]*2').bank('tr909').dec(.4)">
+                        <i class="fas fa-drum"></i> Simple Beat
+                    </button>
+                    <button class="example-btn" data-example="stack(s('bd'), s('sd'), s('hh')).bank('tr909')">
+                        <i class="fas fa-layer-group"></i> Complex Pattern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Initialize the Strudel Pattern Generator -->
+    <script>
+        // Initialize the Strudel Pattern Generator when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for all scripts to load
+            setTimeout(() => {
+                if (window.StrudelPatternGenerator) {
+                    // Create instance if it doesn't exist
+                    if (!window.strudelPatternGenerator) {
+                        window.strudelPatternGenerator = new window.StrudelPatternGenerator(window.nodeManager);
+                    }
+                    window.strudelPatternGenerator.init();
+                    console.log('Strudel Pattern Generator initialized');
+                } else {
+                    console.warn('StrudelPatternGenerator class not found');
+                }
+            }, 100);
+        });
+    </script>
+
 </body>
 
 </html>

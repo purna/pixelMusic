@@ -1,0 +1,483 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Strudel Pattern Combinator Functions - Higher-order pattern composition",
+  
+  "combinators": {
+    "stack": {
+      "label": "Stack",
+      "category": "structural",
+      "description": "Layers multiple patterns in parallel, playing all simultaneously",
+      "signature": "stack(...patterns)",
+      "minArgs": 2,
+      "maxArgs": null,
+      "examples": [
+        "stack(s('bd'), s('hh'))",
+        "stack(s('bd'), s('sd'), s('hh'))",
+        "stack(s('bd').struct('<[x*<1 2> [~@3 x]] x>'), s('~ [rim, sd:<2 3>]'), n('[0 <1 3>]*<2!3 4>').s('hh'))"
+      ],
+      "visualization": {
+        "type": "vertical-layers",
+        "icon": "layers"
+      },
+      "serialization": {
+        "type": "function",
+        "template": "stack({args})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "multiInput": true,
+      "execution": {
+        "stage": "structural",
+        "priority": 20
+      }
+    },
+
+    "cat": {
+      "label": "Concatenate",
+      "category": "structural",
+      "description": "Sequences patterns one after another in time",
+      "signature": "cat(...patterns)",
+      "minArgs": 2,
+      "maxArgs": null,
+      "examples": [
+        "cat(s('bd sd'), s('hh oh'))",
+        "cat(n('0 1'), n('2 3'), n('4 5'))"
+      ],
+      "visualization": {
+        "type": "horizontal-sequence",
+        "icon": "arrow-right"
+      },
+      "serialization": {
+        "type": "function",
+        "template": "cat({args})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "multiInput": true,
+      "execution": {
+        "stage": "structural",
+        "priority": 20
+      }
+    },
+
+    "seq": {
+      "label": "Sequence",
+      "category": "structural",
+      "description": "Alias for cat() - sequences patterns in time",
+      "signature": "seq(...patterns)",
+      "aliasFor": "cat",
+      "minArgs": 2,
+      "maxArgs": null,
+      "examples": [
+        "seq(s('bd'), s('sd'))"
+      ]
+    },
+
+    "superimpose": {
+      "label": "Superimpose",
+      "category": "structural",
+      "description": "Layers a transformed version on top of the original pattern",
+      "signature": "pattern.superimpose(transform)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd').superimpose(x => x.speed(2))",
+        "n('0 1 2 3').superimpose(x => x.add(7))"
+      ],
+      "visualization": {
+        "type": "overlay",
+        "icon": "copy-plus"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".superimpose({fn})"
+      },
+      "sockets": {
+        "in": ["patternIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 25
+      }
+    },
+
+    "layer": {
+      "label": "Layer",
+      "category": "structural",
+      "description": "Applies multiple transformations and layers the results",
+      "signature": "pattern.layer(...transforms)",
+      "minArgs": 1,
+      "maxArgs": null,
+      "examples": [
+        "s('bd sd').layer(x => x.speed(2), x => x.slow(2))"
+      ],
+      "visualization": {
+        "type": "multi-overlay",
+        "icon": "layers"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".layer({fns})"
+      },
+      "sockets": {
+        "in": ["patternIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 25
+      }
+    },
+
+    "struct": {
+      "label": "Structure",
+      "category": "rhythmic",
+      "description": "Applies a rhythmic structure/euclidean pattern to a pattern",
+      "signature": "pattern.struct(structure)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd hh').struct('x ~ x ~')",
+        "n('0 1 2').struct('<[x x] [x ~ x]>')",
+        "s('bd').struct('<[x*<1 2> [~@3 x]] x>')"
+      ],
+      "visualization": {
+        "type": "rhythm-mask",
+        "icon": "grid"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".struct('{structure}')"
+      },
+      "sockets": {
+        "in": ["patternIn", "structureIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "structure": {
+          "type": "pattern",
+          "label": "Structure Pattern",
+          "description": "Mini-notation pattern defining rhythm",
+          "default": "x ~ x ~",
+          "supportsFullMiniNotation": true
+        }
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+
+    "mask": {
+      "label": "Mask",
+      "category": "rhythmic",
+      "description": "Filters events using a boolean pattern",
+      "signature": "pattern.mask(maskPattern)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd hh').mask('1 0 1 0')",
+        "n('0 1 2 3').mask('<1 0>')"
+      ],
+      "visualization": {
+        "type": "binary-mask",
+        "icon": "filter"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".mask('{mask}')"
+      },
+      "sockets": {
+        "in": ["patternIn", "maskIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+
+    "euclidean": {
+      "label": "Euclidean",
+      "category": "rhythmic",
+      "description": "Generates euclidean rhythms",
+      "signature": "pattern.euclidean(pulses, steps)",
+      "minArgs": 2,
+      "maxArgs": 3,
+      "examples": [
+        "s('bd').euclidean(3, 8)",
+        "s('sd').euclidean(5, 16, 2)"
+      ],
+      "visualization": {
+        "type": "circular-rhythm",
+        "icon": "circle-dot"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".euclidean({pulses}, {steps})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "pulses": {
+          "type": "number",
+          "label": "Pulses",
+          "min": 1,
+          "max": 32,
+          "default": 3
+        },
+        "steps": {
+          "type": "number",
+          "label": "Steps",
+          "min": 1,
+          "max": 32,
+          "default": 8
+        },
+        "rotation": {
+          "type": "number",
+          "label": "Rotation",
+          "min": 0,
+          "max": 32,
+          "default": 0
+        }
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+
+    "off": {
+      "label": "Offset",
+      "category": "temporal",
+      "description": "Layers a time-shifted transformation",
+      "signature": "pattern.off(time, transform)",
+      "minArgs": 2,
+      "maxArgs": 2,
+      "examples": [
+        "s('bd sd').off(0.125, x => x.speed(2))",
+        "n('0 2 4').off(0.25, x => x.add(7))"
+      ],
+      "visualization": {
+        "type": "delayed-copy",
+        "icon": "clock"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".off({time}, {fn})"
+      },
+      "sockets": {
+        "in": ["patternIn", "timeIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "time": {
+          "type": "number",
+          "label": "Time Offset",
+          "min": 0,
+          "max": 1,
+          "step": 0.125,
+          "default": 0.25
+        }
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 25
+      }
+    },
+
+    "every": {
+      "label": "Every",
+      "category": "conditional",
+      "description": "Applies transformation every N cycles",
+      "signature": "pattern.every(n, transform)",
+      "minArgs": 2,
+      "maxArgs": 2,
+      "examples": [
+        "s('bd sd hh oh').every(4, x => x.fast(2))",
+        "s('bd').every(2, x => x.speed(0.5))"
+      ],
+      "visualization": {
+        "type": "periodic-transform",
+        "icon": "repeat"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".every({n}, {fn})"
+      },
+      "sockets": {
+        "in": ["patternIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "n": {
+          "type": "number",
+          "label": "Every N Cycles",
+          "min": 1,
+          "max": 16,
+          "step": 1,
+          "default": 4
+        }
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80
+      }
+    },
+
+    "whenmod": {
+      "label": "When Modulo",
+      "category": "conditional",
+      "description": "Applies transformation when cycle modulo matches",
+      "signature": "pattern.whenmod(divisor, remainder, transform)",
+      "minArgs": 3,
+      "maxArgs": 3,
+      "examples": [
+        "s('bd sd').whenmod(4, 2, x => x.speed(2))",
+        "s('hh').whenmod(8, 7, x => x.gain(0.5))"
+      ],
+      "visualization": {
+        "type": "modulo-condition",
+        "icon": "percent"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".whenmod({divisor}, {remainder}, {fn})"
+      },
+      "sockets": {
+        "in": ["patternIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "divisor": {
+          "type": "number",
+          "label": "Divisor",
+          "min": 1,
+          "max": 16,
+          "step": 1,
+          "default": 4
+        },
+        "remainder": {
+          "type": "number",
+          "label": "Remainder",
+          "min": 0,
+          "max": 15,
+          "step": 1,
+          "default": 0
+        }
+      },
+      "execution": {
+        "stage": "wrapper",
+        "priority": 80
+      }
+    },
+
+    "slow": {
+      "label": "Slow",
+      "category": "temporal",
+      "description": "Slows down pattern by a factor",
+      "signature": "pattern.slow(factor)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd hh oh').slow(2)",
+        "n('0 1 2 3').slow(4)"
+      ],
+      "visualization": {
+        "type": "time-stretch",
+        "icon": "gauge"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".slow({factor})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "factor": {
+          "type": "number",
+          "label": "Slow Factor",
+          "min": 0.25,
+          "max": 16,
+          "step": 0.25,
+          "default": 2
+        }
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+
+    "fast": {
+      "label": "Fast",
+      "category": "temporal",
+      "description": "Speeds up pattern by a factor",
+      "signature": "pattern.fast(factor)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd').fast(2)",
+        "n('0 1 2 3').fast(4)"
+      ],
+      "visualization": {
+        "type": "time-compress",
+        "icon": "zap"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".fast({factor})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "properties": {
+        "factor": {
+          "type": "number",
+          "label": "Fast Factor",
+          "min": 0.25,
+          "max": 16,
+          "step": 0.25,
+          "default": 2
+        }
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    }
+  },
+
+  "categories": {
+    "structural": {
+      "label": "Structural",
+      "description": "Combine and compose patterns",
+      "color": "#8b5cf6"
+    },
+    "rhythmic": {
+      "label": "Rhythmic",
+      "description": "Control rhythm and timing",
+      "color": "#ff006e"
+    },
+    "temporal": {
+      "label": "Temporal",
+      "description": "Time-based transformations",
+      "color": "#00d9ff"
+    },
+    "conditional": {
+      "label": "Conditional",
+      "description": "Conditional pattern application",
+      "color": "#00ff41"
+    }
+  }
+}
