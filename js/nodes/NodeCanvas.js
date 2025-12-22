@@ -9,7 +9,7 @@ class NodeCanvas {
         this.offsetX = 0;
         this.offsetY = 0;
         this.isPanning = false;
-        this.panToolActive = true;
+        this.panToolActive = false;
         this.lastPanX = 0;
         this.lastPanY = 0;
     }

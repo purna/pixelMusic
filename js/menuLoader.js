@@ -165,27 +165,12 @@ class MenuLoader {
         const menuData = await this.loadMenuData();
         if (!menuData) return;
 
-        this.createCategoryTabs();
+        // Don't create horizontal tabs anymore - using sidebar instead
         this.loadCategoryContent('instruments'); // Default category
         this.setupEventListeners();
     }
 
-    createCategoryTabs() {
-        const tabsContainer = document.getElementById('category-tabs');
-        if (!tabsContainer || !this.menuData) return;
 
-        // Clear existing tabs
-        tabsContainer.innerHTML = '';
-
-        // Create tabs for each menu
-        this.menuData.menus.forEach((menu, index) => {
-            const tabButton = document.createElement('button');
-            tabButton.className = `category-tab ${index === 0 ? 'active' : ''}`;
-            tabButton.dataset.category = menu.id;
-            tabButton.textContent = menu.label;
-            tabsContainer.appendChild(tabButton);
-        });
-    }
 
     loadCategoryContent(categoryId) {
         const contentContainer = document.getElementById('instrument-content');
@@ -495,10 +480,17 @@ class MenuLoader {
     }
 
     setupEventListeners() {
-        // Category tab switching
+        // Category tab switching (horizontal tabs in panel)
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('category-tab')) {
                 const categoryId = e.target.dataset.category;
+                this.switchCategory(categoryId);
+            }
+            
+            // Sidebar category tab switching
+            if (e.target.classList.contains('category-sidebar-tab') || e.target.closest('.category-sidebar-tab')) {
+                const sidebarTab = e.target.classList.contains('category-sidebar-tab') ? e.target : e.target.closest('.category-sidebar-tab');
+                const categoryId = sidebarTab.dataset.category;
                 this.switchCategory(categoryId);
             }
             
@@ -602,11 +594,32 @@ class MenuLoader {
     }
 
     switchCategory(categoryId) {
-        // Update active tab
+        // Update active horizontal tab
         document.querySelectorAll('.category-tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        document.querySelector(`[data-category="${categoryId}"]`).classList.add('active');
+        const horizontalTab = document.querySelector(`[data-category="${categoryId}"]`);
+        if (horizontalTab) {
+            horizontalTab.classList.add('active');
+        }
+
+        // Update active sidebar tab
+        document.querySelectorAll('.category-sidebar-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        const sidebarTab = document.querySelector(`.category-sidebar-tab[data-category="${categoryId}"]`);
+        if (sidebarTab) {
+            sidebarTab.classList.add('active');
+        }
+
+        // Update tools header
+        const toolsHeader = document.querySelector('.tools-header');
+        if (toolsHeader && this.menuData) {
+            const menu = this.menuData.menus.find(m => m.id === categoryId);
+            if (menu) {
+                toolsHeader.textContent = menu.label;
+            }
+        }
 
         // Load new content
         this.loadCategoryContent(categoryId);

@@ -61,8 +61,23 @@
 
     <main>
         <div id="icon-sidebar">
-            <button class="icon-tab-btn" data-panel="instruments" data-tooltip-right="Instruments">
+            <button class="icon-tab-btn category-sidebar-tab active" data-category="instruments" data-tooltip-right="Instruments">
                 <i class="fas fa-music"></i>
+            </button>
+            <button class="icon-tab-btn category-sidebar-tab" data-category="pattern" data-tooltip-right="Pattern">
+                <i class="fas fa-repeat"></i>
+            </button>
+            <button class="icon-tab-btn category-sidebar-tab" data-category="effects" data-tooltip-right="Effects">
+                <i class="fas fa-sliders-h"></i>
+            </button>
+            <button class="icon-tab-btn category-sidebar-tab" data-category="utility" data-tooltip-right="Utility">
+                <i class="fas fa-cog"></i>
+            </button>
+            <button class="icon-tab-btn category-sidebar-tab" data-category="patternFunctions" data-tooltip-right="Pattern Functions">
+                <i class="fas fa-code"></i>
+            </button>
+            <button class="icon-tab-btn category-sidebar-tab" data-category="combinators" data-tooltip-right="Combinators">
+                <i class="fas fa-layer-group"></i>
             </button>
         </div>
 
@@ -71,12 +86,7 @@
                 <div class="tools-header">Instruments</div>
                 <div id="instrument-panel">
                     <div class="instrument-categories">
-                        <!-- Category Tabs -->
-                        <div class="category-tabs" id="category-tabs">
-                            <!-- Dynamically loaded from strudel-node-instruments.json -->
-                        </div>
-
-                        <!-- Dynamic Instrument Content -->
+                        <!-- Category content is now controlled by sidebar tabs -->
                         <div id="instrument-content">
                             <!-- Dynamically loaded from strudel-node-instruments.json -->
                         </div>
@@ -131,7 +141,7 @@
                     <!-- Canvas Controls -->
                     <div class="canvas-controls">
                         <div class="control-group">
-                            <button id="pan-tool" class="control-btn pan-btn active"
+                            <button id="pan-tool" class="control-btn pan-btn"
                                 title="Pan Tool (Drag to move canvas)">
                                 <i class="fas fa-hand-paper"></i>
                             </button>

@@ -266,11 +266,26 @@ main {
     display: flex; align-items: center; justify-content: center;
     position: relative; /* For tooltip positioning */
 }
-.icon-tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.icon-tab-btn.active {
-    color: var(--accent-primary);
+/* Enhanced sidebar category tab styling */
+.category-sidebar-tab {
+    position: relative;
+}
+
+.category-sidebar-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.category-sidebar-tab.active {
     background: var(--bg-medium);
     border-left: 3px solid var(--accent-primary);
+    color: var(--accent-primary);
+    box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.1);
+}
+
+.category-sidebar-tab.active i {
+    color: var(--accent-primary);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
 }
 
 /* Sidebar Tooltip Styling */
@@ -1446,35 +1461,22 @@ select { width: 100%; background: var(--bg-darkest); color: var(--text-primary);
     border-right: 1px solid var(--border-color);
 }
 
-/* Category tabs */
+/* Category tabs - Hidden since we moved to sidebar */
 .category-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    display: none;
 }
 
+/* Category tab styles - Hidden since moved to sidebar */
 .category-tab {
-    flex: 1;
-    padding: 8px 4px;
-    background: var(--bg-dark);
-    border: none;
-    color: var(--text-secondary);
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px 4px 0 0;
-    transition: all 0.2s;
+    display: none;
 }
 
 .category-tab:hover {
-    background: var(--bg-light);
-    color: var(--text-primary);
+    display: none;
 }
 
 .category-tab.active {
-    background: var(--accent-primary);
-    color: #000;
-    font-weight: bold;
+    display: none;
 }
 
 .category-content {
