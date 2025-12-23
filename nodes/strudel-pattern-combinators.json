@@ -455,6 +455,174 @@
         "stage": "rhythmic",
         "priority": 30
       }
+    },
+    "jux": {
+      "label": "Juxtapose",
+      "category": "structural",
+      "description": "Splits pattern into stereo channels with different transforms",
+      "signature": "pattern.jux(leftTransform, rightTransform)",
+      "minArgs": 2,
+      "maxArgs": 2,
+      "examples": [
+        "s('bd sd').jux(x => x, x => x.pan(1))",
+        "n('0 1 2 3').jux(x => x, x => x.add(7))"
+      ],
+      "visualization": {
+        "type": "stereo-split",
+        "icon": "pan-left"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".jux({fn1}, {fn2})"
+      },
+      "sockets": {
+        "in": ["patternIn", "functionIn", "functionIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 25
+      }
+    },
+    "rev": {
+      "label": "Reverse",
+      "category": "pitch",
+      "description": "Reverses the order of events in a pattern",
+      "signature": "pattern.rev()",
+      "minArgs": 0,
+      "maxArgs": 0,
+      "examples": [
+        "s('bd sd hh oh').rev()",
+        "n('0 1 2 3').rev()"
+      ],
+      "visualization": {
+        "type": "reverse-flow",
+        "icon": "rotate-ccw"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".rev()"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "palindrome": {
+      "label": "Palindrome",
+      "category": "pitch",
+      "description": "Plays pattern forward then backward",
+      "signature": "pattern.palindrome()",
+      "minArgs": 0,
+      "maxArgs": 0,
+      "examples": [
+        "s('bd sd').palindrome()",
+        "n('0 1 2').palindrome()"
+      ],
+      "visualization": {
+        "type": "palindrome-flow",
+        "icon": "repeat"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".palindrome()"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "shuffle": {
+      "label": "Shuffle",
+      "category": "pitch",
+      "description": "Randomly reorders events in a pattern",
+      "signature": "pattern.shuffle(seed)",
+      "minArgs": 0,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd hh oh').shuffle()",
+        "n('0 1 2 3').shuffle(42)"
+      ],
+      "visualization": {
+        "type": "shuffle-flow",
+        "icon": "shuffle"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".shuffle({seed})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "scramble": {
+      "label": "Scramble",
+      "category": "pitch",
+      "description": "Randomly scrambles events with controlled randomness",
+      "signature": "pattern.scramble(amount)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd sd hh oh').scramble(0.5)",
+        "n('0 1 2 3').scramble(0.8)"
+      ],
+      "visualization": {
+        "type": "scramble-flow",
+        "icon": "shuffle"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".scramble({amount})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "ply": {
+      "label": "Ply",
+      "category": "rhythmic",
+      "description": "Multiplies events by playing pattern multiple times with offsets",
+      "signature": "pattern.ply(n)",
+      "minArgs": 1,
+      "maxArgs": 1,
+      "examples": [
+        "s('bd').ply(4)",
+        "n('0 1 2').ply(3)"
+      ],
+      "visualization": {
+        "type": "event-multiplication",
+        "icon": "copy"
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".ply({n})"
+      },
+      "sockets": {
+        "in": ["patternIn"],
+        "out": ["patternOut"]
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
     }
   },
 

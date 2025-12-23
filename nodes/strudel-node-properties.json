@@ -7,7 +7,9 @@
     "select": { "component": "Select" },
     "toggle": { "component": "Toggle" },
     "pattern": { "component": "PatternInput" },
-    "number": { "component": "NumberInput" }
+    "number": { "component": "NumberInput" },
+    "childContainer": { "component": "ChildContainer" },
+    "transformFunction": { "component": "TransformFunction" }
   },
 
   "transformNodes": {
@@ -24,6 +26,97 @@
           "max": 16,
           "step": 1,
           "default": 8
+        }
+      }
+    },
+    "crush": {
+      "label": "Bit Crush",
+      "category": "spectral",
+      "stage": "spectral",
+      "wraps": false,
+      "properties": {
+        "bits": {
+          "type": "knob",
+          "label": "Bit Depth",
+          "min": 1,
+          "max": 16,
+          "default": 8
+        }
+      }
+    },
+    "shape": {
+      "label": "Wave Shape",
+      "category": "spectral",
+      "stage": "spectral",
+      "wraps": false,
+      "properties": {
+        "amount": {
+          "type": "knob",
+          "label": "Shape Amount",
+          "min": 0,
+          "max": 1,
+          "default": 0.5
+        }
+      }
+    },
+    "vowel": {
+      "label": "Vowel Filter",
+      "category": "spectral",
+      "stage": "spectral",
+      "wraps": false,
+      "properties": {
+        "vowel": {
+          "type": "select",
+          "label": "Vowel Type",
+          "values": ["a", "e", "i", "o", "u"],
+          "default": "a"
+        }
+      }
+    },
+    "jux": {
+      "label": "Juxtapose",
+      "category": "transform",
+      "stage": "structural",
+      "wraps": false,
+      "properties": {
+        "leftTransform": {
+          "type": "text",
+          "label": "Left Channel Transform",
+          "default": "x => x"
+        },
+        "rightTransform": {
+          "type": "text",
+          "label": "Right Channel Transform",
+          "default": "x => x.pan(1)"
+        }
+      }
+    },
+    "rev": {
+      "label": "Reverse",
+      "category": "transform",
+      "stage": "pitch",
+      "wraps": false,
+      "properties": {}
+    },
+    "palindrome": {
+      "label": "Palindrome",
+      "category": "transform",
+      "stage": "pitch",
+      "wraps": false,
+      "properties": {}
+    },
+    "shuffle": {
+      "label": "Shuffle",
+      "category": "transform",
+      "stage": "pitch",
+      "wraps": false,
+      "properties": {
+        "seed": {
+          "type": "number",
+          "label": "Random Seed",
+          "min": 0,
+          "max": 1000,
+          "default": 0
         }
       }
     },
@@ -297,6 +390,13 @@
           "max": 1,
           "step": 0.01,
           "default": 0.75
+        },
+        "children": {
+          "label": "Transform Functions",
+          "type": "transformFunction",
+          "description": "Functions to apply when condition is met",
+          "minChildren": 1,
+          "maxChildren": 4
         }
       }
     },
@@ -360,6 +460,20 @@
               "step": 1,
               "default": 0,
               "mapsTo": ".n"
+            }
+          }
+        },
+        {
+          "id": "children",
+          "label": "Child Patterns",
+          "properties": {
+            "children": {
+              "label": "Child Container",
+              "type": "childContainer",
+              "description": "Drag patterns here to create parent-child relationships",
+              "accepts": ["pattern", "transform"],
+              "minChildren": 0,
+              "maxChildren": 8
             }
           }
         },

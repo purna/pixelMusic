@@ -1,0 +1,221 @@
+/* Node Properties Panel Styles */
+.schema-properties-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.schema-properties-section h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.property-control {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.property-control label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: help;
+}
+
+.property-control label:hover {
+    color: #fff;
+}
+
+.property-description {
+    font-size: 11px;
+    color: #888;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* Number Controls */
+.number-control-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.property-slider {
+    flex: 1;
+    cursor: pointer;
+}
+
+.property-value-display {
+    min-width: 40px;
+    text-align: right;
+    color: #fff;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+/* String Controls */
+.property-text {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.property-text::placeholder {
+    color: #666;
+}
+
+.property-text:focus {
+    outline: none;
+    border-color: #00ff41;
+    box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.2);
+}
+
+/* Boolean Controls */
+.property-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #00ff41;
+}
+
+/* Enum Controls */
+.property-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.property-select:focus {
+    outline: none;
+    border-color: #00ff41;
+    box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.2);
+}
+
+/* Child Container Controls */
+.child-container-control {
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.add-child-btn {
+    width: 100%;
+    padding: 8px;
+    background: #00ff41;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-child-btn:hover {
+    background: #00cc33;
+}
+
+.add-child-btn i {
+    font-size: 12px;
+}
+
+.child-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.child-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.child-label {
+    color: #fff;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.remove-child-btn {
+    background: transparent;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 3px;
+}
+
+.remove-child-btn:hover {
+    background: rgba(255, 68, 68, 0.2);
+}
+
+/* Transform Function Controls */
+.transform-function-control {
+    background: rgba(65, 105, 225, 0.1);
+    border: 1px solid rgba(65, 105, 225, 0.3);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.transform-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.transform-select:focus {
+    outline: none;
+    border-color: #4169e1;
+    box-shadow: 0 0 0 2px rgba(65, 105, 225, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .schema-properties-section {
+        margin-top: 10px;
+        padding: 10px;
+    }
+    
+    .number-control-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .property-value-display {
+        text-align: left;
+    }
+}

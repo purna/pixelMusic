@@ -409,6 +409,377 @@
         "priority": 70
       }
     },
+    "crush": {
+      "label": "Bit Crush",
+      "category": "effect",
+      "description": "Bit crushing effect for digital distortion",
+      "signature": "pattern.crush(bits)",
+      "examples": [
+        "s('bd').crush(8)",
+        "s('hh').crush(4)"
+      ],
+      "arguments": {
+        "bits": {
+          "type": "number",
+          "min": 1,
+          "max": 16,
+          "default": 8,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".crush({bits})"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "shape": {
+      "label": "Wave Shape",
+      "category": "effect",
+      "description": "Wave shaping/distortion effect",
+      "signature": "pattern.shape(amount)",
+      "examples": [
+        "s('bd').shape(0.5)",
+        "s('hh').shape(0.8)"
+      ],
+      "arguments": {
+        "amount": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".shape({amount})"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "vowel": {
+      "label": "Vowel Filter",
+      "category": "effect",
+      "description": "Vowel formant filter effect",
+      "signature": "pattern.vowel(vowelType)",
+      "examples": [
+        "s('bd').vowel('a')",
+        "s('hh').vowel('e')"
+      ],
+      "arguments": {
+        "vowelType": {
+          "type": "select",
+          "values": ["a", "e", "i", "o", "u"],
+          "default": "a"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".vowel('{vowelType}')"
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60
+      }
+    },
+    "coarse": {
+      "label": "Octave Shift",
+      "category": "pitch",
+      "description": "Shifts pitch by octaves",
+      "signature": "pattern.coarse(octaves)",
+      "examples": [
+        "note('c4').coarse(1)",
+        "note('c4 e4 g4').coarse(-1)"
+      ],
+      "arguments": {
+        "octaves": {
+          "type": "number",
+          "min": -3,
+          "max": 3,
+          "default": 0,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".coarse({octaves})"
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "segment": {
+      "label": "Segment",
+      "category": "temporal",
+      "description": "Divides pattern into segments",
+      "signature": "pattern.segment(n)",
+      "examples": [
+        "s('bd sd hh oh').segment(2)",
+        "n('0 1 2 3 4 5').segment(3)"
+      ],
+      "arguments": {
+        "n": {
+          "type": "number",
+          "min": 1,
+          "max": 32,
+          "default": 2
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".segment({n})"
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+    "chunk": {
+      "label": "Chunk",
+      "category": "temporal",
+      "description": "Groups events into chunks",
+      "signature": "pattern.chunk(n)",
+      "examples": [
+        "s('bd sd hh oh').chunk(2)",
+        "n('0 1 2 3 4 5').chunk(3)"
+      ],
+      "arguments": {
+        "n": {
+          "type": "number",
+          "min": 1,
+          "max": 16,
+          "default": 2
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".chunk({n})"
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+    "fit": {
+      "label": "Fit",
+      "category": "temporal",
+      "description": "Fits pattern into specified length",
+      "signature": "pattern.fit(length, values)",
+      "examples": [
+        "s('bd sd hh oh').fit(8, ['bd', 'sd', 'hh', 'oh'])",
+        "n('0 1 2 3').fit(6, [0, 1, 2, 3, 4, 5])"
+      ],
+      "arguments": {
+        "length": {
+          "type": "number",
+          "min": 1,
+          "max": 64,
+          "default": 4
+        },
+        "values": {
+          "type": "array",
+          "description": "Values to fit into pattern"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".fit({length}, {values})"
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+    "scale": {
+      "label": "Scale",
+      "category": "pitch",
+      "description": "Applies musical scale to pattern",
+      "signature": "pattern.scale(scaleName)",
+      "examples": [
+        "n('0 1 2 3 4 5 6 7').scale('C5:minor')",
+        "n('0 2 4 7').scale('D5:major')"
+      ],
+      "arguments": {
+        "scaleName": {
+          "type": "string",
+          "description": "Scale name (e.g., 'C5:minor', 'D5:major')",
+          "default": "C5:minor"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".scale('{scaleName}')"
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "chord": {
+      "label": "Chord",
+      "category": "pitch",
+      "description": "Creates chord from pattern",
+      "signature": "pattern.chord(chordName)",
+      "examples": [
+        "n('0').chord('Cmaj7')",
+        "n('0 2 4').chord('Dm7')"
+      ],
+      "arguments": {
+        "chordName": {
+          "type": "string",
+          "description": "Chord name (e.g., 'Cmaj7', 'Dm7')",
+          "default": "Cmaj7"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".chord('{chordName}')"
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "arp": {
+      "label": "Arpeggio",
+      "category": "pitch",
+      "description": "Creates arpeggio from chord",
+      "signature": "pattern.arp(mode)",
+      "examples": [
+        "n('0 2 4 7').arp('up')",
+        "n('0 2 4 7').arp('down')"
+      ],
+      "arguments": {
+        "mode": {
+          "type": "select",
+          "values": ["up", "down", "updown", "random"],
+          "default": "up"
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".arp('{mode}')"
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40
+      }
+    },
+    "hold": {
+      "label": "Hold",
+      "category": "envelope",
+      "description": "Holds notes for specified duration",
+      "signature": "pattern.hold(duration)",
+      "examples": [
+        "note('c4 e4 g4').hold(0.5)",
+        "s('bd').hold(0.2)"
+      ],
+      "arguments": {
+        "duration": {
+          "type": "number",
+          "min": 0,
+          "max": 2,
+          "default": 0.5,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".hold({duration})"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 12
+      }
+    },
+    "legato": {
+      "label": "Legato",
+      "category": "envelope",
+      "description": "Sets legato timing between notes",
+      "signature": "pattern.legato(time)",
+      "examples": [
+        "note('c4 e4 g4').legato(0.1)",
+        "s('bd sd').legato(0.05)"
+      ],
+      "arguments": {
+        "time": {
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "default": 0.1,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".legato({time})"
+      },
+      "execution": {
+        "stage": "source",
+        "priority": 12
+      }
+    },
+    "accelerate": {
+      "label": "Accelerate",
+      "category": "temporal",
+      "description": "Accelerates pattern over time",
+      "signature": "pattern.accelerate(factor)",
+      "examples": [
+        "s('bd sd hh oh').accelerate(2)",
+        "n('0 1 2 3').accelerate(1.5)"
+      ],
+      "arguments": {
+        "factor": {
+          "type": "number",
+          "min": 0.5,
+          "max": 4,
+          "default": 1.5,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".accelerate({factor})"
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
+    "decelerate": {
+      "label": "Decelerate",
+      "category": "temporal",
+      "description": "Decelerates pattern over time",
+      "signature": "pattern.decelerate(factor)",
+      "examples": [
+        "s('bd sd hh oh').decelerate(0.5)",
+        "n('0 1 2 3').decelerate(0.8)"
+      ],
+      "arguments": {
+        "factor": {
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "default": 0.8,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "template": ".decelerate({factor})"
+      },
+      "execution": {
+        "stage": "rhythmic",
+        "priority": 30
+      }
+    },
     "sound": {
       "label": "Sound/Synth",
       "category": "source",

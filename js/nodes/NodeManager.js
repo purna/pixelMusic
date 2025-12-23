@@ -65,9 +65,10 @@ class NodeManager {
             const menuRes = await fetch('nodes/strudel-node-instruments.json');
             if (menuRes.ok) {
                 const menuData = await menuRes.json();
+                this.menuData = menuData;
                 this.extractInstrumentList(menuData);
             }
-            
+
             // Initialize pattern generator with schemas
             this.patternGenerator.initSchemas({
                 miniNotationSchema: this.miniNotationSchema,
@@ -77,6 +78,9 @@ class NodeManager {
                 controlNodesSchema: this.controlNodesSchema,
                 nodeSchema: this.nodeSchema
             });
+
+            // Initialize the pattern generator (sets up input event listeners)
+            this.patternGenerator.init();
         } catch (error) {
             console.warn('Schema loading failed:', error);
         }
@@ -148,7 +152,7 @@ class NodeManager {
         try {
             // Generate pattern from all nodes
             let fullPattern = '';
-            
+
             if (this.factory.nodes.length === 1) {
                 // Single node - generate its pattern
                 const node = this.factory.nodes[0];

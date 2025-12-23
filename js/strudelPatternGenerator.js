@@ -24,6 +24,181 @@ class StrudelPatternGenerator {
         this.nodeSchema = schemas.nodeSchema;
     }
 
+    // Initialize the pattern generator
+    init() {
+        console.log('Initializing Strudel Pattern Generator...');
+        
+        // Set up event listener for the input field
+        const inputField = document.getElementById('strudel-example-input');
+        if (inputField) {
+            inputField.addEventListener('input', (e) => {
+                const pattern = e.target.value;
+                if (pattern && pattern.trim() !== '') {
+                    this.parseAndCreateNodes(pattern);
+                }
+            });
+        }
+    }
+
+    /**
+     * Parse Strudel pattern and create nodes in the canvas
+     */
+    parseAndCreateNodes(pattern) {
+        console.log('🚀 Parsing pattern:', pattern);
+        console.log('📊 NodeManager available:', !!this.nodeManager);
+        console.log('📋 Current nodes before clear:', this.nodeManager.factory.nodes.length);
+        
+        // Clear existing nodes
+        this.nodeManager.clearAllNodes();
+        console.log('📋 Current nodes after clear:', this.nodeManager.factory.nodes.length);
+        
+        try {
+            // Parse the pattern to extract node information
+            const parsed = this.parseStrudelPattern(pattern);
+            console.log('📝 Parsed result:', parsed);
+            
+            if (parsed) {
+                // Create nodes based on the parsed pattern
+                this.createNodesFromParsedPattern(parsed);
+                
+                // Update the strudel output
+                this.nodeManager.updateStrudelOutput();
+                
+                console.log('✅ Nodes created successfully');
+                console.log('📋 Final nodes count:', this.nodeManager.factory.nodes.length);
+                console.log('🔗 Final connections count:', this.nodeManager.connections.connections.length);
+            } else {
+                console.log('❌ Pattern could not be parsed');
+                this.nodeManager.updateStatus('Pattern could not be parsed');
+            }
+        } catch (error) {
+            console.error('❌ Error parsing pattern:', error);
+            this.nodeManager.updateStatus('Error parsing pattern: ' + error.message);
+        }
+    }
+
+    /**
+     * Parse Strudel pattern into a structured format
+     */
+    parseStrudelPattern(pattern) {
+        // Simple parsing for common patterns
+        // This is a basic implementation that can be expanded
+        
+        // Check for note pattern: note('c4 e4 g4 c5').s('piano')
+        const notePatternRegex = /note\(['"]([^'"]+)['"]\)\.s\(['"]([^'"]+)['"]\)/;
+        const match = pattern.match(notePatternRegex);
+        
+        if (match) {
+            const notes = match[1].split(' ').map(n => n.trim()).filter(n => n !== '');
+            const instrument = match[2];
+            
+            return {
+                type: 'noteWithInstrument',
+                notes: notes,
+                instrument: instrument
+            };
+        }
+        
+        // Check for simple sound pattern: s('bd sd hh')
+        const soundPatternRegex = /s\(['"]([^'"]+)['"]\)/;
+        const soundMatch = pattern.match(soundPatternRegex);
+        
+        if (soundMatch) {
+            const sounds = soundMatch[1].split(' ').map(s => s.trim()).filter(s => s !== '');
+            
+            return {
+                type: 'sound',
+                sounds: sounds
+            };
+        }
+        
+        // Check for stack pattern: stack(s('bd'), s('sd'), s('hh'))
+        const stackPatternRegex = /stack\(([^)]+)\)/;
+        const stackMatch = pattern.match(stackPatternRegex);
+        
+        if (stackMatch) {
+            // This is a more complex pattern that would require recursive parsing
+            console.warn('Stack pattern parsing not yet implemented');
+            return null;
+        }
+        
+        console.warn('Unknown pattern format:', pattern);
+        return null;
+    }
+
+    /**
+     * Create nodes from parsed pattern
+     */
+    createNodesFromParsedPattern(parsed) {
+        console.log('🏗️ Creating nodes from parsed pattern:', parsed);
+        
+        if (parsed.type === 'noteWithInstrument') {
+            // Create a note node with child notes
+            const mainNote = parsed.notes[0]; // First note is the main note
+            const childNotes = parsed.notes.slice(1); // Remaining notes are children
+            const instrument = parsed.instrument;
+            
+            console.log('🎵 Main note:', mainNote);
+            console.log('🎵 Child notes:', childNotes);
+            console.log('🎹 Instrument:', instrument);
+            
+            // Create the main note node
+            const noteNode = this.nodeManager.createNode('note', mainNote, 100, 100);
+            console.log('📝 Created main note node:', noteNode);
+            
+            // The createNode method should already set the note property correctly through the factory
+            // But let's ensure it's set properly
+            if (noteNode && noteNode.properties) {
+                noteNode.properties.note = mainNote;
+                console.log('✅ Set main note property:', noteNode.properties.note);
+            }
+            
+            // Create child note nodes
+            childNotes.forEach((childNote, index) => {
+                const childNode = this.nodeManager.createNode('note', childNote, 100, 200 + (index * 100));
+                console.log(`📝 Created child note node ${index + 1}:`, childNode);
+                
+                if (childNode && childNode.properties) {
+                    childNode.properties.note = childNote;
+                    console.log(`✅ Set child note property ${index + 1}:`, childNode.properties.note);
+                }
+                
+                // Add child to parent
+                if (!noteNode.children) {
+                    noteNode.children = [];
+                }
+                noteNode.children.push(childNode);
+            });
+            
+            // Create the instrument node
+            const instrumentNode = this.nodeManager.createNode('Instrument', instrument, 400, 100);
+            console.log('🎹 Created instrument node:', instrumentNode);
+            
+            instrumentNode.properties.strudelProperties = {
+                sound: instrument
+            };
+            console.log('✅ Set instrument properties:', instrumentNode.properties.strudelProperties);
+            
+            // Connect the note node to the instrument node
+            this.nodeManager.createConnection(noteNode.id, 'output', instrumentNode.id, 'input');
+            console.log('🔗 Created connection from note to instrument');
+            
+            // Update node displays to reflect changes
+            this.nodeManager.updateNodeDisplay(noteNode);
+            this.nodeManager.updateNodeDisplay(instrumentNode);
+            
+            console.log('✅ Updated node displays');
+            
+        } else if (parsed.type === 'sound') {
+            console.log('🔊 Creating sound nodes:', parsed.sounds);
+            // Create sound nodes
+            parsed.sounds.forEach((sound, index) => {
+                const node = this.nodeManager.createNode('Instrument', sound, 100 + (index * 200), 100);
+                console.log(`🔊 Created sound node ${index + 1}:`, node);
+            });
+        }
+    }
+
     /**
      * Generate pattern for a specific node
      */

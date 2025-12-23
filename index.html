@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="css/tutorials.css">
     <link rel="stylesheet" href="css/node.css">
+    <link rel="stylesheet" href="css/node-properties.css">
 </head>
 
 <body>
@@ -184,19 +185,9 @@
             </div>
             <div id="node-properties">
                 <div class="property-group">
-                    <label for="node-instrument">Instrument</label>
+                    <label for="node-instrument">Node Type</label>
                     <select id="node-instrument">
-                        <option value="sine">Sine Wave</option>
-                        <option value="square">Square Wave</option>
-                        <option value="sawtooth">Sawtooth Wave</option>
-                        <option value="triangle">Triangle Wave</option>
-                        <option value="piano">Piano</option>
-                        <option value="violin">Violin</option>
-                        <option value="guitar">Guitar</option>
-                        <option value="flute">Flute</option>
-                        <option value="trumpet">Trumpet</option>
-                        <option value="brown">Brown Noise</option>
-                        <option value="crackle">Crackle</option>
+                        <!-- Options will be populated dynamically based on node category -->
                     </select>
                 </div>
 
@@ -205,102 +196,9 @@
                     <input type="text" id="node-note" placeholder="e.g., c4, f#3">
                 </div>
 
-                <div class="property-group">
-                    <label for="node-duration">Duration</label>
-                    <input type="range" id="node-duration" min="100" max="2000" value="500">
-                    <span class="value" id="node-duration-val">500</span>
-                </div>
-
-                <div class="property-group">
-                    <label for="node-volume">Volume</label>
-                    <input type="range" id="node-volume" min="0" max="100" value="80">
-                    <span class="value" id="node-volume-val">80</span>
-                </div>
-
-                <div class="effects-section">
-                    <h4>Effects</h4>
-                    <div class="effects-list">
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-lpf" data-effect="lpf">
-                                Low-Pass Filter
-                            </label>
-                            <input type="range" id="effect-lpf-value" min="20" max="20000" value="800" disabled>
-                            <span class="effect-value" id="effect-lpf-val">800 Hz</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-hpf" data-effect="hpf">
-                                High-Pass Filter
-                            </label>
-                            <input type="range" id="effect-hpf-value" min="20" max="20000" value="200" disabled>
-                            <span class="effect-value" id="effect-hpf-val">200 Hz</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-bpf" data-effect="bpf">
-                                Band-Pass Filter
-                            </label>
-                            <input type="range" id="effect-bpf-value" min="20" max="20000" value="1200" disabled>
-                            <span class="effect-value" id="effect-bpf-val">1200 Hz</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-delay" data-effect="delay">
-                                Delay
-                            </label>
-                            <input type="range" id="effect-delay-value" min="0" max="1" step="0.01" value="0.25"
-                                disabled>
-                            <span class="effect-value" id="effect-delay-val">0.25</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-reverb" data-effect="reverb">
-                                Reverb
-                            </label>
-                            <input type="range" id="effect-reverb-value" min="0" max="1" step="0.01" value="0.3"
-                                disabled>
-                            <span class="effect-value" id="effect-reverb-val">0.3</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-distort" data-effect="distort">
-                                Distortion
-                            </label>
-                            <input type="range" id="effect-distort-value" min="0" max="1" step="0.01" value="0.3"
-                                disabled>
-                            <span class="effect-value" id="effect-distort-val">0.3</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-speed" data-effect="speed">
-                                Playback Speed
-                            </label>
-                            <input type="range" id="effect-speed-value" min="0.1" max="2" step="0.01" value="1"
-                                disabled>
-                            <span class="effect-value" id="effect-speed-val">1.0x</span>
-                        </div>
-
-                        <div class="effect-item">
-                            <label>
-                                <input type="checkbox" id="effect-pan" data-effect="pan">
-                                Stereo Pan
-                            </label>
-                            <input type="range" id="effect-pan-value" min="-1" max="1" step="0.01" value="0" disabled>
-                            <span class="effect-value" id="effect-pan-val">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="property-group">
-                    <button class="btn btn-secondary" id="apply-effects">Apply Effects</button>
-                    <button class="btn btn-secondary" id="clear-effects">Clear All Effects</button>
+                <!-- Schema-based properties will be injected here -->
+                <div id="schema-properties-container">
+                    <!-- Dynamic properties from schema -->
                 </div>
             </div>
         </div>
@@ -764,12 +662,18 @@
                         placeholder="Enter Strudel pattern, e.g., s('[bd <hh oh>]*2').bank('tr909').dec(.4)" />
                 </div>
                 <div class="example-buttons">
-                    <button class="example-btn" data-example="s('[bd <hh oh>]*2').bank('tr909').dec(.4)">
-                        <i class="fas fa-drum"></i> Simple Beat
-                    </button>
-                    <button class="example-btn" data-example="stack(s('bd'), s('sd'), s('hh')).bank('tr909')">
-                        <i class="fas fa-layer-group"></i> Complex Pattern
-                    </button>
+                    <div class="example-btn" data-example="s('[bd <hh oh>]*2').bank('tr909').dec(.4)" data-tooltip="s('[bd &lt;hh oh&gt;]*2').bank('tr909').dec(.4)">
+                        <span>Simple Beat</span>
+                    </div>
+                    <div class="example-btn" data-example="stack(s('bd'), s('sd'), s('hh')).bank('tr909')" data-tooltip="stack(s('bd'), s('sd'), s('hh')).bank('tr909')">
+                        <span>Complex Pattern</span>
+                    </div>
+                    <div class="example-btn" data-example="s('bd*4 sd*4').bank('tr808')" data-tooltip="s('bd*4 sd*4').bank('tr808')">
+                        <span>808 Style</span>
+                    </div>
+                    <div class="example-btn" data-example="note('c4 e4 g4 c5').s('piano')" data-tooltip="note('c4 e4 g4 c5').s('piano')">
+                        <span>Piano Melody</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -778,21 +682,23 @@
 
     <!-- Initialize the Strudel Pattern Generator -->
     <script>
-        // Initialize the Strudel Pattern Generator when the page loads
+        // Handle example button clicks
         document.addEventListener('DOMContentLoaded', function() {
-            // Wait a bit for all scripts to load
-            setTimeout(() => {
-                if (window.StrudelPatternGenerator) {
-                    // Create instance if it doesn't exist
-                    if (!window.strudelPatternGenerator) {
-                        window.strudelPatternGenerator = new window.StrudelPatternGenerator(window.nodeManager);
+            // Example button click handlers
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const example = this.dataset.example;
+                    const input = document.getElementById('strudel-example-input');
+                    if (input && example) {
+                        input.value = example;
+                        // Trigger input event to notify any listeners
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        // Scroll to input
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        input.focus();
                     }
-                    window.strudelPatternGenerator.init();
-                    console.log('Strudel Pattern Generator initialized');
-                } else {
-                    console.warn('StrudelPatternGenerator class not found');
-                }
-            }, 100);
+                });
+            });
         });
     </script>
 

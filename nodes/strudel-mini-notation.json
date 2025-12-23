@@ -187,6 +187,19 @@
         }
       }
     },
+    "polymeter": {
+      "symbol": ",",
+      "name": "Polymeter",
+      "description": "Creates polyrhythms with different pattern lengths",
+      "examples": [
+        "bd(3,8), hh(5,16)",
+        "c4 e4 g4, d4 f4 a4",
+        "[bd sd], [hh hh hh]"
+      ],
+      "category": "rhythm",
+      "precedence": 7,
+      "context": "within brackets for polyrhythms"
+    },
 
     "probability": {
       "symbol": "?",
@@ -282,6 +295,7 @@
     {"level": 4, "operators": ["euclidean", "bjorklund"]},
     {"level": 5, "operators": ["parallel"]},
     {"level": 6, "operators": ["range"]},
+    {"level": 7, "operators": ["polymeter"]},
     {"level": 8, "operators": ["alternate"]},
     {"level": 10, "operators": ["grouping"]}
   ],
@@ -387,6 +401,22 @@
       {
         "pattern": "<bd!2 [sd sd sd]!3>",
         "description": "Alternating replicated patterns"
+      },
+      {
+        "pattern": "[c4 e4 g4, d4 f4 a4], [bd(3,8), hh(5,16)]",
+        "description": "Polymeter with polyrhythm - different pattern lengths"
+      },
+      {
+        "pattern": "[[x*<1 2> [~@3 x]] x, [bd sd], hh*8]",
+        "description": "Deeply nested pattern with 4+ levels of complexity"
+      },
+      {
+        "pattern": "bd(3,8) * <2 3> / 2",
+        "description": "Euclidean rhythm with multiplication and division"
+      },
+      {
+        "pattern": "<[x*<1 2> [~@3 x]] x> ? 0.7",
+        "description": "Complex nested pattern with probability"
       }
     ]
   },

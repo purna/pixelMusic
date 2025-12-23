@@ -7,7 +7,9 @@
     "eventIn": "Accepts event-level transforms",
     "controlIn": "Numeric or pattern control",
     "wrapIn": "Accepts a pattern to wrap",
-    "wrapOut": "Outputs wrapped pattern"
+    "wrapOut": "Outputs wrapped pattern",
+    "childSlot": "Accepts child patterns for containers/wrappers",
+    "parentOut": "Sends to parent container (for child nodes)"
   },
   "executionStages": {
     "source": {
@@ -68,6 +70,123 @@
           "description": "Mini-notation pattern of note names (c4, eb5, etc.)",
           "required": true,
           "mapsTo": "note"
+        }
+      }
+    },
+    "Gain": {
+      "id": "Gain",
+      "category": "effect",
+      "title": "Gain",
+      "description": "Sets volume/amplitude",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "amount": {
+          "type": "pattern",
+          "label": "Gain Amount",
+          "description": "Volume multiplier (can be pattern)",
+          "default": "1",
+          "canBePattern": true,
+          "mapsTo": "arg"
+        }
+      }
+    },
+    "Crush": {
+      "id": "Crush",
+      "category": "effect",
+      "title": "Bit Crush",
+      "description": "Bit crushing effect for digital distortion",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "bits": {
+          "type": "knob",
+          "label": "Bit Depth",
+          "min": 1,
+          "max": 16,
+          "default": 8,
+          "canBePattern": true,
+          "mapsTo": "arg"
+        }
+      }
+    },
+    "Shape": {
+      "id": "Shape",
+      "category": "effect",
+      "title": "Wave Shape",
+      "description": "Wave shaping/distortion effect",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "amount": {
+          "type": "knob",
+          "label": "Shape Amount",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "canBePattern": true,
+          "mapsTo": "arg"
+        }
+      }
+    },
+    "Vowel": {
+      "id": "Vowel",
+      "category": "effect",
+      "title": "Vowel Filter",
+      "description": "Vowel formant filter effect",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ]
+      },
+      "execution": {
+        "stage": "spectral",
+        "priority": 60,
+        "wraps": false
+      },
+      "properties": {
+        "vowel": {
+          "type": "select",
+          "label": "Vowel Type",
+          "values": ["a", "e", "i", "o", "u"],
+          "default": "a",
+          "mapsTo": "arg"
         }
       }
     },
@@ -408,6 +527,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -416,6 +538,14 @@
         "wraps": false
       },
       "multiInput": true,
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 8,
+        "childTypes": ["pattern"],
+        "combineMode": "parallel",
+        "childExecutionMode": "independent"
+      },
       "properties": {}
     },
     "Sequence": {
@@ -430,6 +560,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -438,6 +571,14 @@
         "wraps": false
       },
       "multiInput": true,
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 8,
+        "childTypes": ["pattern"],
+        "combineMode": "sequential",
+        "childExecutionMode": "independent"
+      },
       "properties": {}
     },
     "Group": {
@@ -452,6 +593,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -460,6 +604,14 @@
         "wraps": false
       },
       "multiInput": true,
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 8,
+        "childTypes": ["pattern"],
+        "combineMode": "parallel",
+        "childExecutionMode": "independent"
+      },
       "properties": {
         "mode": {
           "type": "select",
@@ -696,6 +848,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -704,6 +859,14 @@
         "wraps": true
       },
       "minChildren": 1,
+      "children": {
+        "accepts": true,
+        "minChildren": 1,
+        "maxChildren": 4,
+        "childTypes": ["transform"],
+        "combineMode": "wrap",
+        "childExecutionMode": "within_wrapper"
+      },
       "properties": {
         "probability": {
           "type": "knob",
@@ -725,6 +888,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -733,6 +899,14 @@
         "wraps": true
       },
       "minChildren": 1,
+      "children": {
+        "accepts": true,
+        "minChildren": 1,
+        "maxChildren": 4,
+        "childTypes": ["transform"],
+        "combineMode": "wrap",
+        "childExecutionMode": "within_wrapper"
+      },
       "properties": {
         "probability": {
           "type": "knob",
@@ -754,6 +928,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -762,6 +939,14 @@
         "wraps": true
       },
       "minChildren": 1,
+      "children": {
+        "accepts": true,
+        "minChildren": 1,
+        "maxChildren": 4,
+        "childTypes": ["transform"],
+        "combineMode": "wrap",
+        "childExecutionMode": "within_wrapper"
+      },
       "properties": {
         "probability": {
           "type": "knob",
@@ -783,6 +968,9 @@
         ],
         "out": [
           "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
         ]
       },
       "execution": {
@@ -791,6 +979,14 @@
         "wraps": true
       },
       "minChildren": 1,
+      "children": {
+        "accepts": true,
+        "minChildren": 1,
+        "maxChildren": 4,
+        "childTypes": ["transform"],
+        "combineMode": "wrap",
+        "childExecutionMode": "within_wrapper"
+      },
       "properties": {
         "type": {
           "type": "select",
@@ -1501,23 +1697,260 @@
           "mapsTo": "arg"
         }
       }
+    },
+    "Jux": {
+      "id": "Jux",
+      "category": "transform",
+      "title": "Juxtapose",
+      "description": "Splits pattern into stereo channels with different transforms",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ],
+        "childSlot": [
+          "childSlot",
+          "childSlot"
+        ]
+      },
+      "execution": {
+        "stage": "structural",
+        "priority": 25,
+        "wraps": false
+      },
+      "children": {
+        "accepts": true,
+        "minChildren": 2,
+        "maxChildren": 2,
+        "childTypes": ["transform"],
+        "combineMode": "stereo_split",
+        "childExecutionMode": "parallel"
+      },
+      "properties": {
+        "leftTransform": {
+          "type": "text",
+          "label": "Left Channel Transform",
+          "default": "x => x",
+          "mapsTo": "arg1"
+        },
+        "rightTransform": {
+          "type": "text",
+          "label": "Right Channel Transform",
+          "default": "x => x.pan(1)",
+          "mapsTo": "arg2"
+        }
+      }
+    },
+    "Rev": {
+      "id": "Rev",
+      "category": "transform",
+      "title": "Reverse",
+      "description": "Reverses the order of events in a pattern",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
+        ]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40,
+        "wraps": false
+      },
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 2,
+        "childTypes": ["pattern"],
+        "combineMode": "reverse",
+        "childExecutionMode": "independent"
+      },
+      "properties": {}
+    },
+    "Palindrome": {
+      "id": "Palindrome",
+      "category": "transform",
+      "title": "Palindrome",
+      "description": "Plays pattern forward then backward",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
+        ]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40,
+        "wraps": false
+      },
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 2,
+        "childTypes": ["pattern"],
+        "combineMode": "palindrome",
+        "childExecutionMode": "independent"
+      },
+      "properties": {}
+    },
+    "Shuffle": {
+      "id": "Shuffle",
+      "category": "transform",
+      "title": "Shuffle",
+      "description": "Randomly reorders events in a pattern",
+      "sockets": {
+        "in": [
+          "patternIn"
+        ],
+        "out": [
+          "patternOut"
+        ],
+        "childSlot": [
+          "childSlot"
+        ]
+      },
+      "execution": {
+        "stage": "pitch",
+        "priority": 40,
+        "wraps": false
+      },
+      "children": {
+        "accepts": true,
+        "minChildren": 0,
+        "maxChildren": 2,
+        "childTypes": ["pattern"],
+        "combineMode": "shuffle",
+        "childExecutionMode": "independent"
+      },
+      "properties": {
+        "seed": {
+          "type": "number",
+          "label": "Random Seed",
+          "min": 0,
+          "max": 1000,
+          "default": 0,
+          "mapsTo": "arg"
+        }
+      }
+    },
+    "Perlin": {
+      "id": "Perlin",
+      "category": "control",
+      "title": "Perlin Noise",
+      "description": "Smooth random noise generator",
+      "sockets": {
+        "in": [],
+        "out": [
+          "controlOut"
+        ]
+      },
+      "execution": {
+        "stage": "modulation",
+        "priority": 50,
+        "wraps": false
+      },
+      "properties": {
+        "frequency": {
+          "type": "knob",
+          "label": "Noise Frequency",
+          "min": 0.01,
+          "max": 1,
+          "default": 0.1,
+          "mapsTo": "arg"
+        },
+        "amplitude": {
+          "type": "knob",
+          "label": "Noise Amplitude",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "mapsTo": ".amp"
+        }
+      }
+    },
+    "StepSeq": {
+      "id": "StepSeq",
+      "category": "control",
+      "title": "Step Sequencer",
+      "description": "Programmable step sequencer",
+      "sockets": {
+        "in": [],
+        "out": [
+          "controlOut"
+        ]
+      },
+      "execution": {
+        "stage": "modulation",
+        "priority": 50,
+        "wraps": false
+      },
+      "properties": {
+        "steps": {
+          "type": "pattern",
+          "label": "Step Values",
+          "description": "Mini-notation pattern of step values",
+          "default": "0 1 2 3",
+          "supportsMiniNotation": true,
+          "mapsTo": "arg"
+        },
+        "length": {
+          "type": "number",
+          "label": "Sequence Length",
+          "min": 1,
+          "max": 32,
+          "default": 8,
+          "mapsTo": ".length"
+        }
+      }
     }
   },
   "socketCompatibilityMatrix": {
     "patternOut": {
       "patternIn": true,
       "wrapIn": true,
-      "controlIn": false
+      "controlIn": false,
+      "childSlot": false,
+      "parentOut": false
     },
     "wrapOut": {
       "patternIn": false,
       "wrapIn": false,
-      "controlIn": false
+      "controlIn": false,
+      "childSlot": false,
+      "parentOut": false
     },
     "controlOut": {
       "patternIn": false,
       "wrapIn": false,
-      "controlIn": true
+      "controlIn": true,
+      "childSlot": false,
+      "parentOut": false
+    },
+    "childSlot": {
+      "patternOut": true,
+      "wrapOut": false,
+      "controlOut": false,
+      "childSlot": false,
+      "parentOut": false
+    },
+    "parentOut": {
+      "patternIn": false,
+      "wrapIn": false,
+      "controlIn": false,
+      "childSlot": false,
+      "parentOut": false
     }
   },
   "validationRules": {

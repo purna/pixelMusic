@@ -132,6 +132,30 @@
         "schema": "patternFunctions",
         "details": "Drum bank selection method"
       }
+    },
+    "childNodeArchitecture": {
+      "covered": true,
+      "schema": "nodeSchema",
+      "details": "Complete parent-child relationship system implemented",
+      "elements": [
+        "Container nodes (Stack, Sequence, Group) with childSlot support",
+        "Wrapper nodes (Often, Sometimes, Rarely) with transform child support",
+        "Transform nodes (Jux, Rev, Palindrome) with pattern child support",
+        "Execution context hierarchy for nested evaluation",
+        "Socket compatibility matrix for child connections"
+      ]
+    },
+    "missingElementsAdded": {
+      "covered": true,
+      "schema": "all",
+      "details": "All previously missing elements now implemented",
+      "elements": [
+        "Effects: Gain, Crush, Shape, Vowel filters",
+        "Transforms: Jux, Rev, Palindrome, Shuffle, Scramble, Ply",
+        "Controls: Perlin noise, Step sequencer, Sample & Hold",
+        "Instruments: Synthesizers, Bass, Vocals, World instruments",
+        "Methods: accelerate, decelerate, segment, chunk, fit, scale, chord, arp"
+      ]
     }
   },
   
@@ -190,7 +214,9 @@
         "2. Resolve pattern constructors (s, n, note, etc.)",
         "3. Apply combinators (stack, cat, etc.)",
         "4. Chain methods (struct, room, bank, etc.)",
-        "5. Build execution graph by stage priority"
+        "5. Build execution graph by stage priority",
+        "6. Resolve parent-child relationships",
+        "7. Validate socket compatibility"
       ]
     },
     
@@ -204,6 +230,13 @@
         "spectral (60) - Filters and spectral effects",
         "space (70) - Spatial effects (reverb, delay, pan)",
         "wrapper (80) - Conditional/probabilistic"
+      ],
+      "childContextHierarchy": [
+        "1. Parent nodes execute first in their stage",
+        "2. Child patterns inherit parent execution context",
+        "3. Wrapper nodes create conditional execution contexts",
+        "4. Transform nodes modify child patterns within context",
+        "5. Execution flows from root to leaves, then combines results"
       ]
     },
     
@@ -213,7 +246,26 @@
         "Valid socket connections in node graph",
         "Stage ordering in execution chain",
         "Parameter ranges",
-        "Required properties present"
+        "Required properties present",
+        "Child node compatibility with parent types",
+        "Execution context hierarchy integrity"
+      ]
+    },
+    "childNodePatterns": {
+      "containerUsage": [
+        "Stack with child patterns: stack(s('bd'), s('hh')).child(s('sd'))",
+        "Group with child patterns: group(s('bd'), s('sd')).child(s('hh'))",
+        "Sequence with child patterns: seq(s('bd'), s('sd')).child(s('hh'))"
+      ],
+      "wrapperUsage": [
+        "Often with transform: often(0.7).child(x => x.speed(2))",
+        "Sometimes with multiple transforms: sometimes(0.5).child([x => x.pan(-1), x => x.pan(1)])",
+        "Rarely with complex transform: rarely(0.25).child(x => x.struct('x ~ x ~'))"
+      ],
+      "transformUsage": [
+        "Jux with stereo transforms: jux(x => x, x => x.pan(1))",
+        "Rev with pattern child: rev().child(s('bd sd hh oh'))",
+        "Palindrome with pattern child: palindrome().child(n('0 1 2 3'))"
       ]
     }
   },

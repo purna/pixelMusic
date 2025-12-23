@@ -95,6 +95,44 @@
           ]
         },
         {
+          "id": "synthesizers",
+          "label": "Synthesizers",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "sawtooth", "sine", "square", "triangle"
+          ]
+        },
+        {
+          "id": "bass",
+          "label": "Bass Sounds",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "bass0", "bass1", "bass2", "bass3",
+            "bassfoo", "bassdm"
+          ]
+        },
+        {
+          "id": "vocals",
+          "label": "Vocal & Choir",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "choir", "soprano", "alto"
+          ]
+        },
+        {
+          "id": "world",
+          "label": "World Instruments",
+          "nodeType": "Instrument",
+          "color": "#00d9ff",
+          "items": [
+            "tabla", "sitar", "tanpura",
+            "kalimba", "balafon"
+          ]
+        },
+        {
           "id": "textures",
           "label": "Textures & FX",
           "nodeType": "Instrument",

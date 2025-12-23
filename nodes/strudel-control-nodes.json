@@ -20,6 +20,97 @@
         "template": "{value}"
       }
     },
+    "perlin": {
+      "label": "Perlin Noise",
+      "category": "noise",
+      "outputs": ["controlOut"],
+      "properties": {
+        "frequency": {
+          "type": "number",
+          "label": "Noise Frequency",
+          "min": 0.01,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.1
+        },
+        "amplitude": {
+          "type": "number",
+          "label": "Noise Amplitude",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "function": "perlin",
+        "args": ["frequency", "amplitude"]
+      }
+    },
+    "stepseq": {
+      "label": "Step Sequencer",
+      "category": "sequencer",
+      "outputs": ["controlOut"],
+      "properties": {
+        "steps": {
+          "type": "pattern",
+          "label": "Step Values",
+          "description": "Mini-notation pattern of step values",
+          "default": "0 1 2 3",
+          "supportsMiniNotation": true
+        },
+        "length": {
+          "type": "number",
+          "label": "Sequence Length",
+          "min": 1,
+          "max": 32,
+          "step": 1,
+          "default": 8
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "function": "stepseq",
+        "args": ["steps", "length"]
+      }
+    },
+    "samplehold": {
+      "label": "Sample & Hold",
+      "category": "random",
+      "outputs": ["controlOut"],
+      "properties": {
+        "rate": {
+          "type": "number",
+          "label": "Sample Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "default": 1
+        },
+        "min": {
+          "type": "number",
+          "label": "Min Value",
+          "min": -100,
+          "max": 100,
+          "step": 0.01,
+          "default": 0
+        },
+        "max": {
+          "type": "number",
+          "label": "Max Value",
+          "min": -100,
+          "max": 100,
+          "step": 0.01,
+          "default": 1
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "function": "samplehold",
+        "args": ["rate", "min", "max"]
+      }
+    },
 
     "sine": {
       "label": "Sine LFO",
@@ -160,12 +251,104 @@
           "type": "number",
           "label": "Max",
           "default": 1
+        },
+        "curve": {
+          "type": "select",
+          "label": "Curve",
+          "values": ["linear", "exponential", "logarithmic", "sine", "cosine"],
+          "default": "linear"
         }
       },
       "serialization": {
         "type": "method",
         "function": "range",
         "args": ["min", "max"]
+      }
+    },
+    "envelopeFollower": {
+      "label": "Envelope Follower",
+      "category": "analysis",
+      "inputs": ["controlIn"],
+      "outputs": ["controlOut"],
+      "properties": {
+        "attack": {
+          "type": "number",
+          "label": "Attack Time",
+          "min": 0.001,
+          "max": 1,
+          "default": 0.01
+        },
+        "release": {
+          "type": "number",
+          "label": "Release Time",
+          "min": 0.001,
+          "max": 1,
+          "default": 0.1
+        }
+      },
+      "serialization": {
+        "type": "function",
+        "function": "envelopeFollower",
+        "args": ["attack", "release"]
+      }
+    },
+    "add": {
+      "label": "Add",
+      "category": "math",
+      "inputs": ["controlIn", "controlIn"],
+      "outputs": ["controlOut"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "label": "Add Value",
+          "default": 0,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "function": "add",
+        "args": ["value"]
+      }
+    },
+    "multiply": {
+      "label": "Multiply",
+      "category": "math",
+      "inputs": ["controlIn", "controlIn"],
+      "outputs": ["controlOut"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "label": "Multiply Value",
+          "default": 1,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "function": "mul",
+        "args": ["value"]
+      }
+    },
+    "mix": {
+      "label": "Mix",
+      "category": "math",
+      "inputs": ["controlIn", "controlIn"],
+      "outputs": ["controlOut"],
+      "properties": {
+        "amount": {
+          "type": "number",
+          "label": "Mix Amount",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "canBePattern": true
+        }
+      },
+      "serialization": {
+        "type": "method",
+        "function": "mix",
+        "args": ["amount"]
       }
     }
   }
