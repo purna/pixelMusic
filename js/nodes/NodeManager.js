@@ -88,14 +88,28 @@ class NodeManager {
 
     extractInstrumentList(menuData) {
         const instruments = [];
+        const signatureMap = new Map();
         menuData.menus.forEach(menu => {
             menu.groups.forEach(group => {
+                // Build signature map if group defines signature and property
+                if (group.signature && group.property) {
+                    group.items.forEach(item => {
+                        const itemName = typeof item === 'string' ? item : (item.value !== undefined ? item.value : item.id);
+                        signatureMap.set(itemName, {
+                            signature: group.signature,
+                            property: group.property
+                        });
+                    });
+                }
+                // Collect instrument names for instrumentList
                 group.items.forEach(item => {
-                    instruments.push(typeof item === 'string' ? item : item.id);
+                    const name = typeof item === 'string' ? item : (item.value !== undefined ? item.value : item.id);
+                    instruments.push(name);
                 });
             });
         });
         this.instrumentList = [...new Set(instruments)].sort();
+        this.instrumentSignatureMap = signatureMap;
     }
 
     bindEvents() {
@@ -222,10 +236,21 @@ class NodeManager {
         this.factory.selectNode(node);
     }
 
+
+    addChildNode(parentNodeId, childType, childInstrument) {
+        return this.factory.addChildNode(parentNodeId, childType, childInstrument);
+    }
+
     // Getters for backward compatibility
     get nodes() { return this.factory.nodes; }
     get selectedNode() { return this.factory.selectedNode; }
+    getInstrumentSignatureInfo(instrumentName) {
+        return this.instrumentSignatureMap ? this.instrumentSignatureMap.get(instrumentName) : null;
+    }
+
 }
 
+// Initialize global instance
+window.nodeManager = new NodeManager();
 // Initialize global instance
 window.nodeManager = new NodeManager();

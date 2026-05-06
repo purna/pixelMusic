@@ -18,6 +18,7 @@
       "category": "rhythmic",
       "stage": "rhythmic",
       "wraps": false,
+      "signature": "pattern.chop(slices)",
       "properties": {
         "slices": {
           "type": "number",
@@ -27,13 +28,18 @@
           "step": 1,
           "default": 8
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh').chop(8)",
+        "s('bd*4').chop(4)"
+      ]
     },
     "crush": {
       "label": "Bit Crush",
       "category": "spectral",
       "stage": "spectral",
       "wraps": false,
+      "signature": "pattern.crush(bits)",
       "properties": {
         "bits": {
           "type": "knob",
@@ -42,28 +48,39 @@
           "max": 16,
           "default": 8
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').crush(4)",
+        "note('c4 e4 g4').sound('piano').crush(2)"
+      ]
     },
     "shape": {
       "label": "Wave Shape",
       "category": "spectral",
       "stage": "spectral",
       "wraps": false,
+      "signature": "pattern.shape(amount)",
       "properties": {
         "amount": {
           "type": "knob",
           "label": "Shape Amount",
           "min": 0,
           "max": 1,
+          "step": 0.01,
           "default": 0.5
         }
-      }
+      },
+      "examples": [
+        "s('bd').shape(0.8)",
+        "note('c4').sound('sawtooth').shape(0.3)"
+      ]
     },
     "vowel": {
       "label": "Vowel Filter",
       "category": "spectral",
       "stage": "spectral",
       "wraps": false,
+      "signature": "pattern.vowel(vowelType)",
       "properties": {
         "vowel": {
           "type": "select",
@@ -71,13 +88,18 @@
           "values": ["a", "e", "i", "o", "u"],
           "default": "a"
         }
-      }
+      },
+      "examples": [
+        "s('bd').vowel('a')",
+        "note('c4 e4 g4').sound('sawtooth').vowel('e')"
+      ]
     },
     "jux": {
       "label": "Juxtapose",
       "category": "transform",
       "stage": "structural",
       "wraps": false,
+      "signature": "pattern.jux(leftTransform, rightTransform)",
       "properties": {
         "leftTransform": {
           "type": "text",
@@ -89,27 +111,42 @@
           "label": "Right Channel Transform",
           "default": "x => x.pan(1)"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').jux(x => x, x => x.pan(1))",
+        "note('c4 e4 g4').sound('piano').jux(x => x.speed(2), x => x.slow(2))"
+      ]
     },
     "rev": {
       "label": "Reverse",
       "category": "transform",
       "stage": "pitch",
       "wraps": false,
-      "properties": {}
+      "signature": "pattern.rev()",
+      "properties": {},
+      "examples": [
+        "s('bd sd hh oh').rev()",
+        "n('0 1 2 3').rev()"
+      ]
     },
     "palindrome": {
       "label": "Palindrome",
       "category": "transform",
       "stage": "pitch",
       "wraps": false,
-      "properties": {}
+      "signature": "pattern.palindrome()",
+      "properties": {},
+      "examples": [
+        "s('bd sd').palindrome()",
+        "note('c4 e4 g4').sound('piano').palindrome()"
+      ]
     },
     "shuffle": {
       "label": "Shuffle",
       "category": "transform",
       "stage": "pitch",
       "wraps": false,
+      "signature": "pattern.shuffle(seed?)",
       "properties": {
         "seed": {
           "type": "number",
@@ -118,13 +155,18 @@
           "max": 1000,
           "default": 0
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh oh').shuffle()",
+        "note('c4 d4 e4 f4').sound('piano').shuffle(42)"
+      ]
     },
 
     "stutter": {
       "label": "Stutter",
       "category": "rhythmic",
       "stage": "rhythmic",
+      "signature": "pattern.stutter(repeats)",
       "properties": {
         "repeats": {
           "type": "number",
@@ -134,13 +176,18 @@
           "step": 1,
           "default": 2
         }
-      }
+      },
+      "examples": [
+        "s('bd').stutter(4)",
+        "note('c4').sound('piano').stutter(2)"
+      ]
     },
 
     "trunc": {
       "label": "Truncate",
       "category": "rhythmic",
       "stage": "rhythmic",
+      "signature": "pattern.trunc(amount)",
       "properties": {
         "amount": {
           "type": "number",
@@ -150,13 +197,17 @@
           "step": 0.01,
           "default": 0.5
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh oh').trunc(0.3)"
+      ]
     },
 
     "speed": {
       "label": "Playback Speed",
       "category": "pitch",
       "stage": "pitch",
+      "signature": "pattern.speed(factor)",
       "properties": {
         "factor": {
           "type": "number",
@@ -166,13 +217,18 @@
           "step": 0.01,
           "default": 1
         }
-      }
+      },
+      "examples": [
+        "s('bd').speed(2)",
+        "note('c4').sound('piano').speed(0.5)"
+      ]
     },
 
     "note": {
       "label": "Pitch",
       "category": "pitch",
       "stage": "pitch",
+      "signature": "pattern.note(semitones)",
       "properties": {
         "semitones": {
           "type": "number",
@@ -182,13 +238,18 @@
           "step": 1,
           "default": 0
         }
-      }
+      },
+      "examples": [
+        "note('c4').sound('piano').note(7) // transpose up a 5th",
+        "s('bd').note(12) // drum pitch shift"
+      ]
     },
 
     "coarse": {
       "label": "Octave Shift",
       "category": "pitch",
       "stage": "pitch",
+      "signature": "pattern.coarse(octaves)",
       "properties": {
         "octaves": {
           "type": "number",
@@ -198,13 +259,18 @@
           "step": 1,
           "default": 0
         }
-      }
+      },
+      "examples": [
+        "note('c4').sound('piano').coarse(1) // up an octave",
+        "note('c4').sound('piano').coarse(-1) // down an octave"
+      ]
     },
 
     "vibrato": {
       "label": "Vibrato",
       "category": "modulation",
       "stage": "modulation",
+      "signature": "pattern.vibrato(rate, depth?)",
       "properties": {
         "rate": {
           "type": "number",
@@ -222,13 +288,18 @@
           "step": 0.001,
           "default": 0.02
         }
-      }
+      },
+      "examples": [
+        "note('c4').sound('sine').vibrato(5, 0.05)",
+        "n('0 2 4 5').scale('C:major').sound('triangle').vibrato(8)"
+      ]
     },
 
     "tremolo": {
       "label": "Tremolo",
       "category": "modulation",
       "stage": "modulation",
+      "signature": "pattern.tremolo(rate, depth?)",
       "properties": {
         "rate": {
           "type": "number",
@@ -246,13 +317,18 @@
           "step": 0.01,
           "default": 0.5
         }
-      }
+      },
+      "examples": [
+        "note('c4').sound('sawtooth').tremolo(6, 0.8)",
+        "s('bd sd hh').tremolo(10, 0.5)"
+      ]
     },
 
     "lpf": {
       "label": "Low-Pass Filter",
       "category": "spectral",
       "stage": "spectral",
+      "signature": "pattern.lpf(frequency)",
       "properties": {
         "frequency": {
           "type": "number",
@@ -262,13 +338,18 @@
           "step": 10,
           "default": 800
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh').lpf(1000)",
+        "note('c4 e4 g4').sound('sawtooth').lpf(2000).lpf(500)"
+      ]
     },
 
     "hpf": {
       "label": "High-Pass Filter",
       "category": "spectral",
       "stage": "spectral",
+      "signature": "pattern.hpf(frequency)",
       "properties": {
         "frequency": {
           "type": "number",
@@ -278,13 +359,18 @@
           "step": 10,
           "default": 200
         }
-      }
+      },
+      "examples": [
+        "s('hh oh').hpf(200)",
+        "note('c4').sound('piano').hpf(500)"
+      ]
     },
 
     "lpq": {
       "label": "Filter Resonance",
       "category": "spectral",
       "stage": "spectral",
+      "signature": "pattern.lpq(q)",
       "properties": {
         "q": {
           "type": "number",
@@ -294,13 +380,18 @@
           "step": 0.1,
           "default": 0.7
         }
-      }
+      },
+      "examples": [
+        "s('bd').lpf(800).lpq(5)",
+        "note('c4').sound('sawtooth').lpf(1200).lpq(10)"
+      ]
     },
 
     "gain": {
       "label": "Gain",
       "category": "spectral",
       "stage": "spectral",
+      "signature": "pattern.gain(amount)",
       "properties": {
         "amount": {
           "type": "number",
@@ -310,13 +401,18 @@
           "step": 0.01,
           "default": 1
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').gain(0.8)",
+        "note('c4 e4 g4').sound('piano').gain(1.2)"
+      ]
     },
 
     "delay": {
       "label": "Delay",
       "category": "space",
       "stage": "space",
+      "signature": "pattern.delay(time)",
       "properties": {
         "time": {
           "type": "number",
@@ -326,13 +422,18 @@
           "step": 0.01,
           "default": 0.25
         }
-      }
+      },
+      "examples": [
+        "s('bd').delay(0.25)",
+        "note('c4').sound('piano').delay(0.5)"
+      ]
     },
 
     "delayfb": {
       "label": "Delay Feedback",
       "category": "space",
       "stage": "space",
+      "signature": "pattern.delayfb(amount)",
       "properties": {
         "amount": {
           "type": "number",
@@ -342,13 +443,18 @@
           "step": 0.01,
           "default": 0.4
         }
-      }
+      },
+      "examples": [
+        "s('bd').delay(0.25).delayfb(0.5)",
+        "note('c4').sound('piano').delay(0.3).delayfb(0.7)"
+      ]
     },
 
     "reverb": {
       "label": "Reverb",
       "category": "space",
       "stage": "space",
+      "signature": "pattern.reverb(amount)",
       "properties": {
         "amount": {
           "type": "number",
@@ -358,13 +464,18 @@
           "step": 0.01,
           "default": 0.3
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').reverb(0.3)",
+        "note('c4 e4 g4').sound('piano').reverb(0.5)"
+      ]
     },
 
     "room": {
       "label": "Room Size",
       "category": "space",
       "stage": "space",
+      "signature": "pattern.room(size)",
       "properties": {
         "size": {
           "type": "number",
@@ -374,7 +485,11 @@
           "step": 0.01,
           "default": 0.5
         }
-      }
+      },
+      "examples": [
+        "s('bd').room(0.5)",
+        "note('c4').sound('piano').room(0.8)"
+      ]
     },
 
     "often": {
@@ -382,6 +497,7 @@
       "category": "probability",
       "stage": "wrapper",
       "wraps": true,
+      "signature": "often(chance?)",
       "properties": {
         "chance": {
           "type": "number",
@@ -398,7 +514,11 @@
           "minChildren": 1,
           "maxChildren": 4
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').often(0.8) // play often",
+        "note('c4 e4 g4').sound('piano').often(0.6).speed(2)"
+      ]
     },
 
     "sometimes": {
@@ -406,6 +526,7 @@
       "category": "probability",
       "stage": "wrapper",
       "wraps": true,
+      "signature": "sometimes(chance?)",
       "properties": {
         "chance": {
           "type": "number",
@@ -415,7 +536,11 @@
           "step": 0.01,
           "default": 0.5
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh').sometimes(0.5) // half the time",
+        "note('c4 e4 g4').sound('piano').sometimes(0.3).fast(2)"
+      ]
     },
 
     "rarely": {
@@ -423,6 +548,7 @@
       "category": "probability",
       "stage": "wrapper",
       "wraps": true,
+      "signature": "rarely(chance?)",
       "properties": {
         "chance": {
           "type": "number",
@@ -432,14 +558,23 @@
           "step": 0.01,
           "default": 0.25
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh oh').rarely(0.1) // almost never",
+        "note('c4').sound('piano').rarely(0.2).jux(x => x, x => x.pan(1))"
+      ]
     }
 
   },
 
-  "nodes": {
+   "nodes": {
     "Instrument": {
       "title": "Instrument",
+      "examples": [
+        "s('piano')",
+        "s('strings').gain(1.2).pan(-0.5)",
+        "note('c4 e4 g4').sound('piano').note(7)"
+      ],
       "sections": [
         {
           "id": "sound",
@@ -674,11 +809,20 @@
             }
           }
         }
+      ],
+      "examples": [
+        "s('bd sd hh oh')",
+        "s('hh').bank('RolandTR909').dec(0.2)"
       ]
     },
 
     "Repeater": {
       "title": "Repeat",
+      "signature": "*({amount})",
+      "examples": [
+        "s('bd sd hh')*4",
+        "note('c4 e4 g4').sound('piano')*3"
+      ],
       "sections": [
         {
           "id": "repeat",
@@ -700,6 +844,12 @@
 
     "Generator": {
       "title": "Generator",
+      "signature": "{type}({max})",
+      "examples": [
+        "irand(8)",
+        "rand(0, 1)",
+        "range(0, 10)"
+      ],
       "sections": [
         {
           "id": "generator",

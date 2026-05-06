@@ -18,7 +18,12 @@
       "serialization": {
         "type": "literal",
         "template": "{value}"
-      }
+      },
+      "examples": [
+        "12",
+        "0.5",
+        "-3"
+      ]
     },
     "perlin": {
       "label": "Perlin Noise",

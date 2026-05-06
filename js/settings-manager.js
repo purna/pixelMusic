@@ -391,7 +391,7 @@ const SettingsManager = {
         // Debug: Log found tabs and contents
         console.log('Found tab buttons:', tabButtons.length);
         console.log('Found tab contents:', tabContents.length);
-        
+
         // Log all tab buttons found
         tabButtons.forEach((button, index) => {
             console.log(`Tab button ${index}:`, button);
@@ -407,7 +407,7 @@ const SettingsManager = {
             console.log(`Tab content ${index} id:`, content.id);
             console.log(`Tab content ${index} classes:`, content.className);
         });
-         
+          
         if (tabButtons.length === 0) {
             console.error('NO TAB BUTTONS FOUND! This is the critical issue.');
             console.log('All elements with class .settings-tab in document:', document.querySelectorAll('.settings-tab'));
@@ -423,7 +423,14 @@ const SettingsManager = {
                 console.log('Settings tabs container HTML:', settingsTabs.innerHTML);
             }
         }
-         
+        
+        // Ensure all tab contents are hidden initially except the active one
+        tabContents.forEach(content => {
+            if (!content.classList.contains('active')) {
+                content.style.display = 'none';
+            }
+        });
+          
         tabButtons.forEach(button => {
             console.log(`Attaching click listener to tab button: ${button.getAttribute('data-tab')}`);
             button.addEventListener('click', () => {
@@ -433,21 +440,20 @@ const SettingsManager = {
 
                 // Remove active class from all tabs and contents
                 tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    content.style.display = 'none'; // Explicitly hide all tabs
+                });
 
                 // Add active class to clicked tab and corresponding content
                 button.classList.add('active');
                 const targetContent = document.querySelector(`.settings-tab-content[data-tab-content="${tabName}"]`);
                 if (targetContent) {
-                    // Remove active class from all contents first
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        content.style.display = 'none'; // Explicitly hide all tabs
-                    });
-                     
                     // Add active class and show the target content
                     targetContent.classList.add('active');
                     targetContent.style.display = 'block'; // Explicitly set display to block
+                    targetContent.style.opacity = '1'; // Ensure opacity is set
+                    targetContent.style.visibility = 'visible'; // Ensure visibility is set
                     
                     console.log(`Switched to ${tabName} tab, content found and activated`);
                     console.log('Content display style:', window.getComputedStyle(targetContent).display);
@@ -456,7 +462,7 @@ const SettingsManager = {
                     // Specific fix for audio-effects tab
                     if (tabName === 'audio-effects') {
                         console.log('Audio Effects tab activated - ensuring content is visible');
-                         
+                        
                         // Also ensure the settings-content inside is visible
                         const settingsContent = targetContent.querySelector('.settings-content');
                         if (settingsContent) {

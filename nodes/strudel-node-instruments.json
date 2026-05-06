@@ -10,7 +10,10 @@
           "id": "drums",
           "label": "Drum Kit",
           "nodeType": "DrumSymbol",
+          "signature": "s('{value}')",
+          "property": "symbol",
           "color": "#00d9ff",
+          "example": "s('bd sd hh oh')",
           "items": [
             { "id": "bd", "label": "Bass Drum", "value": "bd" },
             { "id": "sd", "label": "Snare Drum", "value": "sd" },
@@ -28,7 +31,10 @@
           "id": "percussion",
           "label": "Percussion",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('clap conga cowbell')",
           "items": [
             "agogo", "anvil", "bongo", "cabasa", "cajon", "clave", "clap",
             "conga", "cowbell", "darbuka", "flexatone", "guiro",
@@ -42,7 +48,10 @@
           "id": "mallet",
           "label": "Mallet & Tuned",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('marimba')",
           "items": [
             "balafon", "balafon_hard", "balafon_soft",
             "glockenspiel",
@@ -58,7 +67,10 @@
           "id": "strings",
           "label": "Strings & Plucked",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('harp')",
           "items": [
             "folkharp", "harp",
             "psaltery_pluck", "psaltery_bow", "psaltery_spiccato",
@@ -70,7 +82,10 @@
           "id": "winds",
           "label": "Winds & Reeds",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('sax')",
           "items": [
             "harmonica", "harmonica_soft", "harmonica_vib",
             "ocarina", "ocarina_small", "ocarina_small_stacc", "ocarina_vib",
@@ -85,7 +100,10 @@
           "id": "keyboards",
           "label": "Keyboards & Organs",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('piano')",
           "items": [
             "piano", "piano1", "steinway", "fmpiano", "kawai",
             "organ_4inch", "organ_8inch", "organ_full",
@@ -98,7 +116,10 @@
           "id": "synthesizers",
           "label": "Synthesizers",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('sawtooth')",
           "items": [
             "sawtooth", "sine", "square", "triangle"
           ]
@@ -107,7 +128,10 @@
           "id": "bass",
           "label": "Bass Sounds",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('bass0')",
           "items": [
             "bass0", "bass1", "bass2", "bass3",
             "bassfoo", "bassdm"
@@ -117,7 +141,10 @@
           "id": "vocals",
           "label": "Vocal & Choir",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('choir')",
           "items": [
             "choir", "soprano", "alto"
           ]
@@ -126,7 +153,10 @@
           "id": "world",
           "label": "World Instruments",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('sitar')",
           "items": [
             "tabla", "sitar", "tanpura",
             "kalimba", "balafon"
@@ -136,7 +166,10 @@
           "id": "textures",
           "label": "Textures & FX",
           "nodeType": "Instrument",
+          "signature": "s('{value}')",
+          "property": "sound",
           "color": "#00d9ff",
+          "example": "s('casio')",
           "items": [
             "casio", "clavisynth", "didgeridoo",
             "east", "insect", "jazz",

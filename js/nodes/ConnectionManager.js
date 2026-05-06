@@ -142,10 +142,16 @@ class ConnectionManager {
         document.removeEventListener('mouseup', this.boundFinishConnection);
     }
 
-    canConnect(sourceNode, sourcePort, targetNode, targetPort) {
+     canConnect(sourceNode, sourcePort, targetNode, targetPort) {
         // Prevent self-connection
         if (sourceNode.id === targetNode.id) {
             this.manager.updateStatus('Cannot connect node to itself');
+            return false;
+        }
+
+        // Check for cycles before allowing any connection
+        if (this.wouldCreateCycle(sourceNode, targetNode)) {
+            this.manager.updateStatus('Connection rejected: Would create a cycle in the graph');
             return false;
         }
 
@@ -186,6 +192,13 @@ class ConnectionManager {
         if (!isCompatible) {
             this.manager.updateStatus(`Incompatible connection: ${sourceNode.type} (${sourceSocket}) -> ${targetNode.type} (${targetSocket})`);
             return true; // Allow for testing
+        }
+
+        // Validate connection rules and constraints
+        const constraintResult = this.validateConnectionConstraints(sourceNode, sourceNodeDef, targetNode, targetNodeDef);
+        if (!constraintResult.valid) {
+            this.manager.updateStatus(`Connection rejected: ${constraintResult.reason}`);
+            return false;
         }
 
         // Apply validation rules
@@ -270,6 +283,11 @@ class ConnectionManager {
         this.connections.push(connection);
         this.renderConnection(connection);
         this.manager.updateStatus(`Connected ${sourceNode.type} to ${targetNode.type}`);
+        
+        // Update strudel example input for the target node
+        if (this.manager.factory && typeof this.manager.factory.updateStrudelExampleInput === 'function') {
+            this.manager.factory.updateStrudelExampleInput(targetNode);
+        }
     }
 
     renderConnection(connection) {
@@ -348,5 +366,233 @@ class ConnectionManager {
     clearAllConnections() {
         this.connections = [];
         document.querySelectorAll('.connection-line').forEach(el => el.remove());
+    }
+
+    /**
+     * Validate all connection constraints including per-node rules, maxPerChain, and stage ordering
+     */
+    validateConnectionConstraints(sourceNode, sourceNodeDef, targetNode, targetNodeDef) {
+        // Check if source node has connection rules
+        if (sourceNodeDef.connectionRules) {
+            const rules = sourceNodeDef.connectionRules;
+
+            // Check allowedTargets
+            if (rules.allowedTargets && rules.allowedTargets.length > 0) {
+                const targetSocket = this.getNodeSocket(targetNodeDef, targetPort);
+                if (!rules.allowedTargets.includes(targetSocket)) {
+                    return { valid: false, reason: `${sourceNode.type} cannot connect to ${targetSocket} port` };
+                }
+            }
+
+            // Check cannotConnectTo
+            if (rules.cannotConnectTo && rules.cannotConnectTo.length > 0) {
+                if (rules.cannotConnectTo.includes(targetNodeDef.category)) {
+                    return { valid: false, reason: `${sourceNode.type} cannot connect to ${targetNode.type}` };
+                }
+            }
+
+            // Check maxPerChain - count occurrences of this node type in the execution chain
+            if (rules.maxPerChain !== null && rules.maxPerChain !== undefined) {
+                const chainCount = this.countNodeTypeInChain(sourceNode, targetNode, sourceNode.type);
+                if (chainCount >= rules.maxPerChain) {
+                    return { valid: false, reason: `Maximum ${rules.maxPerChain} ${sourceNode.type} node(s) allowed per chain` };
+                }
+            }
+
+            // Check cannotReceiveFromStages
+            if (rules.cannotReceiveFromStages && rules.cannotReceiveFromStages.length > 0) {
+                if (rules.cannotReceiveFromStages.includes(targetNodeDef.execution?.stage)) {
+                    return { valid: false, reason: `${sourceNode.type} cannot be received by ${targetNode.type}` };
+                }
+            }
+
+            // Check preferredInputStages (suggestion, not enforcement)
+            if (rules.preferredInputStages && rules.preferredInputStages.length > 0) {
+                if (this.isSourceConnectedToTarget(sourceNode, targetNode)) {
+                    const targetStage = targetNodeDef.execution?.stage;
+                    if (!rules.preferredInputStages.includes(targetStage)) {
+                        console.log(`Note: ${sourceNode.type} prefers connecting to stages in ${rules.preferredInputStages.join(', ')}, but connecting to ${targetStage}`);
+                    }
+                }
+            }
+        }
+
+        // Check target node's allowedSources if defined
+        if (targetNodeDef.connectionRules?.allowedSources && targetNodeDef.connectionRules.allowedSources.length > 0) {
+            const sourceSocket = this.getNodeSocket(sourceNodeDef, sourcePort);
+            if (!targetNodeDef.connectionRules.allowedSources.includes(sourceSocket)) {
+                return { valid: false, reason: `${targetNode.type} cannot receive from ${sourceSocket} port` };
+            }
+        }
+
+        // Validate execution stage ordering
+        const stageValidation = this.validateExecutionStageOrder(sourceNodeDef, targetNodeDef);
+        if (!stageValidation.valid) {
+            return stageValidation;
+        }
+
+        // Check maxPerChain for target node as well
+        if (targetNodeDef.connectionRules?.maxPerChain !== null && targetNodeDef.connectionRules?.maxPerChain !== undefined) {
+            const targetChainCount = this.countNodeTypeInChain(sourceNode, targetNode, targetNode.type, true);
+            if (targetChainCount > targetNodeDef.connectionRules.maxPerChain) {
+                return { valid: false, reason: `Maximum ${targetNodeDef.connectionRules.maxPerChain} ${targetNode.type} node(s) allowed per chain` };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Count occurrences of a node type in the execution chain
+     */
+    countNodeTypeInChain(sourceNode, targetNode, nodeType, includeTarget = false) {
+        const visited = new Set();
+        const stack = [targetNode];
+        let count = 0;
+
+        while (stack.length > 0) {
+            const current = stack.pop();
+            
+            if (visited.has(current.id)) continue;
+            visited.add(current.id);
+
+            if (current.type === nodeType) {
+                count++;
+            }
+
+            const incoming = this.connections.filter(c => c.targetNodeId === current.id);
+            for (const conn of incoming) {
+                const upstream = this.manager.factory.nodes.find(n => n.id === conn.sourceNodeId) ||
+                                 this.manager.currentLevel?.parentNode?.children?.find(n => n.id === conn.sourceNodeId);
+                if (upstream && !visited.has(upstream.id)) {
+                    stack.push(upstream);
+                }
+            }
+        }
+
+        if (sourceNode.type === nodeType && !visited.has(sourceNode.id)) {
+            const sourceIsUpstream = this.isNodeUpstreamOf(sourceNode, targetNode);
+            if (sourceIsUpstream || !this.wouldCreateCycle(sourceNode, targetNode)) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Check if source node is already upstream of target node
+     */
+    isNodeUpstreamOf(sourceNode, targetNode) {
+        const visited = new Set();
+        const stack = [targetNode];
+        
+        while (stack.length > 0) {
+            const current = stack.pop();
+            if (current.id === sourceNode.id) return true;
+            if (visited.has(current.id)) continue;
+            visited.add(current.id);
+
+            const incoming = this.connections.filter(c => c.targetNodeId === current.id);
+            for (const conn of incoming) {
+                const upstream = this.manager.factory.nodes.find(n => n.id === conn.sourceNodeId) ||
+                                 this.manager.currentLevel?.parentNode?.children?.find(n => n.id === conn.sourceNodeId);
+                if (upstream && !visited.has(upstream.id)) {
+                    stack.push(upstream);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if adding a connection would create a cycle in the graph
+     */
+    wouldCreateCycle(sourceNode, targetNode) {
+        const visited = new Set();
+        const stack = [targetNode];
+
+        while (stack.length > 0) {
+            const current = stack.pop();
+            
+            if (current.id === sourceNode.id) {
+                return true;
+            }
+
+            if (visited.has(current.id)) continue;
+            visited.add(current.id);
+
+            const incoming = this.connections.filter(c => c.targetNodeId === current.id);
+            for (const conn of incoming) {
+                const upstream = this.manager.factory.nodes.find(n => n.id === conn.sourceNodeId) ||
+                                 this.manager.currentLevel?.parentNode?.children?.find(n => n.id === conn.sourceNodeId);
+                if (upstream && !visited.has(upstream.id)) {
+                    stack.push(upstream);
+                }
+            }
+
+            if (current.children && current.children.length > 0) {
+                for (const child of current.children) {
+                    if (!visited.has(child.id)) {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Validate child node constraints when adding a child to a parent
+     */
+    validateChildAddition(parentNode, childNode) {
+        const parentDef = this.manager.nodeSchema?.nodes[parentNode.type];
+        if (!parentDef) return { valid: true };
+
+        const childRules = parentDef.children;
+        if (!childRules) return { valid: true };
+
+        if (!childRules.accepts) {
+            return { valid: false, reason: `${parentNode.type} does not accept child nodes` };
+        }
+
+        const currentChildCount = parentNode.children ? parentNode.children.length : 0;
+        if (childRules.maxChildren !== null && childRules.maxChildren !== undefined) {
+            if (currentChildCount >= childRules.maxChildren) {
+                return { valid: false, reason: `${parentNode.type} has reached maximum children (${childRules.maxChildren})` };
+            }
+        }
+
+        if (childRules.minChildren !== null && childRules.minChildren !== undefined) {
+            if (currentChildCount < childRules.minChildren) {
+                // Allowed, just informational
+            }
+        }
+
+        if (childRules.childTypes && childRules.childTypes.length > 0 && !childRules.childTypeStrict) {
+            if (!childRules.childTypes.includes(childNode.category || childNode.type)) {
+                if (!childRules.childTypes.includes(childNode.type)) {
+                    return { valid: false, reason: `${parentNode.type} only accepts ${childRules.childTypes.join(', ')} children` };
+                }
+            }
+        } else if (childRules.childTypes && childRules.childTypes.length > 0 && childRules.childTypeStrict) {
+            if (!childRules.childTypes.includes(childNode.type)) {
+                return { valid: false, reason: `${parentNode.type} only accepts ${childRules.childTypes.join(', ')} children` };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Add a warning to the status area
+     */
+    addWarning(message) {
+        const statusElement = document.getElementById('status-message');
+        if (statusElement) {
+            statusElement.innerHTML = `<span style="color: #fbbf24;">⚠ ${message}</span>`;
+        }
+        console.warn('Connection warning:', message);
     }
 }

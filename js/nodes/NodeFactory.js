@@ -20,6 +20,7 @@ class NodeFactory {
             y: y,
             properties: {
                 note: '',
+                comment: '',
                 duration: 500,
                 volume: 80,
                 effects: {},
@@ -53,28 +54,46 @@ class NodeFactory {
 
         if (this.manager.propertySchema) {
             if (this.manager.propertySchema.nodes && this.manager.propertySchema.nodes[type]) {
-                node.properties.strudelProperties = this.getDefaultProperties(type);
+                node.properties.strudelProperties = {
+                    ...node.properties.strudelProperties,
+                    ...this.getDefaultProperties(type)
+                };
             } else if (this.manager.propertySchema.transformNodes && this.manager.propertySchema.transformNodes[type]) {
-                node.properties.strudelProperties = this.getDefaultProperties(type);
+                node.properties.strudelProperties = {
+                    ...node.properties.strudelProperties,
+                    ...this.getDefaultProperties(type)
+                };
             }
         }
 
         if (this.manager.controlNodesSchema?.controlNodes?.[type]) {
-            node.properties.strudelProperties = this.getDefaultControlNodeProperties(type);
+            node.properties.strudelProperties = {
+                ...node.properties.strudelProperties,
+                ...this.getDefaultControlNodeProperties(type)
+            };
         }
 
         if (this.manager.patternCombinatorsSchema?.combinators?.[type]) {
-            node.properties.strudelProperties = this.getDefaultCombinatorProperties(type);
+            node.properties.strudelProperties = {
+                ...node.properties.strudelProperties,
+                ...this.getDefaultCombinatorProperties(type)
+            };
         }
 
         if (this.manager.patternFunctionsSchema?.constructors?.[type]) {
-            node.properties.strudelProperties = this.getDefaultPatternFunctionProperties(type);
+            node.properties.strudelProperties = {
+                ...node.properties.strudelProperties,
+                ...this.getDefaultPatternFunctionProperties(type)
+            };
         }
 
         if (this.manager.nodeSchema?.nodes?.[type]) {
             const nodeDef = this.manager.nodeSchema.nodes[type];
             if (nodeDef.properties) {
-                node.properties.strudelProperties = this.getDefaultNodeSchemaProperties(type);
+                node.properties.strudelProperties = {
+                    ...node.properties.strudelProperties,
+                    ...this.getDefaultNodeSchemaProperties(type)
+                };
             }
         }
     }
@@ -125,6 +144,15 @@ class NodeFactory {
                 this.manager.updateBackButtonState();
             }
         });
+
+        // Add click handler for child port
+        const childPort = nodeElement.querySelector('.child-port');
+        if (childPort) {
+            childPort.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleChildPortClick(node);
+            });
+        }
 
         this.manager.connections.addConnectionPortListeners(nodeElement, node);
         canvas.appendChild(nodeElement);
@@ -396,11 +424,78 @@ class NodeFactory {
             noteInput.value = node.properties.note || '';
         }
 
+        // Update comment field
+        const commentInput = document.getElementById('node-comment');
+        if (commentInput) {
+            commentInput.value = node.properties.comment || '';
+        }
+
         // Render schema-based properties
         this.renderSchemaProperties(node);
 
         // Update effects panel
         this.updateEffectsPanel(node);
+    }
+
+    updateStrudelExampleInput(node) {
+        const exampleInput = document.getElementById('strudel-example-input');
+        if (!exampleInput) return;
+        
+        // Generate valid Strudel code based on node type and properties
+        let strudelCode = '';
+        
+        if (node.type === 'Instrument' || node.type === 'DrumSymbol') {
+            const sound = node.properties.strudelProperties.sound || node.properties.strudelProperties.symbol || node.instrument;
+            const note = node.properties.note || '';
+            
+            if (node.type === 'DrumSymbol') {
+                // For drum symbols, use the symbol directly
+                strudelCode = `s("${sound}")`;
+            } else if (note) {
+                // For instruments with notes, use note().sound()
+                strudelCode = `note("${note}").sound("${sound}")`;
+            } else {
+                // For instruments without notes, just use sound
+                strudelCode = `s("${sound}")`;
+            }
+            
+            // Add effects if any
+            const effects = node.properties.effects || {};
+            const strudelProps = node.properties.strudelProperties || {};
+            
+            if (strudelProps.lpf) {
+                strudelCode += `.lpf(${strudelProps.lpf})`;
+            }
+            if (strudelProps.hpf) {
+                strudelCode += `.hpf(${strudelProps.hpf})`;
+            }
+            if (strudelProps.delay) {
+                strudelCode += `.delay(${strudelProps.delay})`;
+            }
+            if (strudelProps.reverb) {
+                strudelCode += `.reverb(${strudelProps.reverb})`;
+            }
+            if (strudelProps.distort) {
+                strudelCode += `.distort(${strudelProps.distort})`;
+            }
+            if (strudelProps.pan) {
+                strudelCode += `.pan(${strudelProps.pan})`;
+            }
+            if (strudelProps.gain && strudelProps.gain !== 1) {
+                strudelCode += `.gain(${strudelProps.gain})`;
+            }
+        } else if (node.type === 'Effect') {
+            const effectType = node.properties.strudelProperties.type || node.instrument || 'lpf';
+            strudelCode = `s("*").${effectType}()`;
+        } else if (node.type === 'Repeater') {
+            const amount = node.properties.strudelProperties.amount || 2;
+            strudelCode = `s("*").fast(${amount})`;
+        } else {
+            // Default for other node types
+            strudelCode = `s("${node.instrument || 'sine'}")`;
+        }
+        
+        exampleInput.value = strudelCode;
     }
 
     updateInstrumentSelector(node) {
@@ -477,6 +572,29 @@ class NodeFactory {
                 // Update the node's visual display and the main Strudel output
                 this.updateNodeDisplay(this.selectedNode);
                 this.manager.updateStrudelOutput();
+            });
+        }
+
+        // Note/pattern input field listener
+        const noteInput = document.getElementById('node-note');
+        if (noteInput) {
+            noteInput.addEventListener('input', (e) => {
+                if (!this.selectedNode) return;
+
+                this.selectedNode.properties.note = e.target.value;
+                this.updateNodeDisplay(this.selectedNode);
+                this.manager.updateStrudelOutput();
+            });
+        }
+
+        // Comment input field listener
+        const commentInput = document.getElementById('node-comment');
+        if (commentInput) {
+            commentInput.addEventListener('input', (e) => {
+                if (!this.selectedNode) return;
+
+                this.selectedNode.properties.comment = e.target.value;
+                // Comment doesn't affect pattern generation, no need to update output
             });
         }
 
@@ -892,6 +1010,9 @@ class NodeFactory {
             case 'transformFunction':
                 control = this.createTransformFunctionControl(propName, propDef, currentValue);
                 break;
+            case 'pattern':
+                control = this.createStringControl(propName, propDef, currentValue);
+                break;
             default:
                 return null;
         }
@@ -1090,8 +1211,10 @@ class NodeFactory {
 
         // Update strudel output
         this.manager.updateStrudelOutput();
+        
+        // Re-render schema properties to reflect changes
+        this.renderSchemaProperties(node);
     }
-
     addChildToContainer(nodeId, propName) {
         const node = this.nodes.find(n => n.id === nodeId);
         if (!node) return;
@@ -1473,6 +1596,19 @@ class NodeFactory {
         return this.extractDefaultsFromDefinition(def);
     }
 
+
+    handleChildPortClick(parentNode) {
+        // Check if we're already in child editing mode for this parent
+        if (this.manager.currentLevel?.parentNode?.id === parentNode.id) {
+            // We're already editing this parent's children, so add a new child
+            this.addChildNode(parentNode.id, 'Instrument', 'sine');
+            this.manager.updateStatus('Added child node to current parent');
+        } else {
+            // Enter child editing mode for this parent
+            this.enterNodeLevel(parentNode);
+            this.manager.updateStatus(`Now editing children of ${parentNode.type} node. Click "Add Child" or double-click to add nodes.`);
+        }
+    }
     getDefaultControlNodeProperties(type) {
         const def = this.manager.controlNodesSchema?.controlNodes?.[type];
         return this.extractDefaultsFromDefinition(def);

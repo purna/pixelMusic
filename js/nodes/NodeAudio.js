@@ -16,24 +16,33 @@ class NodeAudio {
             // Ensure AudioContext is resumed after user interaction
             if (window.AudioContext || window.webkitAudioContext) {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioContextClass.prototype.state === 'suspended') {
-                    await AudioContextClass.prototype.resume();
+                // Create an AudioContext instance to check state
+                const audioContext = new AudioContextClass();
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
                 }
+                // Close the temporary context to avoid conflicts
+                audioContext.close();
             }
 
-            if (typeof strudel === 'undefined') {
+            // Check if Strudel is already loaded (from CDN in HTML)
+            if (typeof window.Strudel === 'undefined' && typeof evaluate === 'undefined') {
                 await this.loadStrudelFromCDN();
             }
 
-            if (typeof strudel.init === 'function') {
-                await strudel.init();
+            // Initialize Strudel - @strudel/web exposes global functions after init
+            // Check if evaluate function is available (from @strudel/web)
+            if (typeof evaluate === 'function' || typeof window.evaluate === 'function') {
+                this.audioInitialized = true;
+                this.manager.updateStatus('Audio initialized - Ready to play sounds');
+                this.enableAudioFeatures();
+            } else if (window.Strudel && typeof window.Strudel.evaluate === 'function') {
+                // Fallback to window.Strudel if available
                 this.audioInitialized = true;
                 this.manager.updateStatus('Audio initialized - Ready to play sounds');
                 this.enableAudioFeatures();
             } else {
-                this.audioInitialized = true;
-                this.manager.updateStatus('Audio initialized with fallback synthesis');
-                this.enableAudioFeatures();
+                throw new Error('Strudel library not available');
             }
         } catch (error) {
             console.error('Audio initialization failed:', error);
@@ -44,14 +53,16 @@ class NodeAudio {
     async loadStrudelFromCDN() {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://unpkg.com/strudel@0.12.2/dist/strudel.web.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/@strudel/web@1.0.3/dist/strudel.min.js';
             script.async = true;
             script.onload = () => {
                 setTimeout(() => {
-                    if (typeof strudel !== 'undefined') {
+                    // @strudel/web exposes global functions after loading
+                    // Check if evaluate or hush functions are available
+                    if (typeof evaluate !== 'undefined' || typeof window.evaluate !== 'undefined') {
                         resolve();
                     } else {
-                        reject(new Error('Strudel global not available'));
+                        reject(new Error('Strudel global functions not available'));
                     }
                 }, 500);
             };
@@ -70,6 +81,7 @@ class NodeAudio {
         if (initAudioBtn) {
             initAudioBtn.disabled = false;
             initAudioBtn.textContent = 'Audio Ready';
+            initAudioBtn.classList.add('audio-ready');
         }
     }
 
@@ -85,7 +97,17 @@ class NodeAudio {
             this.manager.updateStatus(`Playing ${node.instrument}...`);
             const pattern = this.manager.patternGenerator.generatePatternFromNode(node);
             this.currentPattern = pattern;
-            eval(`strudel(${pattern})`);
+            
+            // Use Strudel's evaluate function (global from @strudel/web)
+            const evalFunc = window.evaluate || evaluate;
+            if (evalFunc && typeof evalFunc === 'function') {
+                await evalFunc(pattern);
+            } else {
+                console.error('Strudel evaluate function not available');
+                this.manager.updateStatus('Error: Strudel evaluate function not available');
+                return;
+            }
+            
             this.manager.updateStatus(`Playing: ${pattern}`);
         } catch (error) {
             console.error('Error playing node:', error);
@@ -107,14 +129,33 @@ class NodeAudio {
                 // Fallback to playing all nodes if no roots found
                 const patterns = this.manager.factory.nodes.map(node => this.buildNodePattern(node));
                 const combinedPattern = patterns.join(' ');
-                eval(`strudel(${combinedPattern})`);
+                
+                // Use Strudel's evaluate function (global from @strudel/web)
+                const evalFunc = window.evaluate || evaluate;
+                if (evalFunc && typeof evalFunc === 'function') {
+                    await evalFunc(combinedPattern);
+                } else {
+                    console.error('Strudel evaluate function not available');
+                    this.manager.updateStatus('Error: Strudel evaluate function not available');
+                    return;
+                }
                 return;
             }
 
             const patterns = rootNodes.map(node => this.generatePatternFromNode(node));
             const combinedPattern = patterns.join(' ');
             this.currentPattern = combinedPattern;
-            eval(`strudel(${combinedPattern})`);
+            
+            // Use Strudel's evaluate function (global from @strudel/web)
+            const evalFunc = window.evaluate || evaluate;
+            if (evalFunc && typeof evalFunc === 'function') {
+                await evalFunc(combinedPattern);
+            } else {
+                console.error('Strudel evaluate function not available');
+                this.manager.updateStatus('Error: Strudel evaluate function not available');
+                return;
+            }
+            
             this.manager.updateStatus(`Playing connected networks: ${combinedPattern}`);
         } catch (error) {
             console.error('Error playing all nodes:', error);
@@ -123,9 +164,14 @@ class NodeAudio {
     }
 
     stopAllNodes() {
-        if (typeof strudel !== 'undefined') {
-            strudel.stop();
+        // Check if Strudel's hush function is available (global from @strudel/web)
+        const hushFunc = window.hush || hush;
+        if (hushFunc && typeof hushFunc === 'function') {
+            hushFunc();
             this.manager.updateStatus('Stopped all playback');
+        } else {
+            console.warn('Strudel hush function not available');
+            this.manager.updateStatus('Stopped all playback (fallback)');
         }
     }
 

@@ -78,17 +78,40 @@ class TutorialConfig {
                         showNext: true,
                         showSkip: true
                     },
-                    {
-                        id: 'export',
-                        elementId: 'exportMixBtn',
-                        position: 'bottom',
-                        arrowPosition: 'top', // Arrow is on the top side of the tutorial panel, points up (towards target panel)
-                        marginOverride: '25px', // Margin for export button positioning
-                        heading: 'Export Your Sounds',
-                        content: 'When you\'re happy with your creation, use the Export Mix button to save your sound as a WAV file.',
-                        showNext: true,
-                        showSkip: true
-                    }
+            {
+                id: 'export',
+                elementId: 'exportMixBtn',
+                position: 'bottom',
+                arrowPosition: 'top', // Arrow is on the top side of the tutorial panel, points up (towards target panel)
+                marginOverride: '25px', // Margin for export button positioning
+                heading: 'Export Your Sounds',
+                content: 'When you\'re happy with your creation, use the Export Mix button to save your sound as a WAV file.',
+                showNext: true,
+                showSkip: true
+            },
+            {
+                id: 'strudel-samples',
+                elementId: 'instrument-content',
+                position: 'right',
+                arrowPosition: 'left',
+                arrowPositionOverride: 'middle-third',
+                marginOverride: '60px',
+                heading: 'Strudel Sample Library',
+                content: 'Pixel Music uses Strudel\'s powerful sample library with curated, high-quality sounds including classic drum machines (TR-808, TR-909) and the Virtual Community Sound Library (VCSL). These samples are pre-processed and loaded in the background for instant use!',
+                showNext: true,
+                showSkip: true
+            },
+            {
+                id: 'using-samples',
+                elementId: 'strudel-example-input',
+                position: 'bottom',
+                arrowPosition: 'top',
+                marginOverride: '25px',
+                heading: 'Using Samples in Patterns',
+                content: 'Create patterns using Strudel\'s mini-notation. Try examples like "s(\'[bd <hh oh>]*2\').bank(\'tr909\').dec(.4)" to use drum samples with effects!',
+                showNext: true,
+                showSkip: true
+            }
                 ]
             }
         };
@@ -106,6 +129,101 @@ class TutorialConfig {
      */
     addTutorial(tutorialId, config) {
         this.tutorials[tutorialId] = config;
+    }
+
+    /**
+     * Add Strudel sample library tutorial
+     * This tutorial explains the built-in sample library features
+     */
+    addStrudelSampleTutorial() {
+        this.addTutorial('strudel-samples', {
+            enabled: true,
+            steps: [
+                {
+                    id: 'strudel-welcome',
+                    elementId: 'workspace-area',
+                    position: 'center',
+                    arrowPosition: 'none',
+                    arrowPositionOverride: 'center',
+                    marginOverride: '0',
+                    heading: 'Strudel Sample Library',
+                    content: 'Pixel Music includes Strudel\'s powerful sample library with curated, high-quality sounds. Let\'s explore what\'s available!',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'built-in-sounds',
+                    elementId: 'instrument-content',
+                    position: 'right',
+                    arrowPosition: 'left',
+                    arrowPositionOverride: 'top-third',
+                    marginOverride: '60px',
+                    heading: 'Built-in Sounds',
+                    content: 'Strudel provides a curated base library with classic drum machine sounds like Roland TR-808 and TR-909. These are high-quality, pre-processed samples loaded in the background for instant use.',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'sample-libraries',
+                    elementId: 'instrument-content',
+                    position: 'right',
+                    arrowPosition: 'left',
+                    arrowPositionOverride: 'middle-third',
+                    marginOverride: '60px',
+                    heading: 'Virtual Community Sound Library',
+                    content: 'Strudel leverages instrument samples from the Virtual Community Sound Library (VCSL), providing a rich collection of diverse sounds from acoustic instruments to electronic textures.',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'drum-kits',
+                    elementId: 'instrument-content',
+                    position: 'right',
+                    arrowPosition: 'left',
+                    arrowPositionOverride: 'middle-third',
+                    marginOverride: '60px',
+                    heading: 'Drum Kits & Percussion',
+                    content: 'Explore comprehensive drum kits including TR-808, TR-909, TR-707, and LinnDrum samples. Plus a wide range of percussion instruments from congas to shakers.',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'melodic-instruments',
+                    elementId: 'instrument-content',
+                    position: 'right',
+                    arrowPosition: 'left',
+                    arrowPositionOverride: 'middle-third',
+                    marginOverride: '60px',
+                    heading: 'Melodic Instruments',
+                    content: 'From pianos and organs to synthesizers, mallets, strings, winds, and world instruments. Each category offers multiple variations for creative exploration.',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'using-samples',
+                    elementId: 'strudel-example-input',
+                    position: 'bottom',
+                    arrowPosition: 'top',
+                    marginOverride: '25px',
+                    heading: 'Using Samples in Patterns',
+                    content: 'Create patterns using Strudel\'s mini-notation. Try examples like "s(\'[bd <hh oh>]*2\').bank(\'tr909\').dec(.4)" to use drum samples with effects!',
+                    showNext: true,
+                    showSkip: true
+                },
+                {
+                    id: 'sample-complete',
+                    elementId: 'workspace-area',
+                    position: 'center',
+                    arrowPosition: 'none',
+                    arrowPositionOverride: 'center',
+                    marginOverride: '0',
+                    heading: 'Start Creating!',
+                    content: 'Now you know about Strudel\'s sample library! Drag instruments from the sidebar or use the pattern generator to create music with these high-quality samples.',
+                    showNext: false,
+                    showSkip: true
+                }
+            ]
+        });
     }
 
     /**

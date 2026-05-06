@@ -150,6 +150,13 @@ header {
 .header-btn.primary { background: var(--accent-secondary); border-color: var(--accent-secondary); color: white; }
 .header-btn.action { color: var(--accent-tertiary); border-color: var(--accent-tertiary); background: transparent; }
 
+/* Style for when audio is ready/enabled */
+.header-btn.action.audio-ready {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
 /* Ensure header action buttons show both icon and text */
 .header-btn.action i {
     margin-right: 6px;
@@ -575,6 +582,26 @@ select { width: 100%; background: var(--bg-darkest); color: var(--text-primary);
         transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1),
         opacity 0.15s ease-out;
 }
+
+/* Side panel overlay - closes panel when clicking outside */
+#side-panel-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#side-panel-overlay.visible {
+    display: block;
+    opacity: 1;
+}
+
 .panel-content { display: none; height: 100%; flex-direction: column; padding: 15px; overflow-y: auto; }
 .panel-content.active { display: flex; }
 .panel-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
@@ -2229,6 +2256,7 @@ select { width: 100%; background: var(--bg-darkest); color: var(--text-primary);
     background: rgba(26, 26, 46, 0.9);
     color: var(--text-secondary);
     padding: 10px 15px;
+    margin: 10px 0;
     border-radius: 6px;
     font-size: 12px;
     z-index: 100;

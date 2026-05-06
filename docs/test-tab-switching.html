@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Tab Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass {
+            background: #2d5a2d;
+            color: #0f0;
+        }
+        .fail {
+            background: #5a2d2d;
+            color: #f00;
+        }
+        .info {
+            background: #2d4a5a;
+            color: #0ff;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #444;
+        }
+        .modal {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .settings-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .settings-tab {
+            padding: 10px 20px;
+            background: #333;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .settings-tab.active {
+            color: #0f0;
+            border-bottom-color: #0f0;
+        }
+        .settings-tab-content {
+            display: none;
+            padding: 20px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .settings-tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Settings Tab Test</h1>
+    <p>This test verifies that the settings tabs work correctly.</p>
+    
+    <div id="test-results"></div>
+    
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="testTabSwitching()">Test Tab Switching</button>
+    
+    <div class="modal">
+        <h2>Test Modal</h2>
+        <div class="settings-tabs">
+            <button class="settings-tab active" data-tab="general">General</button>
+            <button class="settings-tab" data-tab="audio-effects">Audio Effects</button>
+        </div>
+        
+        <div class="settings-tab-content active" data-tab-content="general">
+            <h3>General Settings</h3>
+            <p>General settings content here.</p>
+        </div>
+        
+        <div class="settings-tab-content" data-tab-content="audio-effects">
+            <h3>Audio Effects Settings</h3>
+            <p>Audio effects settings content here.</p>
+            <div class="settings-content">
+                <p>Additional audio effects controls.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function addResult(message, type) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        function runTests() {
+            addResult('Running settings tab tests...', 'info');
+            
+            // Test 1: Check if tab buttons exist
+            const tabButtons = document.querySelectorAll('.settings-tab');
+            if (tabButtons.length > 0) {
+                addResult(`✓ Found ${tabButtons.length} tab buttons`, 'pass');
+            } else {
+                addResult('✗ No tab buttons found', 'fail');
+            }
+            
+            // Test 2: Check if tab contents exist
+            const tabContents = document.querySelectorAll('.settings-tab-content');
+            if (tabContents.length > 0) {
+                addResult(`✓ Found ${tabContents.length} tab contents`, 'pass');
+            } else {
+                addResult('✗ No tab contents found', 'fail');
+            }
+            
+            // Test 3: Check if audio-effects tab exists
+            const audioTab = document.querySelector('[data-tab="audio-effects"]');
+            if (audioTab) {
+                addResult('✓ Audio Effects tab button exists', 'pass');
+            } else {
+                addResult('✗ Audio Effects tab button not found', 'fail');
+            }
+            
+            // Test 4: Check if audio-effects content exists
+            const audioContent = document.querySelector('[data-tab-content="audio-effects"]');
+            if (audioContent) {
+                addResult('✓ Audio Effects tab content exists', 'pass');
+            } else {
+                addResult('✗ Audio Effects tab content not found', 'fail');
+            }
+            
+            // Test 5: Check initial state
+            const activeTab = document.querySelector('.settings-tab.active');
+            const activeContent = document.querySelector('.settings-tab-content.active');
+            if (activeTab && activeContent) {
+                addResult(`✓ Initial active tab: ${activeTab.getAttribute('data-tab')}`, 'pass');
+                addResult(`✓ Initial active content: ${activeContent.getAttribute('data-tab-content')}`, 'pass');
+            } else {
+                addResult('✗ No active tab or content found', 'fail');
+            }
+        }
+        
+        function testTabSwitching() {
+            addResult('Testing tab switching...', 'info');
+            
+            // Get the audio effects tab button
+            const audioTab = document.querySelector('[data-tab="audio-effects"]');
+            if (!audioTab) {
+                addResult('✗ Audio Effects tab not found', 'fail');
+                return;
+            }
+            
+            // Click the audio effects tab
+            audioTab.click();
+            
+            // Check if it became active
+            setTimeout(() => {
+                const isActive = audioTab.classList.contains('active');
+                if (isActive) {
+                    addResult('✓ Audio Effects tab is now active', 'pass');
+                } else {
+                    addResult('✗ Audio Effects tab did not become active', 'fail');
+                }
+                
+                // Check if the content is visible
+                const audioContent = document.querySelector('[data-tab-content="audio-effects"]');
+                if (audioContent) {
+                    const isVisible = audioContent.classList.contains('active');
+                    const display = window.getComputedStyle(audioContent).display;
+                    if (isVisible && display !== 'none') {
+                        addResult('✓ Audio Effects content is visible', 'pass');
+                    } else {
+                        addResult(`✗ Audio Effects content is not visible (display: ${display})`, 'fail');
+                    }
+                }
+            }, 100);
+        }
+        
+        // Add click event listeners to tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.settings-tab');
+            const tabContents = document.querySelectorAll('.settings-tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const targetContent = document.querySelector(`[data-tab-content="${tabName}"]`);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                });
+            });
+            
+            addResult('Event listeners attached to tabs', 'info');
+        });
+    </script>
+</body>
+</html>

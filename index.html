@@ -4,11 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Music Grid</title>
+    <title>Pixel Music Strudel Node Editor</title>
     <!-- Fonts & Icons -->
     <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
-    <!-- Google Fonts - Press Start 2P -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <!-- Custom Font -->
     <style>
         @font-face {
@@ -29,7 +27,7 @@
 
         @font-face {
             font-family: 'Press Start 2P';
-            src: url('fonts/press-start-2p-regular.woff2') format('woff2');
+            src: url('fonts/PressStart2P-Regular.ttf') format('ttf');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
@@ -135,10 +133,39 @@
             <div id="music-grid-container">
                 <div class="grid-header">Node-Based Music Editor</div>
                 <div id="node-canvas">
+                    <!-- Canvas Search Toolbar -->
+                    <div class="canvas-search-toolbar">
+                        <div class="search-container">
+                            <input type="text" id="node-search-input" class="node-search-input" placeholder="Search nodes... (e.g., sine, piano, delay)">
+                            <button id="node-search-btn" class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div class="search-results" id="search-results"></div>
+                    </div>
+                    
+                    <!-- Canvas Context Menu -->
+                    <div class="canvas-context-menu" id="canvas-context-menu">
+                        <div class="context-menu-item" data-action="add-node">
+                            <i class="fas fa-plus"></i> Add Node
+                        </div>
+                        <div class="context-menu-item" data-action="search-node">
+                            <i class="fas fa-search"></i> Search & Add Node
+                        </div>
+                        <div class="context-menu-divider"></div>
+                        <div class="context-menu-item" data-action="add-instrument">
+                            <i class="fas fa-music"></i> Add Instrument
+                        </div>
+                        <div class="context-menu-item" data-action="add-effect">
+                            <i class="fas fa-sliders-h"></i> Add Effect
+                        </div>
+                        <div class="context-menu-item" data-action="add-pattern">
+                            <i class="fas fa-code"></i> Add Pattern
+                        </div>
+                    </div>
+                    
                     <div class="canvas-content" id="canvas-content">
                         <!-- Nodes and connections will be rendered here -->
                     </div>
-
+                    
                     <!-- Canvas Controls -->
                     <div class="canvas-controls">
                         <div class="control-group">
@@ -167,15 +194,16 @@
                         Selected</button>
                     <button id="clear-nodes" class="btn btn-secondary"><i class="fas fa-trash"></i> Clear Nodes</button>
                 </div>
-
+                
                 <!-- Status Message -->
                 <div class="status-message" id="status-message">
                     Node Editor Ready - Click play buttons on nodes to test sounds
                 </div>
             </div>
         </div>
-
+        
         <!-- Dynamic Side Panel for Node Properties -->
+        <div id="side-panel-overlay"></div>
         <div id="side-panel">
             <div class="side-panel-header">
                 <h3 id="side-panel-title">Node Properties</h3>
@@ -192,8 +220,13 @@
                 </div>
 
                 <div class="property-group">
-                    <label for="node-note">Note (if applicable)</label>
-                    <input type="text" id="node-note" placeholder="e.g., c4, f#3">
+                    <label for="node-note">Note Pattern</label>
+                    <input type="text" id="node-note" placeholder="e.g., c4 e4 g4, a3 c#4, 48 60 64">
+                </div>
+
+                <div class="property-group">
+                    <label for="node-comment">Comment</label>
+                    <input type="text" id="node-comment" placeholder="Optional description or annotation">
                 </div>
 
                 <!-- Schema-based properties will be injected here -->
@@ -630,11 +663,11 @@
     <!-- Music Manager - Audio effects processing -->
     <script src="js/musicManager.js"></script>
     <!-- Strudel.cc Library - Load as regular script instead of module -->
-    <script src="https://cdn.jsdelivr.net/npm/@strudel/webaudio@1.2.6/dist/strudel.min.js"
+    <script src="https://cdn.jsdelivr.net/npm/@strudel/web@1.0.3/dist/strudel.min.js"
         onerror="this.onerror=null; this.src='js/strudel.esm.min.js'; console.log('Falling back to local Strudel file');"
         onload="console.log('Strudel CDN loaded successfully')">
         </script>
-
+    
     <!-- Tooltip System -->
     <script src="js/tooltip.js"></script>
     <!-- Audio Effects Manager -->
@@ -649,6 +682,10 @@
     <script src="js/nodes/NodeFactory.js"></script>
     <script src="js/nodes/NodeAudio.js"></script>
     <script src="js/nodes/NodeManager.js"></script>
+    
+    <!-- Node Search Module -->
+    <script src="js/nodeSearch.js"></script>
+    
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
 
@@ -680,6 +717,9 @@
     </footer>
 
 
+    <!-- Strudel Sample Manager -->
+    <script src="js/strudel-sample-manager.js"></script>
+    
     <!-- Initialize the Strudel Pattern Generator -->
     <script>
         // Handle example button clicks
@@ -699,9 +739,62 @@
                     }
                 });
             });
+            
+            // Initialize Strudel samples on first user interaction
+            initializeStrudelSamples();
         });
+        
+        // Load Strudel sample libraries
+        async function initializeStrudelSamples() {
+            // Wait for user interaction to initialize audio (browser requirement)
+            const initAudioBtn = document.getElementById('initAudioBtn');
+            if (initAudioBtn) {
+                initAudioBtn.addEventListener('click', async function() {
+                    try {
+                        // Load default Strudel samples after audio is initialized
+                        if (window.Strudel && Strudel.samples) {
+                            console.log('Loading Strudel sample libraries...');
+                            
+                            // Load the main sample library
+                            await Strudel.samples('github:tidalcycles/dirt-samples');
+                            console.log('✓ Dirt Samples loaded');
+                            
+                            // Optionally load additional libraries
+                            // const base = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
+                            // await Strudel.samples(`${base}/tidal-drum-machines.json`, `${base}/tidal-drum-machines/machines/`);
+                            // console.log('✓ Drum Machines loaded');
+                            
+                            // await Strudel.samples(`${base}/vcsl.json`, `${base}/VCSL/`);
+                            // console.log('✓ VCSL samples loaded');
+                            
+                            console.log('All Strudel samples loaded successfully!');
+                        }
+                    } catch (error) {
+                        console.warn('Could not load Strudel samples:', error);
+                        // Continue without external samples - built-in samples will still work
+                    }
+                }, { once: true }); // Only run once
+            }
+        }
+        
+        // Example: Load custom samples
+        async function loadCustomSamples() {
+            if (!window.Strudel || !Strudel.samples) return;
+            
+            // Example 1: Load from GitHub
+            // await Strudel.samples('github:tidalcycles/dirt-samples');
+            
+            // Example 2: Load specific sample map
+            // await Strudel.samples({
+            //     'mykick': 'https://example.com/kick.wav',
+            //     'mysnare': 'https://example.com/snare.wav'
+            // });
+            
+            // Example 3: Load from your own GitHub repo
+            // await Strudel.samples('github:yourusername/your-repo/main');
+            
+            console.log('Custom samples loaded');
+        }
     </script>
-
 </body>
-
 </html>

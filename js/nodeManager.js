@@ -1433,6 +1433,11 @@ class NodeManager {
             schema = this.createTransformNodeSchema(nodeType);
         }
         
+        // Check if it's an instrument node (needs note transform property)
+        if (!schema && nodeType === 'Instrument') {
+            schema = this.createInstrumentNodeSchema();
+        }
+        
         // Debug logging for schema lookup
         if (!schema) {
             console.log(`Schema lookup for node type: ${nodeType}`, {
@@ -1647,6 +1652,31 @@ class NodeManager {
             });
         }
 
+         return schema;
+    }
+
+    createInstrumentNodeSchema() {
+        // Instrument nodes support the note transform (semitones) property
+        const schema = {
+            title: 'Instrument',
+            sections: [
+                {
+                    id: 'note',
+                    label: 'Note Transform',
+                    properties: {
+                        semitones: {
+                            label: 'Semitones',
+                            type: 'number',
+                            min: -24,
+                            max: 24,
+                            step: 1,
+                            default: 0,
+                            mapsTo: 'arg'
+                        }
+                    }
+                }
+            ]
+        };
         return schema;
     }
 
@@ -2296,6 +2326,11 @@ class NodeManager {
             }
             if (props.speed !== undefined && props.speed !== 1) {
                 pattern += `.speed(${props.speed})`;
+            }
+            
+            // Apply note transform (semitones)
+            if (props.semitones !== undefined && props.semitones !== 0) {
+                pattern += `.note(${props.semitones})`;
             }
             
         } else if (node.type === 'Repeater' || node.type === 'multiplier') {

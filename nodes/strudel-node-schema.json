@@ -409,7 +409,12 @@
           "default": 0.5,
           "mapsTo": ".release"
         }
-      }
+      },
+      "examples": [
+        "s('piano')",
+        "s('strings').gain(1.2).pan(-0.5)",
+        "note('c4 e4 g4').sound('piano').note(7)"
+      ]
     },
     "DrumSymbol": {
       "id": "DrumSymbol",
@@ -464,7 +469,11 @@
           "default": 0.3,
           "mapsTo": ".dec"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh')",
+        "s('bd').bank('RolandTR909').dec(0.2)"
+      ]
     },
     "Envelope": {
       "id": "Envelope",
@@ -546,7 +555,11 @@
         "combineMode": "parallel",
         "childExecutionMode": "independent"
       },
-      "properties": {}
+      "properties": {},
+      "examples": [
+        "stack(s('bd'), s('hh'))",
+        "stack(s('bd sd'), s('hh oh'))"
+      ]
     },
     "Sequence": {
       "id": "Sequence",
@@ -579,7 +592,11 @@
         "combineMode": "sequential",
         "childExecutionMode": "independent"
       },
-      "properties": {}
+      "properties": {},
+      "examples": [
+        "cat(s('bd'), s('hh'))",
+        "cat(n('0 1'), n('2 3'))"
+      ]
     },
     "Group": {
       "id": "Group",
@@ -622,7 +639,11 @@
           "default": "parallel",
           "mapsTo": "groupMode"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd hh').group('parallel')",
+        "note('c4 e4 g4').sound('piano').group('alternate')"
+      ]
     },
     "Chop": {
       "id": "Chop",
@@ -651,7 +672,11 @@
           "default": 4,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').chop(8)",
+        "note('c4').sound('piano').chop(4)"
+      ]
     },
     "Stutter": {
       "id": "Stutter",
@@ -680,7 +705,11 @@
           "default": 4,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd').stutter(8)",
+        "note('c4').sound('piano').stutter(4)"
+      ]
     },
     "LPF": {
       "id": "LPF",
@@ -712,7 +741,11 @@
           "canBeControl": true,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd').lpf(1000)",
+        "note('c4 e4 g4').sound('piano').lpf(2000)"
+      ]
     },
     "HPF": {
       "id": "HPF",
@@ -733,17 +766,22 @@
         "priority": 60,
         "wraps": false
       },
-      "properties": {
-        "frequency": {
-          "type": "pattern",
-          "label": "Cutoff Frequency",
-          "min": 20,
-          "max": 2000,
-          "default": 20,
-          "canBePattern": true,
-          "canBeControl": true,
-          "mapsTo": "arg"
-        }
+        "properties": {
+          "frequency": {
+            "type": "pattern",
+            "label": "Cutoff Frequency",
+            "min": 20,
+            "max": 2000,
+            "default": 20,
+            "canBePattern": true,
+            "canBeControl": true,
+            "mapsTo": "arg"
+          }
+        },
+        "examples": [
+          "s('hh').hpf(200)",
+          "note('c4').sound('piano').hpf(500)"
+        ]
       }
     },
     "Delay": {
@@ -779,7 +817,11 @@
           "default": 0.4,
           "mapsTo": ".delayfb"
         }
-      }
+      },
+      "examples": [
+        "s('bd').delay(0.25)",
+        "s('hh').delay(0.5).delayfb(0.4)"
+      ]
     },
     "Reverb": {
       "id": "Reverb",
@@ -807,7 +849,11 @@
           "default": 0.3,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').reverb(0.3)",
+        "note('c4 e4 g4').sound('piano').reverb(0.5)"
+      ]
     },
     "Distort": {
       "id": "Distort",
@@ -835,13 +881,22 @@
           "default": 0.5,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd').distort(0.5)",
+        "note('c4').sound('sawtooth').distort(0.8)"
+      ]
     },
     "Often": {
       "id": "Often",
       "category": "wrapper",
       "title": "Often",
       "description": "High probability wrapper",
+      "signature": "often({probability})",
+      "examples": [
+        "s('bd sd hh').often(0.8)",
+        "note('c4 e4 g4').sound('piano').often(0.7).fast(2)"
+      ],
       "sockets": {
         "in": [
           "wrapIn"
@@ -882,6 +937,11 @@
       "category": "wrapper",
       "title": "Sometimes",
       "description": "Medium probability wrapper",
+      "signature": "sometimes({probability})",
+      "examples": [
+        "s('bd sd hh').sometimes(0.5)",
+        "note('c4 e4 g4').sound('piano').sometimes(0.4).rev()"
+      ],
       "sockets": {
         "in": [
           "wrapIn"
@@ -922,6 +982,11 @@
       "category": "wrapper",
       "title": "Rarely",
       "description": "Low probability wrapper",
+      "signature": "rarely({probability})",
+      "examples": [
+        "s('bd').rarely(0.1)",
+        "note('c4').sound('piano').rarely(0.2).jux(x => x, x => x.pan(1))"
+      ],
       "sockets": {
         "in": [
           "wrapIn"
@@ -1014,7 +1079,11 @@
           "default": 4,
           "mapsTo": "arg"
         }
-      }
+      },
+      "examples": [
+        "s('bd sd').sometimes(0.5)",
+        "note('c4 e4 g4').sound('piano').often(0.8).fast(2)"
+      ]
     },
     "LFO": {
       "id": "LFO",
@@ -1138,6 +1207,11 @@
       "category": "modulation",
       "title": "Pitch",
       "description": "Pitch transformation",
+      "signature": ".note({semitones}).speed({speed})",
+      "examples": [
+        "note('c4').sound('piano').note(7) // up a 5th",
+        "s('bd').note(12).speed(0.8)"
+      ],
       "sockets": {
         "in": [
           "patternIn"

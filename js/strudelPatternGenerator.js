@@ -332,12 +332,18 @@ class StrudelPatternGenerator {
                 if (node.properties.note) {
                     pattern = `note("${node.properties.note}")`;
                 } else {
-                    // Use sound property if available, otherwise fall back to instrument
-                    const sound = props.sound || props.symbol || node.instrument;
-                    
-                    // Check if sound contains mini-notation
-                    const parsedSound = this.parseMiniNotation(sound);
-                    pattern = `s("${parsedSound}")`;
+                    // Look up signature from instrument menu data
+                    const signatureInfo = this.manager.getInstrumentSignatureInfo(node.instrument);
+                    if (signatureInfo && signatureInfo.signature) {
+                        const propName = signatureInfo.property;
+                        const value = props[propName] || node.instrument;
+                        pattern = signatureInfo.signature.replace('{value}', value);
+                    } else {
+                        // Fallback to legacy behavior
+                        const sound = props.sound || props.symbol || node.instrument;
+                        const parsedSound = this.parseMiniNotation(sound);
+                        pattern = `s("${parsedSound}")`;
+                    }
                 }
                 
                 // Apply instrument properties

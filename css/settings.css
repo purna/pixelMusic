@@ -117,18 +117,7 @@
 }
 
 .settings-tab-content.active {
-    display: block;
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Specific styling for audio effects tab to ensure it shows */
-.settings-tab-content[data-tab-content="audio-effects"] {
-    display: none;
-    padding: 10px 0;
-}
-
-.settings-tab-content[data-tab-content="audio-effects"].active {
-    display: block;
+    display: block !important; /* Force display to ensure tab shows */
     animation: fadeIn 0.3s ease-out;
 }
 

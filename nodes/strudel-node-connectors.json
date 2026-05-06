@@ -1,0 +1,3316 @@
+{
+    "schemaVersion": "2.1",
+    "description": "Strudel Node Connector & Sequencing Schema - Directed Acyclic Signal Graph with enhanced constraints",
+    "lastUpdated": "2026-05-06",
+    "source": "https://strudel.cc/learn/code/ + all function docs",
+    "socketTypes": {
+        "patternIn": {
+            "type": "patternIn",
+            "description": "Accepts a Strudel Pattern",
+            "dataType": "pattern"
+        },
+        "patternOut": {
+            "type": "patternOut",
+            "description": "Outputs a Strudel Pattern",
+            "dataType": "pattern"
+        },
+        "eventIn": {
+            "type": "eventIn",
+            "description": "Accepts event-level transforms",
+            "dataType": "event"
+        },
+        "controlIn": {
+            "type": "controlIn",
+            "description": "Numeric or pattern control signal",
+            "dataType": "control",
+            "targetProperties": {}
+        },
+        "wrapIn": {
+            "type": "wrapIn",
+            "description": "Accepts a pattern to wrap",
+            "dataType": "pattern"
+        },
+        "wrapOut": {
+            "type": "wrapOut",
+            "description": "Outputs wrapped pattern",
+            "dataType": "pattern"
+        },
+        "childSlot": {
+            "type": "childSlot",
+            "description": "Accepts child patterns for containers/wrappers",
+            "dataType": "childNode"
+        },
+        "parentOut": {
+            "type": "parentOut",
+            "description": "Sends to parent container",
+            "dataType": "childNode"
+        }
+    },
+    "executionStages": {
+        "source": {
+            "priority": 10,
+            "description": "Sound generators - must be at the start of any chain",
+            "allowedInputStages": [],
+            "allowedOutputStages": [
+                "structural",
+                "rhythmic",
+                "pitch",
+                "modulation",
+                "spectral",
+                "space",
+                "wrapper"
+            ]
+        },
+        "structural": {
+            "priority": 20,
+            "description": "Pattern combinators (stack, cat, seq)",
+            "allowedInputStages": [
+                "source",
+                "structural"
+            ],
+            "allowedOutputStages": [
+                "rhythmic",
+                "pitch",
+                "modulation",
+                "spectral",
+                "space",
+                "wrapper"
+            ]
+        },
+        "rhythmic": {
+            "priority": 30,
+            "description": "Time slicing & repeats (slow, fast, euclid, chop, stutter)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic"
+            ],
+            "allowedOutputStages": [
+                "pitch",
+                "modulation",
+                "spectral",
+                "space",
+                "wrapper"
+            ]
+        },
+        "pitch": {
+            "priority": 40,
+            "description": "Pitch transformations (transpose, scale, add)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic",
+                "pitch"
+            ],
+            "allowedOutputStages": [
+                "modulation",
+                "spectral",
+                "space",
+                "wrapper"
+            ]
+        },
+        "modulation": {
+            "priority": 50,
+            "description": "Modulation & control (LFO, envelope, vibrato)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic",
+                "pitch",
+                "modulation"
+            ],
+            "allowedOutputStages": [
+                "spectral",
+                "space",
+                "wrapper"
+            ]
+        },
+        "spectral": {
+            "priority": 60,
+            "description": "Spectral effects (filters, waveshaping, bitcrush)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic",
+                "pitch",
+                "modulation",
+                "spectral"
+            ],
+            "allowedOutputStages": [
+                "space",
+                "wrapper"
+            ]
+        },
+        "space": {
+            "priority": 70,
+            "description": "Spatial effects (reverb, delay, pan)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic",
+                "pitch",
+                "modulation",
+                "spectral",
+                "space"
+            ],
+            "allowedOutputStages": [
+                "wrapper"
+            ]
+        },
+        "wrapper": {
+            "priority": 80,
+            "description": "Higher-order transforms (probability, conditional)",
+            "allowedInputStages": [
+                "source",
+                "structural",
+                "rhythmic",
+                "pitch",
+                "modulation",
+                "spectral",
+                "space"
+            ],
+            "allowedOutputStages": []
+        }
+    },
+    "nodes": {
+        "Note": {
+            "id": "Note",
+            "category": "source",
+            "title": "Note",
+            "description": "Musical note pattern generator using note names",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 10,
+                "wraps": false
+            },
+            "maxInstances": 1,
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "cannotReceiveFromStages": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "pattern": {
+                    "type": "pattern",
+                    "label": "Note Pattern",
+                    "description": "Mini-notation pattern of note names (c4, eb5, etc.)",
+                    "required": true,
+                    "mapsTo": "note",
+                    "supportsMiniNotation": true,
+                    "syntax": "noteNames"
+                }
+            }
+        },
+        "s": {
+            "id": "s",
+            "category": "source",
+            "title": "Sound Pattern",
+            "description": "Creates a pattern from sound sample names",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 10,
+                "wraps": false
+            },
+            "maxInstances": 1,
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "cannotReceiveFromStages": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "pattern": {
+                    "type": "pattern",
+                    "label": "Sound Pattern",
+                    "description": "Mini-notation pattern of sound names",
+                    "required": true,
+                    "mapsTo": "sound",
+                    "supportsMiniNotation": true,
+                    "syntax": "sampleNames"
+                }
+            }
+        },
+        "SoundSynth": {
+            "id": "SoundSynth",
+            "category": "synth",
+            "title": "Synthesizer",
+            "description": "Sets the synthesizer waveform type",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 11,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "preferredInputStages": [
+                    "source",
+                    "structural"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "synth": {
+                    "type": "select",
+                    "label": "Waveform",
+                    "values": [
+                        "sine",
+                        "sawtooth",
+                        "square",
+                        "triangle",
+                        "white",
+                        "pink",
+                        "brown"
+                    ],
+                    "default": "sawtooth",
+                    "required": true,
+                    "mapsTo": "arg"
+                },
+                "noise": {
+                    "type": "knob",
+                    "label": "Noise Amount",
+                    "description": "Amount of noise to add",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "mapsTo": "noise"
+                }
+            },
+            "aliases": [
+                "s",
+                "sound"
+            ]
+        },
+        "Instrument": {
+            "id": "Instrument",
+            "category": "source",
+            "title": "Instrument",
+            "description": "Sound generator for melodic instrument samples",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 10,
+                "wraps": false
+            },
+            "maxInstances": 1,
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "cannotReceiveFromStages": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "sound": {
+                    "type": "select",
+                    "label": "Instrument",
+                    "source": "instrumentList",
+                    "required": true,
+                    "mapsTo": "s"
+                },
+                "gain": {
+                    "type": "knob",
+                    "label": "Gain",
+                    "min": 0,
+                    "max": 2,
+                    "default": 1,
+                    "mapsTo": ".gain"
+                },
+                "pan": {
+                    "type": "slider",
+                    "label": "Pan",
+                    "min": -1,
+                    "max": 1,
+                    "default": 0,
+                    "mapsTo": ".pan"
+                },
+                "attack": {
+                    "type": "knob",
+                    "label": "Attack",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.01,
+                    "mapsTo": ".attack"
+                },
+                "decay": {
+                    "type": "knob",
+                    "label": "Decay",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.3,
+                    "mapsTo": ".decay"
+                },
+                "sustain": {
+                    "type": "knob",
+                    "label": "Sustain",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.7,
+                    "mapsTo": ".sustain"
+                },
+                "release": {
+                    "type": "knob",
+                    "label": "Release",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.5,
+                    "mapsTo": ".release"
+                }
+            }
+        },
+        "DrumSymbol": {
+            "id": "DrumSymbol",
+            "category": "source",
+            "title": "Drum",
+            "description": "Sound generator for percussion",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 10,
+                "wraps": false
+            },
+            "maxInstances": 1,
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "cannotReceiveFromStages": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "symbol": {
+                    "type": "select",
+                    "label": "Drum Type",
+                    "values": [
+                        "bd",
+                        "sd",
+                        "oh",
+                        "hh",
+                        "rim",
+                        "lt",
+                        "mt",
+                        "ht",
+                        "rd",
+                        "cr",
+                        "cp"
+                    ],
+                    "required": true,
+                    "mapsTo": "s"
+                },
+                "bank": {
+                    "type": "select",
+                    "label": "Drum Machine",
+                    "values": [
+                        "RolandTR909",
+                        "RolandTR808",
+                        "RolandTR707",
+                        "AkaiLinn",
+                        "RhythmAce",
+                        "ViscoSpaceDrum"
+                    ],
+                    "default": "RolandTR909",
+                    "mapsTo": ".bank"
+                },
+                "dec": {
+                    "type": "knob",
+                    "label": "Decay",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.3,
+                    "mapsTo": ".dec"
+                }
+            }
+        },
+        "Envelope": {
+            "id": "Envelope",
+            "category": "modulation",
+            "title": "ADSR Envelope",
+            "description": "Amplitude envelope shaping (attack/decay/sustain/release)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 12,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "attack": {
+                    "type": "knob",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.1,
+                    "mapsTo": ".attack"
+                },
+                "decay": {
+                    "type": "knob",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.1,
+                    "mapsTo": ".decay"
+                },
+                "sustain": {
+                    "type": "knob",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.25,
+                    "mapsTo": ".sustain"
+                },
+                "release": {
+                    "type": "knob",
+                    "min": 0,
+                    "max": 2,
+                    "default": 0.2,
+                    "mapsTo": ".release"
+                }
+            }
+        },
+        "Stack": {
+            "id": "Stack",
+            "category": "structural",
+            "title": "Stack",
+            "description": "Combines patterns in parallel (simultaneous playback)",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 1
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 2
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 3
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0,
+                        "acceptsMultiple": true
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "structural",
+                "priority": 20,
+                "wraps": false
+            },
+            "multiInput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "childSlot"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "wrapper"
+                ],
+                "childConnectionsAllowed": true
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 8,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "parallel",
+                "childExecutionMode": "independent",
+                "multiSlot": true
+            },
+            "properties": {}
+        },
+        "Sequence": {
+            "id": "Sequence",
+            "category": "structural",
+            "title": "Sequence",
+            "description": "Combines patterns in sequence (one after another)",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 1
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 2
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 3
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0,
+                        "acceptsMultiple": true
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "structural",
+                "priority": 20,
+                "wraps": false
+            },
+            "multiInput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "childSlot"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "wrapper"
+                ],
+                "childConnectionsAllowed": true
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 8,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "sequential",
+                "childExecutionMode": "independent",
+                "multiSlot": true
+            },
+            "aliases": [
+                "seq",
+                "cat"
+            ]
+        },
+        "Group": {
+            "id": "Group",
+            "category": "structural",
+            "title": "Group",
+            "description": "Groups patterns with selectable combination mode",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 1
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 2
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 3
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0,
+                        "acceptsMultiple": true
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "structural",
+                "priority": 25,
+                "wraps": false
+            },
+            "multiInput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "childSlot"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "wrapper"
+                ],
+                "childConnectionsAllowed": true
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 8,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "parallel",
+                "childExecutionMode": "independent",
+                "multiSlot": true
+            },
+            "properties": {
+                "mode": {
+                    "type": "select",
+                    "label": "Group Mode",
+                    "values": [
+                        "parallel",
+                        "alternate"
+                    ],
+                    "default": "parallel",
+                    "mapsTo": "groupMode"
+                }
+            }
+        },
+        "Chop": {
+            "id": "Chop",
+            "category": "rhythmic",
+            "title": "Chop",
+            "description": "Time slicing for granular effects (slices events into parts)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "rhythmic",
+                "priority": 30,
+                "wraps": false
+            },
+            "maxPerChain": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "note": "Only one Chop per linear execution chain"
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "slices": {
+                    "type": "knob",
+                    "label": "Slices",
+                    "description": "Number of slices per event (1-16)",
+                    "min": 1,
+                    "max": 16,
+                    "step": 1,
+                    "default": 8,
+                    "mapsTo": "arg"
+                }
+            },
+            "aliases": [
+                "chop"
+            ]
+        },
+        "Stutter": {
+            "id": "Stutter",
+            "category": "rhythmic",
+            "title": "Stutter",
+            "description": "Repeats events for stuttering/repetition effects",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "rhythmic",
+                "priority": 30,
+                "wraps": false
+            },
+            "maxPerChain": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 1,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "note": "Only one Stutter per linear execution chain"
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "repeats": {
+                    "type": "knob",
+                    "label": "Repeats",
+                    "description": "Number of times to repeat (1-8)",
+                    "min": 1,
+                    "max": 8,
+                    "step": 1,
+                    "default": 2,
+                    "mapsTo": "arg"
+                }
+            },
+            "aliases": [
+                "stutter"
+            ]
+        },
+        "LPF": {
+            "id": "LPF",
+            "category": "spectral",
+            "title": "Low Pass Filter",
+            "description": "Filters high frequencies, allows low frequencies to pass",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "controlIn",
+                        "index": 1,
+                        "targetProperty": "frequency"
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut",
+                    "controlOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "controlIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ],
+                "controlInputs": [
+                    {
+                        "property": "frequency",
+                        "socket": "controlIn",
+                        "description": "Filter cutoff frequency control"
+                    }
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "frequency": {
+                    "type": "pattern",
+                    "label": "Cutoff Frequency",
+                    "description": "Filter cutoff frequency in Hz (50-20000), can be pattern or control",
+                    "min": 50,
+                    "max": 20000,
+                    "default": 8000,
+                    "canBePattern": true,
+                    "canBeControl": true,
+                    "mapsTo": "arg",
+                    "controlSocket": "controlIn"
+                },
+                "q": {
+                    "type": "knob",
+                    "label": "Resonance (Q)",
+                    "description": "Filter resonance/Q factor (0-50)",
+                    "min": 0,
+                    "max": 50,
+                    "default": 0.7,
+                    "mapsTo": "lpq"
+                },
+                "ftype": {
+                    "type": "select",
+                    "label": "Filter Type",
+                    "description": "Filter characteristic (12db, ladder, 24db)",
+                    "values": [
+                        "12db",
+                        "ladder",
+                        "24db"
+                    ],
+                    "default": "24db",
+                    "mapsTo": "ftype"
+                }
+            }
+        },
+        "HPF": {
+            "id": "HPF",
+            "category": "spectral",
+            "title": "High Pass Filter",
+            "description": "Filters low frequencies, allows high frequencies to pass",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "controlIn",
+                        "index": 1,
+                        "targetProperty": "frequency"
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut",
+                    "controlOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "controlIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ],
+                "controlInputs": [
+                    {
+                        "property": "frequency",
+                        "socket": "controlIn"
+                    }
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "frequency": {
+                    "type": "pattern",
+                    "label": "Cutoff Frequency",
+                    "description": "Filter cutoff frequency in Hz (20-20000)",
+                    "min": 20,
+                    "max": 20000,
+                    "default": 20,
+                    "canBePattern": true,
+                    "canBeControl": true,
+                    "mapsTo": "arg",
+                    "controlSocket": "controlIn"
+                },
+                "q": {
+                    "type": "knob",
+                    "label": "Resonance (Q)",
+                    "min": 0,
+                    "max": 50,
+                    "default": 0.7,
+                    "mapsTo": "hpq"
+                }
+            }
+        },
+        "BPF": {
+            "id": "BPF",
+            "category": "spectral",
+            "title": "Band Pass Filter",
+            "description": "Allows a frequency band to pass, cuts low and high",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "controlIn",
+                        "index": 1,
+                        "targetProperty": "frequency"
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut",
+                    "controlOut"
+                ],
+                "allowedTargets": [
+                    "patternIn",
+                    "controlIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "frequency": {
+                    "type": "pattern",
+                    "label": "Center Frequency",
+                    "description": "Filter center frequency in Hz",
+                    "min": 100,
+                    "max": 8000,
+                    "default": 1000,
+                    "canBePattern": true,
+                    "canBeControl": true,
+                    "mapsTo": "arg",
+                    "controlSocket": "controlIn"
+                },
+                "q": {
+                    "type": "knob",
+                    "label": "Resonance (Q)",
+                    "min": 0,
+                    "max": 10,
+                    "default": 1,
+                    "mapsTo": "bpq"
+                }
+            }
+        },
+        "Delay": {
+            "id": "Delay",
+            "category": "space",
+            "title": "Delay",
+            "description": "Time-based delay effect (echo) - global per orbit",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "space",
+                "priority": 70,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral",
+                    "space"
+                ],
+                "orbitAware": true,
+                "note": "Multiple patterns on same orbit share delay settings"
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "level": {
+                    "type": "knob",
+                    "label": "Delay Level",
+                    "description": "Wet/dry mix amount (0-1)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.3,
+                    "mapsTo": "arg"
+                },
+                "time": {
+                    "type": "knob",
+                    "label": "Delay Time",
+                    "description": "Delay time in seconds or cycles",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.3,
+                    "mapsTo": "arg"
+                },
+                "feedback": {
+                    "type": "knob",
+                    "label": "Feedback",
+                    "description": "Feedback amount (0-0.95, >=1 will runaway!)",
+                    "min": 0,
+                    "max": 0.95,
+                    "default": 0.4,
+                    "mapsTo": ".delayfb"
+                }
+            }
+        },
+        "Reverb": {
+            "id": "Reverb",
+            "category": "space",
+            "title": "Reverb",
+            "description": "Spatial reverb effect - global per orbit",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "space",
+                "priority": 70,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral",
+                    "space"
+                ],
+                "orbitAware": true,
+                "note": "Multiple patterns on same orbit share reverb settings"
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "room": {
+                    "type": "knob",
+                    "label": "Room Level",
+                    "description": "Reverb amount (0-1)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.3,
+                    "mapsTo": "arg"
+                },
+                "size": {
+                    "type": "knob",
+                    "label": "Room Size",
+                    "description": "Reverb room size (0-10)",
+                    "min": 0,
+                    "max": 10,
+                    "default": 1,
+                    "mapsTo": "roomsize"
+                },
+                "fade": {
+                    "type": "knob",
+                    "label": "Room Fade",
+                    "description": "Reverb fade time in seconds",
+                    "min": 0,
+                    "max": 10,
+                    "default": 0.5,
+                    "mapsTo": "roomfade"
+                },
+                "lowpass": {
+                    "type": "knob",
+                    "label": "Lowpass",
+                    "description": "Reverb lowpass starting frequency (Hz)",
+                    "min": 0,
+                    "max": 20000,
+                    "default": 10000,
+                    "mapsTo": "roomlp"
+                }
+            }
+        },
+        "Pan": {
+            "id": "Pan",
+            "category": "space",
+            "title": "Pan",
+            "description": "Sets stereo panning position (0=left, 0.5=center, 1=right)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "space",
+                "priority": 70,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral",
+                    "space"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "position": {
+                    "type": "pattern",
+                    "label": "Pan Position",
+                    "description": "Stereo position (0=left, 0.5=center, 1=right)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "canBePattern": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Gain": {
+            "id": "Gain",
+            "category": "spectral",
+            "title": "Gain",
+            "description": "Sets volume/amplitude multiplier (exponential)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "amount": {
+                    "type": "pattern",
+                    "label": "Gain Amount",
+                    "description": "Volume multiplier (can be pattern or constant)",
+                    "default": "1",
+                    "canBePattern": true,
+                    "mapsTo": "arg",
+                    "range": {
+                        "min": 0,
+                        "max": 2
+                    }
+                }
+            }
+        },
+        "Crush": {
+            "id": "Crush",
+            "category": "spectral",
+            "title": "Bit Crush",
+            "description": "Reduces bit depth for digital distortion",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "bits": {
+                    "type": "knob",
+                    "label": "Bit Depth",
+                    "description": "Number of bits (1-16), lower = more distortion",
+                    "min": 1,
+                    "max": 16,
+                    "default": 8,
+                    "canBePattern": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Shape": {
+            "id": "Shape",
+            "category": "spectral",
+            "title": "Wave Shape",
+            "description": "Wave shaping/distortion effect",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "amount": {
+                    "type": "knob",
+                    "label": "Shape Amount",
+                    "description": "Amount of waveshaping (0-1)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "canBePattern": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Vowel": {
+            "id": "Vowel",
+            "category": "spectral",
+            "title": "Vowel Filter",
+            "description": "Formant filter to make sounds resemble vocal vowels",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "vowel": {
+                    "type": "select",
+                    "label": "Vowel Type",
+                    "values": [
+                        "a",
+                        "e",
+                        "i",
+                        "o",
+                        "u",
+                        "ae",
+                        "aa",
+                        "oe",
+                        "ue",
+                        "y",
+                        "uh",
+                        "un",
+                        "en",
+                        "an",
+                        "on"
+                    ],
+                    "default": "a",
+                    "mapsTo": "arg",
+                    "aliases": {
+                        "aa": "a",
+                        "å": "a",
+                        "oe": "o",
+                        "ø": "o"
+                    }
+                }
+            }
+        },
+        "Distort": {
+            "id": "Distort",
+            "category": "spectral",
+            "title": "Distortion",
+            "description": "Signal distortion effect with optional post-gain",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "spectral",
+                "priority": 60,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch",
+                    "modulation",
+                    "spectral"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "amount": {
+                    "type": "knob",
+                    "label": "Distortion Amount",
+                    "description": "Amount of distortion (0-20, careful!)",
+                    "min": 0,
+                    "max": 20,
+                    "default": 0.5,
+                    "canBePattern": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Jux": {
+            "id": "Jux",
+            "category": "transform",
+            "title": "Juxtapose",
+            "description": "Splits pattern into stereo channels with different transforms",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0,
+                        "name": "left"
+                    },
+                    {
+                        "type": "childSlot",
+                        "index": 1,
+                        "name": "right"
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "structural",
+                "priority": 25,
+                "wraps": false
+            },
+            "maxPerChain": 2,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 2,
+                "cannotConnectTo": [
+                    "source"
+                ],
+                "stereoOnly": true
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 2,
+                "maxChildren": 2,
+                "childTypes": [
+                    "transform"
+                ],
+                "childTypeStrict": true,
+                "requiredSlotCount": 2,
+                "slotNames": [
+                    "left",
+                    "right"
+                ],
+                "combineMode": "stereo_split",
+                "childExecutionMode": "parallel"
+            },
+            "properties": {
+                "leftTransform": {
+                    "type": "text",
+                    "label": "Left Channel Transform",
+                    "default": "x => x",
+                    "mapsTo": "arg1"
+                },
+                "rightTransform": {
+                    "type": "text",
+                    "label": "Right Channel Transform",
+                    "default": "x => x.pan(1)",
+                    "mapsTo": "arg2"
+                }
+            }
+        },
+        "Rev": {
+            "id": "Rev",
+            "category": "transform",
+            "title": "Reverse",
+            "description": "Reverses the order of events in a pattern",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "maxPerChain": 2,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 2,
+                "cannotConnectTo": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 2,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": false,
+                "combineMode": "reverse",
+                "childExecutionMode": "independent"
+            },
+            "properties": {}
+        },
+        "Palindrome": {
+            "id": "Palindrome",
+            "category": "transform",
+            "title": "Palindrome",
+            "description": "Plays pattern forward then backward",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "maxPerChain": 2,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 2,
+                "cannotConnectTo": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 2,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": false,
+                "combineMode": "palindrome",
+                "childExecutionMode": "independent"
+            },
+            "properties": {}
+        },
+        "Shuffle": {
+            "id": "Shuffle",
+            "category": "transform",
+            "title": "Shuffle",
+            "description": "Randomly reorders events in a pattern",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "maxPerChain": 2,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 2,
+                "cannotConnectTo": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 0,
+                "maxChildren": 2,
+                "childTypes": [
+                    "pattern"
+                ],
+                "childTypeStrict": false,
+                "combineMode": "shuffle",
+                "childExecutionMode": "independent"
+            },
+            "properties": {
+                "seed": {
+                    "type": "number",
+                    "label": "Random Seed",
+                    "description": "Seed for reproducible shuffling (0 = random)",
+                    "min": 0,
+                    "max": 10000,
+                    "default": 0,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Often": {
+            "id": "Often",
+            "category": "wrapper",
+            "title": "Often",
+            "description": "Wrapper with 70% probability (high chance)",
+            "sockets": {
+                "in": [
+                    "wrapIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": true
+            },
+            "minChildren": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "wrapIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ],
+                "mustConnectTo": "transform"
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 1,
+                "maxChildren": 4,
+                "childTypes": [
+                    "transform"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "wrap",
+                "childExecutionMode": "within_wrapper"
+            },
+            "properties": {
+                "probability": {
+                    "type": "knob",
+                    "label": "Probability",
+                    "description": "Chance to apply transform (0-1). Default 0.7 = often",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.7,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Sometimes": {
+            "id": "Sometimes",
+            "category": "wrapper",
+            "title": "Sometimes",
+            "description": "Wrapper with 50% probability (medium chance)",
+            "sockets": {
+                "in": [
+                    "wrapIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": true
+            },
+            "minChildren": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "wrapIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ],
+                "mustConnectTo": "transform"
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 1,
+                "maxChildren": 4,
+                "childTypes": [
+                    "transform"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "wrap",
+                "childExecutionMode": "within_wrapper"
+            },
+            "properties": {
+                "probability": {
+                    "type": "knob",
+                    "label": "Probability",
+                    "description": "Chance to apply transform (0-1). Default 0.5 = sometimes",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Rarely": {
+            "id": "Rarely",
+            "category": "wrapper",
+            "title": "Rarely",
+            "description": "Wrapper with 25% probability (low chance)",
+            "sockets": {
+                "in": [
+                    "wrapIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": true
+            },
+            "minChildren": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "wrapIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ],
+                "mustConnectTo": "transform"
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 1,
+                "maxChildren": 4,
+                "childTypes": [
+                    "transform"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "wrap",
+                "childExecutionMode": "within_wrapper"
+            },
+            "properties": {
+                "probability": {
+                    "type": "knob",
+                    "label": "Probability",
+                    "description": "Chance to apply transform (0-1). Default 0.25 = rarely",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.25,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Chance": {
+            "id": "Chance",
+            "category": "wrapper",
+            "title": "Probability",
+            "description": "Probability wrapper with multiple modes",
+            "sockets": {
+                "in": [
+                    "wrapIn"
+                ],
+                "out": [
+                    "patternOut"
+                ],
+                "childSlot": [
+                    {
+                        "type": "childSlot",
+                        "index": 0
+                    }
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": true
+            },
+            "minChildren": 1,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "wrapIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ],
+                "mustConnectTo": "transform"
+            },
+            "children": {
+                "accepts": true,
+                "minChildren": 1,
+                "maxChildren": 4,
+                "childTypes": [
+                    "transform"
+                ],
+                "childTypeStrict": true,
+                "combineMode": "wrap",
+                "childExecutionMode": "within_wrapper"
+            },
+            "properties": {
+                "type": {
+                    "type": "select",
+                    "label": "Probability Type",
+                    "values": [
+                        "often",
+                        "sometimes",
+                        "rarely",
+                        "chance",
+                        "every"
+                    ],
+                    "default": "sometimes",
+                    "mapsTo": "method"
+                },
+                "probability": {
+                    "type": "knob",
+                    "label": "Probability",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "mapsTo": "arg"
+                },
+                "interval": {
+                    "type": "number",
+                    "label": "Interval",
+                    "description": "Cycles between applications (for 'every' type)",
+                    "min": 1,
+                    "max": 16,
+                    "step": 1,
+                    "default": 4,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "LFO": {
+            "id": "LFO",
+            "category": "control",
+            "title": "LFO",
+            "description": "Low Frequency Oscillator - generates continuous control signal",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "controlOut"
+                ]
+            },
+            "execution": {
+                "stage": "modulation",
+                "priority": 50,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "controlIn"
+                ],
+                "maxPerChain": null,
+                "canConnectToProperties": [
+                    "frequency",
+                    "q",
+                    "amount",
+                    "position",
+                    "bits"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "waveform": {
+                    "type": "select",
+                    "label": "Waveform",
+                    "values": [
+                        "sine",
+                        "saw",
+                        "square",
+                        "tri"
+                    ],
+                    "default": "sine",
+                    "mapsTo": "method"
+                },
+                "rate": {
+                    "type": "knob",
+                    "label": "Rate",
+                    "description": "Oscillation speed in Hz or cycles",
+                    "min": 0.1,
+                    "max": 10,
+                    "default": 1,
+                    "mapsTo": "arg"
+                },
+                "depth": {
+                    "type": "knob",
+                    "label": "Depth",
+                    "description": "Modulation depth (0-1)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "mapsTo": ".depth"
+                }
+            }
+        },
+        "Range": {
+            "id": "Range",
+            "category": "control",
+            "title": "Range Map",
+            "description": "Maps control signal to a min-max range",
+            "sockets": {
+                "in": [
+                    "controlIn"
+                ],
+                "out": [
+                    "controlOut"
+                ]
+            },
+            "execution": {
+                "stage": "modulation",
+                "priority": 51,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "controlOut"
+                ],
+                "allowedTargets": [
+                    "controlIn"
+                ],
+                "maxPerChain": null
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "min": {
+                    "type": "number",
+                    "label": "Min Value",
+                    "min": 0,
+                    "max": 20000,
+                    "default": 0,
+                    "mapsTo": "arg1"
+                },
+                "max": {
+                    "type": "number",
+                    "label": "Max Value",
+                    "min": 0,
+                    "max": 20000,
+                    "default": 1,
+                    "mapsTo": "arg2"
+                },
+                "curve": {
+                    "type": "select",
+                    "label": "Curve",
+                    "values": [
+                        "linear",
+                        "exponential",
+                        "logarithmic",
+                        "sine",
+                        "cosine"
+                    ],
+                    "default": "linear",
+                    "mapsTo": "curve"
+                }
+            }
+        },
+        "Random": {
+            "id": "Random",
+            "category": "control",
+            "title": "Random",
+            "description": "Random value generator for control signals",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "controlOut"
+                ]
+            },
+            "execution": {
+                "stage": "modulation",
+                "priority": 50,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "controlIn"
+                ],
+                "maxPerChain": null
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "min": {
+                    "type": "number",
+                    "label": "Min",
+                    "min": 0,
+                    "max": 255,
+                    "default": 0,
+                    "mapsTo": ".min"
+                },
+                "max": {
+                    "type": "number",
+                    "label": "Max",
+                    "min": 1,
+                    "max": 255,
+                    "default": 8,
+                    "mapsTo": ".max"
+                }
+            }
+        },
+        "StepSeq": {
+            "id": "StepSeq",
+            "category": "control",
+            "title": "Step Sequencer",
+            "description": "Programmable step sequencer for control values",
+            "sockets": {
+                "in": [],
+                "out": [
+                    "controlOut"
+                ]
+            },
+            "execution": {
+                "stage": "modulation",
+                "priority": 50,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [],
+                "allowedTargets": [
+                    "controlIn"
+                ],
+                "maxPerChain": null
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "steps": {
+                    "type": "pattern",
+                    "label": "Step Values",
+                    "description": "Mini-notation pattern of step values",
+                    "default": "0 1 2 3",
+                    "supportsMiniNotation": true,
+                    "mapsTo": "arg"
+                },
+                "length": {
+                    "type": "number",
+                    "label": "Sequence Length",
+                    "min": 1,
+                    "max": 32,
+                    "step": 1,
+                    "default": 8,
+                    "mapsTo": ".length"
+                }
+            }
+        },
+        "bank": {
+            "id": "bank",
+            "category": "source",
+            "title": "Bank Selection",
+            "description": "Sets the sound bank/kit for drum sounds",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 11,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "bankName": {
+                    "type": "select",
+                    "label": "Drum Bank",
+                    "values": [
+                        "tr909",
+                        "tr808",
+                        "tr707",
+                        "linn"
+                    ],
+                    "default": "tr909",
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "dec": {
+            "id": "dec",
+            "category": "effect",
+            "title": "Decay",
+            "description": "Sets the decay time for drum sounds",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "source",
+                "priority": 11,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "label": "Decay Time",
+                    "min": 0,
+                    "max": 2,
+                    "step": 0.01,
+                    "default": 0.3,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "slow": {
+            "id": "slow",
+            "category": "temporal",
+            "title": "Slow",
+            "description": "Slows down pattern by a factor (divides time)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "rhythmic",
+                "priority": 30,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "factor": {
+                    "type": "number",
+                    "label": "Slow Factor",
+                    "description": "Slow down multiplier (>1 = slower)",
+                    "min": 0.25,
+                    "max": 16,
+                    "step": 0.25,
+                    "default": 2,
+                    "mapsTo": "arg"
+                }
+            },
+            "aliases": [
+                "slow"
+            ]
+        },
+        "fast": {
+            "id": "fast",
+            "category": "temporal",
+            "title": "Fast",
+            "description": "Speeds up pattern by a factor (multiplies time)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "rhythmic",
+                "priority": 30,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "factor": {
+                    "type": "number",
+                    "label": "Fast Factor",
+                    "description": "Speed up multiplier (>1 = faster)",
+                    "min": 0.25,
+                    "max": 16,
+                    "step": 0.25,
+                    "default": 2,
+                    "mapsTo": "arg"
+                }
+            },
+            "aliases": [
+                "fast",
+                "density"
+            ]
+        },
+        "Pitch": {
+            "id": "Pitch",
+            "category": "pitch",
+            "title": "Pitch",
+            "description": "Pitch transformation by semitone transposition",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "semitones": {
+                    "type": "number",
+                    "label": "Semitones",
+                    "description": "Transpose amount in semitones (-24 to +24)",
+                    "min": -24,
+                    "max": 24,
+                    "step": 1,
+                    "default": 0,
+                    "mapsTo": "arg"
+                },
+                "octaves": {
+                    "type": "number",
+                    "label": "Octaves",
+                    "description": "Transpose amount in octaves (-3 to +3)",
+                    "min": -3,
+                    "max": 3,
+                    "step": 1,
+                    "default": 0,
+                    "mapsTo": ".octave"
+                }
+            },
+            "aliases": [
+                "transpose"
+            ]
+        },
+        "add": {
+            "id": "add",
+            "category": "pitch",
+            "title": "Add",
+            "description": "Adds value to pattern (numeric addition)",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 1
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "multiInput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "label": "Add Value",
+                    "description": "Value to add to each event",
+                    "min": -24,
+                    "max": 24,
+                    "step": 1,
+                    "default": 4,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "Transform": {
+            "id": "Transform",
+            "category": "modulation",
+            "title": "Transform",
+            "description": "Generic pattern transformation (chop, stutter, slow, fast, rev, etc.)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "maxPerChain": 2,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": 2,
+                "cannotConnectTo": [
+                    "source"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "type": {
+                    "type": "select",
+                    "label": "Transform Type",
+                    "values": [
+                        "chop",
+                        "stutter",
+                        "density",
+                        "linger",
+                        "rarely",
+                        "sometimes",
+                        "often",
+                        "slow",
+                        "fast",
+                        "rev",
+                        "palindrome",
+                        "shuffle"
+                    ],
+                    "default": "chop",
+                    "mapsTo": "method"
+                },
+                "amount": {
+                    "type": "knob",
+                    "label": "Amount",
+                    "description": "Transformation amount (varies by type)",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "mapsTo": "arg"
+                },
+                "speed": {
+                    "type": "knob",
+                    "label": "Speed",
+                    "description": "Speed multiplier for time-based transforms",
+                    "min": 0.25,
+                    "max": 4,
+                    "default": 1,
+                    "mapsTo": ".speed"
+                }
+            }
+        },
+        "scale": {
+            "id": "scale",
+            "category": "pitch",
+            "title": "Scale",
+            "description": "Applies musical scale to pattern - converts numbers to notes",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut",
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "pitch",
+                "priority": 40,
+                "wraps": false
+            },
+            "multiOutput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "scalePattern": {
+                    "type": "pattern",
+                    "label": "Scale Pattern",
+                    "description": "Mini-notation pattern of scale names (e.g. 'C:minor')",
+                    "default": "C5:minor",
+                    "supportsMiniNotation": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "struct": {
+            "id": "struct",
+            "category": "rhythmic",
+            "title": "Structure",
+            "description": "Applies rhythmic structure pattern (using x, ~ symbols)",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "rhythmic",
+                "priority": 30,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "structure": {
+                    "type": "pattern",
+                    "label": "Structure",
+                    "description": "Mini-notation pattern defining rhythm (e.g. 'x ~ x ~')",
+                    "default": "x ~ x ~",
+                    "supportsMiniNotation": true,
+                    "mapsTo": "arg"
+                }
+            }
+        },
+        "every": {
+            "id": "every",
+            "category": "conditional",
+            "title": "Every",
+            "description": "Applies transformation every N cycles",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "n": {
+                    "type": "number",
+                    "label": "Every N Cycles",
+                    "min": 1,
+                    "max": 16,
+                    "step": 1,
+                    "default": 4,
+                    "mapsTo": "arg1"
+                },
+                "transform": {
+                    "type": "text",
+                    "label": "Transform Function",
+                    "default": "x => x.fast(2)",
+                    "mapsTo": "arg2"
+                }
+            }
+        },
+        "whenmod": {
+            "id": "whenmod",
+            "category": "conditional",
+            "title": "When Modulo",
+            "description": "Applies transformation when cycle modulo matches",
+            "sockets": {
+                "in": [
+                    "patternIn"
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "wrapper",
+                "priority": 80,
+                "wraps": false
+            },
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "cannotConnectTo": [
+                    "source",
+                    "effect",
+                    "wrapper"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "divisor": {
+                    "type": "number",
+                    "label": "Divisor",
+                    "min": 1,
+                    "max": 16,
+                    "step": 1,
+                    "default": 4,
+                    "mapsTo": "arg1"
+                },
+                "remainder": {
+                    "type": "number",
+                    "label": "Remainder",
+                    "min": 0,
+                    "max": 15,
+                    "step": 1,
+                    "default": 0,
+                    "mapsTo": "arg2"
+                },
+                "transform": {
+                    "type": "text",
+                    "label": "Transform Function",
+                    "default": "x => x.speed(2)",
+                    "mapsTo": "arg3"
+                }
+            }
+        },
+        "off": {
+            "id": "off",
+            "category": "temporal",
+            "title": "Offset",
+            "description": "Adds offset timing to pattern (superimpose with delay)",
+            "sockets": {
+                "in": [
+                    {
+                        "type": "patternIn",
+                        "index": 0
+                    },
+                    {
+                        "type": "patternIn",
+                        "index": 1
+                    }
+                ],
+                "out": [
+                    "patternOut"
+                ]
+            },
+            "execution": {
+                "stage": "temporal",
+                "priority": 30,
+                "wraps": false
+            },
+            "multiInput": true,
+            "connectionRules": {
+                "allowedSources": [
+                    "patternOut"
+                ],
+                "allowedTargets": [
+                    "patternIn"
+                ],
+                "maxPerChain": null,
+                "preferredInputStages": [
+                    "source",
+                    "structural",
+                    "rhythmic",
+                    "pitch"
+                ]
+            },
+            "children": {
+                "accepts": false,
+                "minChildren": 0,
+                "maxChildren": 0
+            },
+            "properties": {
+                "time": {
+                    "type": "pattern",
+                    "label": "Offset Time",
+                    "description": "Timing offset in cycles",
+                    "default": "1/16",
+                    "supportsMiniNotation": true,
+                    "mapsTo": "arg1"
+                },
+                "transform": {
+                    "type": "text",
+                    "label": "Transform Function",
+                    "default": "x => x.add(4)",
+                    "mapsTo": "arg2"
+                }
+            }
+        }
+    },
+    "socketCompatibilityMatrix": {
+        "patternOut": {
+            "patternIn": true,
+            "wrapIn": true,
+            "controlIn": false,
+            "childSlot": true,
+            "parentOut": false
+        },
+        "wrapOut": {
+            "patternIn": false,
+            "wrapIn": false,
+            "controlIn": false,
+            "childSlot": false,
+            "parentOut": false
+        },
+        "controlOut": {
+            "patternIn": false,
+            "wrapIn": false,
+            "controlIn": true,
+            "childSlot": false,
+            "parentOut": false
+        },
+        "childSlot": {
+            "patternOut": true,
+            "wrapOut": false,
+            "controlOut": false,
+            "childSlot": false,
+            "parentOut": false
+        },
+        "parentOut": {
+            "patternIn": false,
+            "wrapIn": false,
+            "controlIn": false,
+            "childSlot": false,
+            "parentOut": false
+        }
+    },
+    "validationRules": {
+        "forbiddenConnections": [
+            {
+                "from": "patternOut",
+                "to": "source",
+                "reason": "Source nodes cannot receive pattern inputs"
+            },
+            {
+                "from": "source",
+                "to": "source",
+                "reason": "Cannot connect source to source (ambiguous source)"
+            },
+            {
+                "from": "effect",
+                "to": "source",
+                "reason": "Effects cannot feed into source nodes"
+            },
+            {
+                "from": "wrapper",
+                "to": "structural",
+                "reason": "Wrapper nodes should wrap final patterns"
+            },
+            {
+                "from": "wrapper",
+                "to": "wrapper",
+                "reason": "Cannot chain wrappers directly"
+            }
+        ],
+        "enforcedRules": [
+            {
+                "rule": "singleSourcePerChain",
+                "description": "Exactly one source node per linear chain",
+                "enforcement": "connectionTime"
+            },
+            {
+                "rule": "wrapperAtEnd",
+                "description": "Wrapper nodes must be at end of chain",
+                "enforcement": "connectionTime"
+            },
+            {
+                "rule": "orderedExecution",
+                "description": "Connections must follow increasing execution stage priority",
+                "enforcement": "connectionTime"
+            },
+            {
+                "rule": "maxPerChain",
+                "description": "Nodes with maxPerChain limit cannot exceed that count in any linear chain",
+                "enforcement": "connectionTime"
+            },
+            {
+                "rule": "childTypeStrict",
+                "description": "Container/wrapper children must match declared childTypes",
+                "enforcement": "childAddition"
+            },
+            {
+                "rule": "childCountBounds",
+                "description": "minChildren and maxChildren must be respected",
+                "enforcement": "childAddition"
+            },
+            {
+                "rule": "acyclicGraph",
+                "description": "Node graph must be a directed acyclic graph",
+                "enforcement": "connectionTime"
+            },
+            {
+                "rule": "controlSocketMapping",
+                "description": "Control signals can only connect to properties with canBeControl:true",
+                "enforcement": "connectionTime"
+            }
+        ]
+    },
+    "controlSignalMapping": {
+        "LPF": {
+            "controllableProperties": [
+                "frequency"
+            ],
+            "controlSocket": "controlIn"
+        },
+        "HPF": {
+            "controllableProperties": [
+                "frequency"
+            ],
+            "controlSocket": "controlIn"
+        },
+        "BPF": {
+            "controllableProperties": [
+                "frequency"
+            ],
+            "controlSocket": "controlIn"
+        },
+        "Gain": {
+            "controllableProperties": [
+                "amount"
+            ],
+            "controlSocket": null
+        },
+        "Pan": {
+            "controllableProperties": [
+                "position"
+            ],
+            "controlSocket": null
+        },
+        "Vowel": {
+            "controllableProperties": [],
+            "controlSocket": null
+        },
+        "Crush": {
+            "controllableProperties": [
+                "bits"
+            ],
+            "controlSocket": null
+        },
+        "Shape": {
+            "controllableProperties": [
+                "amount"
+            ],
+            "controlSocket": null
+        },
+        "Distort": {
+            "controllableProperties": [
+                "amount"
+            ],
+            "controlSocket": null
+        },
+        "Room": {
+            "controllableProperties": [
+                "size"
+            ],
+            "controlSocket": null
+        },
+        "Delay": {
+            "controllableProperties": [
+                "time",
+                "feedback"
+            ],
+            "controlSocket": null
+        }
+    },
+    "nodeAliasMap": {
+        "s": "SoundPattern",
+        "sound": "SoundPattern",
+        "note": "Note",
+        "bank": "bank",
+        "dec": "dec",
+        "stack": "Stack",
+        "seq": "Sequence",
+        "cat": "Sequence",
+        "group": "Group",
+        "struct": "struct",
+        "slow": "Speed",
+        "fast": "Speed",
+        "chop": "Chop",
+        "stutter": "Stutter",
+        "lpf": "LPF",
+        "hpf": "HPF",
+        "bpf": "BPF",
+        "lpq": "LPF",
+        "hpq": "HPF",
+        "bpq": "BPF",
+        "ftype": "LPF",
+        "vowel": "Vowel",
+        "gain": "Gain",
+        "crush": "Crush",
+        "shape": "Shape",
+        "distort": "Distort",
+        "room": "Reverb",
+        "roomsize": "Reverb",
+        "roomfade": "Reverb",
+        "roomlp": "Reverb",
+        "roomdim": "Reverb",
+        "pan": "Pan",
+        "jux": "Jux",
+        "juxBy": "Jux",
+        "rev": "Rev",
+        "palindrome": "Palindrome",
+        "shuffle": "Shuffle",
+        "often": "Often",
+        "sometimes": "Sometimes",
+        "rarely": "Rarely",
+        "chance": "Chance",
+        "every": "every",
+        "whenmod": "whenmod",
+        "off": "off",
+        "add": "add",
+        "transpose": "Pitch",
+        "delay": "Delay",
+        "delaytime": "Delay",
+        "delayfb": "Delay",
+        "lfo": "LFO",
+        "perlin": "Perlin",
+        "rand": "Random",
+        "range": "Range",
+        "stepseq": "StepSeq"
+    },
+    "notes": {
+        "maxPerChain": "Limits how many times a node type can appear in a single linear execution chain from source to wrapper. Enforced at connection time.",
+        "childTypeStrict": "When true, children must exactly match one of the childTypes values. When false, any pattern-type child is accepted.",
+        "wraps": "If true, this node is a wrapper and must be at the end of a chain (no outputs to other pattern nodes).",
+        "orbitAware": "Nodes marked orbitAware share state per orbit; connecting multiple patterns to same orbit may cause interference.",
+        "controlSocket": "Properties with canBeControl:true can receive control signals.controlIn socket maps to specific property."
+    }
+}
