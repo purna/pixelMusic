@@ -312,8 +312,33 @@ class NodeFactory {
         const subtitle = nodeElement.querySelector('.node-subtitle');
         if (subtitle) subtitle.textContent = this.getNodeSubtitle(node);
 
-        // Update effects display
-        const existingEffects = nodeElement.querySelectorAll('.property-value');
+        // Update note display
+        const noteDiv = nodeElement.querySelector('.node-note');
+        if (node.properties.note) {
+            if (noteDiv) {
+                noteDiv.textContent = `Note: ${node.properties.note}`;
+            } else {
+                const newNoteDiv = document.createElement('div');
+                newNoteDiv.className = 'node-note';
+                newNoteDiv.textContent = `Note: ${node.properties.note}`;
+                // Insert before effects
+                const effectsDiv = nodeElement.querySelector('.node-effects');
+                const childPort = nodeElement.querySelector('.child-port');
+                if (effectsDiv) {
+                    nodeElement.insertBefore(newNoteDiv, effectsDiv);
+                } else if (childPort) {
+                    nodeElement.insertBefore(newNoteDiv, childPort);
+                } else {
+                    const contentDiv = nodeElement.querySelector('.node-content');
+                    contentDiv.appendChild(newNoteDiv);
+                }
+            }
+        } else {
+            if (noteDiv) noteDiv.remove();
+        }
+
+        // Update effects display - REMOVE OLD EFFECTS FIRST
+        const existingEffects = nodeElement.querySelectorAll('.node-effects');
         existingEffects.forEach(effect => effect.remove());
 
         const effectsHTML = this.renderNodeEffects(node);
@@ -422,6 +447,44 @@ class NodeFactory {
         const noteInput = document.getElementById('node-note');
         if (noteInput) {
             noteInput.value = node.properties.note || '';
+            
+            // Dynamically set label and placeholder based on node type
+            const noteLabel = document.querySelector('label[for="node-note"]');
+            if (noteLabel) {
+                const labels = {
+                    'Note': 'Note Pattern',
+                    'Instrument': 'Sound',
+                    'DrumSymbol': 'Drum Sound',
+                    'bank': 'Bank',
+                    'Generator': 'Generator Type',
+                    'Effect': 'Effect Type',
+                    'Transform': 'Transform Type',
+                    'Pitch': 'Pitch Value',
+                    'Repeater': 'Repeat Amount',
+                    'Chance': 'Chance Type',
+                    'Often': 'Probability',
+                    'Sometimes': 'Probability',
+                    'Rarely': 'Probability'
+                };
+                noteLabel.textContent = labels[node.type] || 'Value';
+            }
+            
+            const placeholders = {
+                'Note': 'e.g., c4 e4 g4, a3 c#4, 48 60 64',
+                'Instrument': 'e.g., piano, sine, sawtooth',
+                'DrumSymbol': 'e.g., bd, sd, hh',
+                'bank': 'e.g., RolandTR808, tr909, custom',
+                'Generator': 'e.g., rand, cycle, count',
+                'Effect': 'e.g., lpf, hpf, delay',
+                'Transform': 'e.g., chop, stutter, rev',
+                'Pitch': 'e.g., 0, 7, 12',
+                'Repeater': 'e.g., 2, 4, 8',
+                'Chance': 'e.g., often, sometimes, rarely',
+                'Often': 'e.g., 0.5, 0.7, 0.9',
+                'Sometimes': 'e.g., 0.3, 0.5, 0.7',
+                'Rarely': 'e.g., 0.1, 0.2, 0.3'
+            };
+            noteInput.placeholder = placeholders[node.type] || 'Enter value';
         }
 
         // Update comment field
@@ -569,6 +632,34 @@ class NodeFactory {
                 }
                 // For other node types, `node.instrument` is used as a fallback by the pattern generator.
 
+                // Update note field with instrument value if note hasn't been manually edited
+                // or if it matches the current instrument value
+                const noteInput = document.getElementById('node-note');
+                if (noteInput) {
+                    const currentNote = this.selectedNode.properties.note || '';
+                    const instrumentValue = newInstrument;
+                    
+                    // Check if note field matches current instrument or is empty
+                    // or if it was previously set to this instrument
+                    if (currentNote === '' || currentNote === instrumentValue) {
+                        noteInput.value = instrumentValue;
+                        this.selectedNode.properties.note = instrumentValue;
+                    } else {
+                        // Check if current note matches any available instrument option
+                        const optionExists = Array.from(instrumentSelect.options).some(
+                            opt => opt.value === currentNote
+                        );
+                        if (!optionExists && currentNote !== 'custom') {
+                            // Note doesn't match any preset, mark as custom
+                            // But only update the instrument display if it's not already custom
+                            if (instrumentSelect.value !== 'custom') {
+                                // Don't change the actual instrument value, just note it's custom
+                                console.log('Note field has custom value, instrument remains:', newInstrument);
+                            }
+                        }
+                    }
+                }
+
                 // Update the node's visual display and the main Strudel output
                 this.updateNodeDisplay(this.selectedNode);
                 this.manager.updateStrudelOutput();
@@ -584,6 +675,35 @@ class NodeFactory {
                 this.selectedNode.properties.note = e.target.value;
                 this.updateNodeDisplay(this.selectedNode);
                 this.manager.updateStrudelOutput();
+                
+                // Check if note value matches any available instrument option
+                const instrumentSelect = document.getElementById('node-instrument');
+                if (instrumentSelect) {
+                    const noteValue = e.target.value;
+                    const optionExists = Array.from(instrumentSelect.options).some(
+                        opt => opt.value === noteValue
+                    );
+                    
+                    // If note doesn't match any preset option, mark instrument as custom
+                    // But only if the note field has a non-empty value
+                    if (noteValue && !optionExists) {
+                        // Check if 'custom' option exists, if not add it temporarily
+                        const customOption = Array.from(instrumentSelect.options).find(opt => opt.value === 'custom');
+                        if (!customOption) {
+                            const option = document.createElement('option');
+                            option.value = 'custom';
+                            option.textContent = 'Custom';
+                            instrumentSelect.appendChild(option);
+                        }
+                        instrumentSelect.value = 'custom';
+                        // Update node instrument to custom for pattern generation
+                        this.selectedNode.instrument = 'custom';
+                    } else if (noteValue && optionExists) {
+                        // Note matches a preset, sync instrument selection
+                        instrumentSelect.value = noteValue;
+                        this.selectedNode.instrument = noteValue;
+                    }
+                }
             });
         }
 

@@ -390,6 +390,9 @@ class NodeSearch {
                 this.showSearchToolbar();
                 this.searchInput?.focus();
                 break;
+            case 'add-sound':
+                this.addNode('s', 'bd', 'Sound Pattern', this.lastClickPosition);
+                break;
             case 'add-instrument':
                 this.addNode('Instrument', 'sine',   'Sine Wave',       this.lastClickPosition);
                 break;
