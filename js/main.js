@@ -677,3 +677,22 @@ function randomize() {
         setTimeout(() => randomize(), 100);
     }
 }
+window.PixelAIApply_pixelMusic = (result) => {
+    if (!app?.layerManager) throw new Error('The sound editor is still loading.');
+    const settings = result?.settings;
+    if (!settings || typeof settings !== 'object') throw new Error('The AI result has no sound settings.');
+    const allowed = ['attack','sustain','punch','decay','frequency','slide','deltaSlide','vibratoEnable','vibratoDepth','vibratoSpeed','arpEnable','arpMult','arpSpeed','duty','dutySweep','waveform','lpfEnable','lpf','hpfEnable','hpf','gain'];
+    const ranges = { attack:[0,1], sustain:[0,1], punch:[0,1], decay:[0,5], frequency:[20,20000], slide:[-20000,20000], deltaSlide:[-20000,20000], vibratoDepth:[0,1], vibratoSpeed:[0,100], arpMult:[0.125,16], arpSpeed:[-100,100], duty:[0,100], dutySweep:[-100,100], lpf:[20,22050], hpf:[0,20000], gain:[-60,0] };
+    const patch = {};
+    for (const key of allowed) {
+        if (!Object.hasOwn(settings, key)) continue;
+        if (ranges[key]) { const value = Number(settings[key]); if (Number.isFinite(value)) patch[key] = Math.max(ranges[key][0], Math.min(ranges[key][1], value)); }
+        else if (['vibratoEnable','arpEnable','lpfEnable','hpfEnable'].includes(key) && typeof settings[key] === 'boolean') patch[key] = settings[key];
+        else if (key === 'waveform' && ['square','sawtooth','sine','triangle','noise'].includes(settings[key])) patch[key] = settings[key];
+    }
+    if (!Object.keys(patch).length) throw new Error('The AI result did not include supported sound parameters.');
+    const layer = app.layerManager.getSelectedLayer();
+    if (!layer) throw new Error('Select a sound layer before applying the AI result.');
+    app.layerManager.updateLayerSettings(layer.id, patch);
+    if (result.name) app.layerManager.updateLayer(layer.id, { name: String(result.name).slice(0, 60) });
+};
