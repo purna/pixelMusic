@@ -1,0 +1,131 @@
+/*
+ * layout.css
+ * Workspace layout: collapsible left palette, pinned narrow inspector.
+ * Loaded last so it can override the older side-panel rules.
+ */
+
+:root {
+    --side-panel-width: 280px;
+}
+
+/* The tools column should only be as wide as its palette; the canvas takes
+   whatever is left. */
+#workspace-area {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+#center-stack {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#music-grid-container {
+    width: auto;
+    min-width: 0;
+}
+
+/* Collapsible instrument/effect palette. The icon rail stays visible. */
+#fixed-tools-panel {
+    width: var(--tools-width);
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition:
+        width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.18s ease;
+}
+
+#fixed-tools-panel.collapsed {
+    width: 0;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Pinned inspector: always part of the workspace on desktop, no overlay. */
+#side-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: var(--side-panel-width);
+    flex: 0 0 var(--side-panel-width);
+    height: auto;
+    max-height: none;
+    padding: 14px;
+    overflow-y: auto;
+    background: var(--bg-dark);
+    border-left: 1px solid var(--border-color);
+    box-shadow: none;
+    transform: none;
+    opacity: 1;
+    transition: none;
+    z-index: 1;
+}
+
+#side-panel.open {
+    transform: none;
+    opacity: 1;
+}
+
+#side-panel .side-panel-close,
+#panel-toggle {
+    display: none;
+}
+
+#side-panel-overlay {
+    display: none !important;
+}
+
+/* Compact controls for the narrower inspector. */
+#side-panel .property-group {
+    margin-bottom: 10px;
+}
+
+#side-panel .property-group label {
+    margin-bottom: 4px;
+}
+
+#side-panel input[type="text"],
+#side-panel select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* On narrow screens the inspector becomes an overlay again so the canvas
+   keeps a usable width. */
+@media (max-width: 1024px) {
+    #side-panel {
+        position: fixed;
+        top: var(--header-height, 60px);
+        right: 0;
+        bottom: 0;
+        width: min(300px, 86vw);
+        flex: none;
+        height: auto;
+        padding: 16px;
+        box-shadow: -6px 0 24px rgba(0, 0, 0, 0.55);
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 0.25s ease, opacity 0.2s ease;
+        z-index: 100;
+    }
+
+    #side-panel.open {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    #side-panel .side-panel-close {
+        display: block;
+    }
+
+    #panel-toggle {
+        display: flex;
+    }
+}

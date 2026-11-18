@@ -210,6 +210,13 @@ class NodeManager {
         document.getElementById('clear-nodes')?.addEventListener('click', () => this.clearAllNodes());
         document.getElementById('delete-selected-node')?.addEventListener('click', () => this.factory.deleteSelectedNode());
         document.getElementById('side-panel-close')?.addEventListener('click', () => this.factory.hideSidePanel());
+        document.getElementById('panel-toggle')?.addEventListener('click', () => {
+            const panel = document.getElementById('side-panel');
+            if (!panel) return;
+            const willOpen = !panel.classList.contains('open');
+            panel.classList.toggle('open', willOpen);
+            document.getElementById('side-panel-overlay')?.classList.toggle('visible', willOpen);
+        });
         document.getElementById('back-to-parent')?.addEventListener('click', () => this.factory.exitNodeLevel());
 
         // Keyboard events

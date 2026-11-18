@@ -52,6 +52,14 @@ class MenuLoader {
         // Don't create horizontal tabs anymore - using sidebar instead
         this.loadCategoryContent('instruments'); // Default category
         this.setupEventListeners();
+
+        let toolsOpen = true;
+        try {
+            toolsOpen = localStorage.getItem('pixelMusic.toolsPanel') !== 'closed';
+        } catch (error) {
+            // Storage may be unavailable; default to open.
+        }
+        this.setToolsPanelOpen(toolsOpen, false);
     }
 
 
@@ -371,11 +379,20 @@ class MenuLoader {
                 this.switchCategory(categoryId);
             }
             
-            // Sidebar category tab switching
+            // Sidebar category tab switching and palette collapse/expand
             if (e.target.classList.contains('category-sidebar-tab') || e.target.closest('.category-sidebar-tab')) {
                 const sidebarTab = e.target.classList.contains('category-sidebar-tab') ? e.target : e.target.closest('.category-sidebar-tab');
                 const categoryId = sidebarTab.dataset.category;
+                const palette = document.getElementById('fixed-tools-panel');
+                const isCollapsed = palette?.classList.contains('collapsed');
+
+                if (sidebarTab.classList.contains('active') && !isCollapsed) {
+                    this.setToolsPanelOpen(false);
+                    return;
+                }
+
                 this.switchCategory(categoryId);
+                this.setToolsPanelOpen(true);
             }
             
             // Group expansion/collapse
@@ -475,6 +492,25 @@ class MenuLoader {
                 window.nodeManager.selectNode(node);
             }
         }, 100);
+    }
+
+    setToolsPanelOpen(open, persist = true) {
+        const panel = document.getElementById('fixed-tools-panel');
+        if (!panel) return;
+
+        panel.classList.toggle('collapsed', !open);
+        panel.setAttribute('aria-hidden', String(!open));
+
+        const activeTab = document.querySelector('.category-sidebar-tab.active');
+        if (activeTab) activeTab.setAttribute('aria-expanded', String(open));
+
+        if (persist) {
+            try {
+                localStorage.setItem('pixelMusic.toolsPanel', open ? 'open' : 'closed');
+            } catch (error) {
+                // Ignore storage failures; the toggle still works for this session.
+            }
+        }
     }
 
     switchCategory(categoryId) {

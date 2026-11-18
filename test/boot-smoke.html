@@ -93,11 +93,21 @@
 
                 check('nodeManager exists', () => !!win.nodeManager);
                 check('app scripts are loaded', () => {
-                    const srcs = [...doc.querySelectorAll('script[src]')].map(s => s.getAttribute('src'));
+                    const srcs = [...doc.querySelectorAll('script[src]')].map(s => s.getAttribute('src').split('?')[0]);
                     ['js/projectManager.js', 'js/settingsCodegen.js', 'js/appWiring.js', 'js/sampleTunes.js', 'js/nodeContextMenu.js', 'js/nodes/NodeManager.js'].forEach(required => {
                         if (!srcs.includes(required)) throw new Error(`index.html does not load ${required}`);
                     });
                     return srcs.length;
+                });
+                check('logo uses the Press Start 2P font', () => {
+                    const logo = doc.querySelector('.logo-area h1');
+                    if (!logo) throw new Error('no logo');
+                    const family = win.getComputedStyle(logo).fontFamily;
+                    if (!/Press Start 2P/i.test(family)) throw new Error(`logo font is ${family}`);
+                    if (!win.document.fonts.check('16px "Press Start 2P"')) {
+                        throw new Error('Press Start 2P did not load');
+                    }
+                    return family;
                 });
                 check('projectManager exists', () => !!win.projectManager);
                 check('AI apply adapter exists', () => typeof win.PixelAIApply_pixelMusic === 'function');
@@ -287,6 +297,31 @@
                         throw new Error(`zoom label ${label} does not match ${scale}`);
                     }
                     return `${nodes.length} node(s) at ${label}`;
+                });
+                check('left palette collapses and reopens from its icon', () => {
+                    const tab = doc.querySelector('.category-sidebar-tab.active');
+                    const panel = doc.getElementById('fixed-tools-panel');
+                    if (!tab || !panel) throw new Error('missing palette tab or panel');
+                    const previousTransition = panel.style.transition;
+                    panel.style.transition = 'none';
+                    if (panel.classList.contains('collapsed')) tab.click();
+                    if (panel.classList.contains('collapsed')) throw new Error('palette did not open');
+                    tab.click();
+                    if (!panel.classList.contains('collapsed')) throw new Error('palette did not collapse');
+                    if (panel.getBoundingClientRect().width > 1) throw new Error('collapsed palette still has width');
+                    tab.click();
+                    if (panel.classList.contains('collapsed')) throw new Error('palette did not reopen');
+                    panel.style.transition = previousTransition;
+                    return 'collapsed and reopened';
+                });
+                check('right inspector is pinned and narrow', () => {
+                    const panel = doc.getElementById('side-panel');
+                    if (!panel) throw new Error('no inspector');
+                    const styles = win.getComputedStyle(panel);
+                    const width = Math.round(panel.getBoundingClientRect().width);
+                    if (styles.position === 'fixed') throw new Error('inspector is still an overlay');
+                    if (width > 300) throw new Error(`inspector is ${width}px wide`);
+                    return `${styles.position}, ${width}px`;
                 });
                 check('right-clicking a node offers delete and removes it', () => {
                     const manager = win.nodeManager;

@@ -27,7 +27,8 @@
 
         @font-face {
             font-family: 'Press Start 2P';
-            src: url('fonts/PressStart2P-Regular.ttf') format('ttf');
+            src: url('fonts/press-start-2p-400.woff2') format('woff2'),
+                 url('fonts/PressStart2P-Regular.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
@@ -41,6 +42,7 @@
     <link rel="stylesheet" href="css/tutorials.css">
     <link rel="stylesheet" href="css/node.css">
     <link rel="stylesheet" href="css/node-properties.css">
+    <link rel="stylesheet" href="css/layout.css">
 </head>
 
 <body>
@@ -688,7 +690,7 @@
     <!-- Tooltip System -->
     <script src="js/tooltip.js"></script>
     <!-- Dynamic Menu Loader -->
-    <script src="js/menuLoader.js"></script>
+    <script src="js/menuLoader.js?v=2"></script>
     <!-- Strudel Pattern Generator - Load before NodeManager -->
     <script src="js/nodeProperties.js"></script>
     <script src="js/nodeCodegen.js"></script>
@@ -696,9 +698,9 @@
     <!-- Node System Modules -->
     <script src="js/nodes/NodeCanvas.js?v=2"></script>
     <script src="js/nodes/ConnectionManager.js"></script>
-    <script src="js/nodes/NodeFactory.js"></script>
+    <script src="js/nodes/NodeFactory.js?v=2"></script>
     <script src="js/nodes/NodeAudio.js?v=3"></script>
-    <script src="js/nodes/NodeManager.js"></script>
+    <script src="js/nodes/NodeManager.js?v=2"></script>
 
     <!-- Project persistence (save / load / export / autosave) -->
     <script src="js/projectManager.js"></script>

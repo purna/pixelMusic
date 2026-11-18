@@ -398,15 +398,12 @@ class NodeFactory {
 
     showSidePanel() {
         const sidePanel = document.getElementById('side-panel');
-        if (sidePanel) {
-            sidePanel.classList.add('open');
-            sidePanel.style.right = '0';
-        }
+        if (sidePanel) sidePanel.classList.add('open');
     }
 
     hideSidePanel() {
         const sidePanel = document.getElementById('side-panel');
-        if (sidePanel) sidePanel.style.right = '-400px';
+        if (sidePanel) sidePanel.classList.remove('open');
     }
 
     updateDeleteButtonState() {
