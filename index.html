@@ -143,8 +143,22 @@
                         <div class="search-results" id="search-results"></div>
                     </div>
                     
-                    <!-- Canvas Context Menu -->
-                    <div class="canvas-context-menu" id="canvas-context-menu">                        <div class="context-menu-item" data-action="add-node">
+                    <!-- Canvas Context Menu (also shows node actions on right-click) -->
+                    <div class="canvas-context-menu" id="canvas-context-menu">
+                        <div class="context-menu-title" id="context-menu-title" hidden></div>
+                        <div class="context-menu-section" id="context-node-actions" hidden>
+                            <div class="context-menu-item" data-action="delete-node">
+                                <i class="fas fa-trash-alt"></i> Delete Node
+                            </div>
+                            <div class="context-menu-item" data-action="disconnect-node">
+                                <i class="fas fa-unlink"></i> Disconnect
+                            </div>
+                            <div class="context-menu-item" data-action="edit-children">
+                                <i class="fas fa-diagram-project"></i> Edit Children
+                            </div>
+                        </div>
+                        <div class="context-menu-divider" id="context-node-divider" hidden></div>
+                        <div class="context-menu-item" data-action="add-node">
                             <i class="fas fa-plus"></i> Add Node
                         </div>
                         <div class="context-menu-item" data-action="search-node">
@@ -248,21 +262,6 @@
     </button>
 
     <!-- Settings Modal -->
-    <!-- Right-click menu for a single node -->
-    <div class="canvas-context-menu node-context-menu" id="node-context-menu">
-        <div class="node-context-title"></div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" data-action="delete-node">
-            <i class="fas fa-trash-alt"></i> Delete Node
-        </div>
-        <div class="context-menu-item" data-action="disconnect-node">
-            <i class="fas fa-unlink"></i> Disconnect
-        </div>
-        <div class="context-menu-item" data-action="edit-children">
-            <i class="fas fa-diagram-project"></i> Edit Children
-        </div>
-    </div>
-
     <div class="modal-overlay" id="settings-modal">
         <div class="modal">
             <div class="modal-header">

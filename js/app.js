@@ -1,17 +1,24 @@
-    // Initialize Node Search after DOM is ready
+    // Initialize Node Search once the DOM is ready. NodeManager is created by its
+    // own script, which loads before this one, so no arbitrary delay is needed.
     let nodeSearch = null;
-    setTimeout(() => {
-        // Try to get NodeManager from window or app
+
+    function initNodeSearch() {
         const nodeManager = window.nodeManager || (window.app && window.app.nodeManager);
-        const menuData = window.menuData || (window.menuLoader && window.menuLoader.menuData);
-        
-        if (nodeManager) {
-            nodeSearch = new NodeSearch(nodeManager, menuData);
-            console.log('NodeSearch initialized');
-        } else {
-            console.log('NodeManager not available yet, NodeSearch will be initialized later');
+        if (!nodeManager) {
+            // Schemas may still be loading; try again shortly.
+            setTimeout(initNodeSearch, 200);
+            return;
         }
-    }, 1000);
+        const menuData = window.menuData || (window.menuLoader && window.menuLoader.menuData);
+        nodeSearch = new NodeSearch(nodeManager, menuData);
+        console.log('NodeSearch initialized');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNodeSearch, { once: true });
+    } else {
+        initNodeSearch();
+    }
     
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {

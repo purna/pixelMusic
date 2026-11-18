@@ -10,6 +10,7 @@ class NodeSearch {
         this.selectedResultIndex = -1;
         this.lastClickPosition = null;
         this.lastAddedPosition = null;
+        this.contextNodeId = null;
         this.nodeOffset = 30;
 
         // DOM elements
@@ -83,20 +84,10 @@ class NodeSearch {
             });
 
             this.canvas.addEventListener('contextmenu', (e) => {
-                // Right-clicking a node opens the node menu; empty canvas keeps the
-                // add/search menu.
-                const nodeElement = e.target.closest('.node');
-                if (nodeElement && window.nodeContextMenu) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.hideContextMenu();
-                    window.nodeContextMenu.open(nodeElement.id, e.clientX, e.clientY);
-                    return;
-                }
-
                 e.preventDefault();
                 this.storeClickPosition(e);
-                this.showContextMenu(e.clientX, e.clientY);
+                // One menu for both cases: on a node it also lists the node actions.
+                this.showContextMenu(e.clientX, e.clientY, e.target.closest('.node')?.id || null);
             });
         }
 
@@ -375,8 +366,25 @@ class NodeSearch {
     // Context menu
     // -------------------------------------------------------------------------
 
-    showContextMenu(x, y) {
+    showContextMenu(x, y, nodeId = null) {
         if (!this.contextMenu) return;
+
+        // Node section only when the click landed on a node; the add/search
+        // actions stay available either way.
+        const node = nodeId
+            ? (this.nodeManager?.factory?.nodes || []).find(candidate => candidate.id === nodeId)
+            : null;
+        this.contextNodeId = node ? node.id : null;
+
+        const title = this.contextMenu.querySelector('#context-menu-title');
+        const nodeActions = this.contextMenu.querySelector('#context-node-actions');
+        const nodeDivider = this.contextMenu.querySelector('#context-node-divider');
+        if (title) {
+            title.hidden = !node;
+            title.textContent = node ? (node.instrument ? `${node.type} · ${node.instrument}` : node.type) : '';
+        }
+        if (nodeActions) nodeActions.hidden = !node;
+        if (nodeDivider) nodeDivider.hidden = !node;
 
         // Make visible before measuring so getBoundingClientRect is accurate
         this.contextMenu.style.left = `${x}px`;
@@ -390,9 +398,11 @@ class NodeSearch {
 
     hideContextMenu() {
         this.contextMenu?.classList.remove('visible');
+        this.contextNodeId = null;
     }
 
     handleContextMenuAction(action) {
+        const nodeId = this.contextNodeId;
         this.hideContextMenu();
 
         switch (action) {
@@ -412,6 +422,15 @@ class NodeSearch {
                 break;
             case 'add-pattern':
                 this.addNode('Repeater',   'repeat', 'Repeater',        this.lastClickPosition);
+                break;
+            case 'delete-node':
+                window.nodeContextActions?.deleteNode(nodeId);
+                break;
+            case 'disconnect-node':
+                window.nodeContextActions?.disconnectNode(nodeId);
+                break;
+            case 'edit-children':
+                window.nodeContextActions?.editChildren(nodeId);
                 break;
             default:
                 console.warn(`NodeSearch: unknown context menu action "${action}"`);

@@ -24,6 +24,8 @@ left palette to add nodes, then **Play All Nodes**.
 | Action | How |
 | --- | --- |
 | Add a node | Click an item in the instrument/pattern/effect palette, or drag it onto the canvas |
+| Delete a node | Right-click it → **Delete Node** (also **Disconnect** and **Edit Children**) |
+| Sample tune | Header **Sample Tune** loads a ready-made graph; click again for the next one |
 | Connect nodes | Drag from a node's output port to another node's input port |
 | Edit children | Double-click a node, `Esc` to go back |
 | Play / stop | `Play All Nodes` / `Stop All` |
@@ -32,7 +34,7 @@ left palette to add nodes, then **Play All Nodes**.
 | Save / load project | Header **Save** (`Cmd/Ctrl+S`) writes a `.json` file, **Load** (`Cmd/Ctrl+O`) restores one |
 | Export | Header **Export** downloads the generated Strudel code as `.strudel` |
 | Autosave | The graph is stored in `localStorage` every 5 seconds and restored on reload |
-| Settings | Header **Settings** (also hosts the AI provider configuration) |
+| Settings | Header **Settings**: tempo, canvas grid, and a master effect chain that is appended to the generated code |
 | AI Create | Bottom-right button; asks the AI for a Strudel pattern and applies it |
 
 ## How it is put together
@@ -50,6 +52,8 @@ js/
   nodeCodegen.js             what one node emits, from the schema's `codegen` rules
   nodeProperties.js          property definitions shared by panels and codegen
   projectManager.js          save / load / export / autosave
+  sampleTunes.js             example graphs behind the "Sample Tune" button
+  nodeContextMenu.js         right-click menu for a single node
   appWiring.js               settings modal, "Build Nodes", AI apply adapter
   menuLoader.js              instrument palette from nodes/strudel-node-instruments.json
   nodeSearch.js              canvas search (Ctrl/Cmd+F)
@@ -117,7 +121,8 @@ below are not published.
   `previousLevel` snapshot).
 * Strudel still loads from the CDN (`@strudel/web@1.0.3`). Bundling it locally is
   the next step for offline use and version pinning.
-* Settings values are persisted but not yet consumed by playback.
+* Settings that would need a paired Strudel call (`vibrato`/`vibdepth`,
+  `tremolo`/`tremdepth`) are stored but not folded into the master chain yet.
 
 ## Legacy files (safe to delete)
 

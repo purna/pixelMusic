@@ -70,6 +70,8 @@
             '../js/strudelPatternGenerator.js',
             '../js/projectManager.js',
             '../js/appWiring.js',
+            '../js/sampleTunes.js',
+            '../js/nodeContextMenu.js',
             '../js/menuLoader.js',
             '../js/ai-creator.js',
             '../nodes/strudel-node-schema.json',
@@ -92,7 +94,7 @@
                 check('nodeManager exists', () => !!win.nodeManager);
                 check('app scripts are loaded', () => {
                     const srcs = [...doc.querySelectorAll('script[src]')].map(s => s.getAttribute('src'));
-                    ['js/projectManager.js', 'js/appWiring.js', 'js/nodes/NodeManager.js'].forEach(required => {
+                    ['js/projectManager.js', 'js/appWiring.js', 'js/sampleTunes.js', 'js/nodeContextMenu.js', 'js/nodes/NodeManager.js'].forEach(required => {
                         if (!srcs.includes(required)) throw new Error(`index.html does not load ${required}`);
                     });
                     return srcs.length;
@@ -246,7 +248,16 @@
                         clientY: 200
                     }));
                     const menu = doc.getElementById('node-context-menu');
-                    if (!menu || !menu.classList.contains('visible')) throw new Error('node menu did not open');
+                    if (!menu) throw new Error('no node-context-menu element');
+                    if (!menu.classList.contains('visible')) {
+                        const diagnostics = {
+                            hasMenuApi: !!win.nodeContextMenu,
+                            searchCanvas: win.nodeSearch?.canvas?.id || null,
+                            nodeId: nodeElement.id,
+                            knownNode: manager.factory.nodes.some(n => n.id === nodeElement.id)
+                        };
+                        throw new Error(`node menu did not open (${JSON.stringify(diagnostics)})`);
+                    }
                     const before = manager.factory.nodes.length;
                     menu.querySelector('[data-action="delete-node"]').click();
                     const after = manager.factory.nodes.length;

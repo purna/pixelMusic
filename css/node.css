@@ -1036,12 +1036,8 @@
         min-width: 40px;
     }
 }
-/* Node context menu (right-click on a node) */
-.node-context-menu {
-    min-width: 200px;
-}
-
-.node-context-title {
+/* Node actions inside the shared canvas context menu */
+.context-menu-title {
     padding: 4px 16px 8px;
     font-size: 11px;
     letter-spacing: 0.08em;
@@ -1053,15 +1049,21 @@
     text-overflow: ellipsis;
 }
 
-.node-context-menu .context-menu-item[data-action="delete-node"] {
+.context-menu-title[hidden],
+.context-menu-section[hidden],
+.context-menu-divider[hidden] {
+    display: none;
+}
+
+.context-menu-item[data-action="delete-node"] {
     color: #ff6b6b;
 }
 
-.node-context-menu .context-menu-item[data-action="delete-node"] i {
+.context-menu-item[data-action="delete-node"] i {
     color: #ff6b6b;
 }
 
-.node-context-menu .context-menu-item[data-action="delete-node"]:hover {
+.context-menu-item[data-action="delete-node"]:hover {
     background: rgba(255, 65, 54, 0.14);
 }
 
