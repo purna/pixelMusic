@@ -416,10 +416,17 @@ function makeEditor() {
         nodes: [],
         rootNodes: null,
         selectedNode: null,
+        levelStack: [],
         renderNode() {},
         hideSidePanel() {},
         updateDeleteButtonState() {},
-        exitNodeLevel() {}
+        exitNodeLevel() {},
+        resetLevelNavigation() {
+            this.levelStack = [];
+            this.rootNodes = null;
+            manager.previousLevel = null;
+            manager.currentLevel = { level: 0, parentNode: null, nodes: [...this.nodes] };
+        }
     };
     const manager = {
         factory,
@@ -502,6 +509,84 @@ check('autosave is restored after a reload', () => {
 /* ---------------------------------------------------------------------- *
  * Sample tunes
  * ---------------------------------------------------------------------- */
+
+group('child level navigation');
+
+function makeNavigationFactory() {
+    const manager = {
+        currentLevel: { level: 0, parentNode: null, nodes: [] },
+        previousLevel: null,
+        canvas: { x: 0, y: 0 },
+        updateStatus() {},
+        updateStrudelOutput() {},
+        updateBackButtonState() {}
+    };
+    const factory = new NodeFactory(manager);
+    manager.factory = factory;
+
+    // Canvas rendering is browser-only; these tests exercise the level stack.
+    factory.clearCanvasForChildLevel = () => {};
+    factory.clearCanvasForExitLevel = () => {};
+    factory.renderChildNodes = () => {};
+    factory.renderNode = () => {};
+    factory.updateSidePanel = () => {};
+    return { manager, factory };
+}
+
+function makeNestedGraph() {
+    const grandchild = { id: 'g1', type: 'Instrument', children: [] };
+    const child = { id: 'c1', type: 'Stack', children: [grandchild] };
+    const root = { id: 'r1', type: 'Stack', children: [child] };
+    return { root, child, grandchild };
+}
+
+check('grandchild levels unwind to the child level, then the root', () => {
+    const { manager, factory } = makeNavigationFactory();
+    const { root, child } = makeNestedGraph();
+    factory.nodes = [root];
+    manager.currentLevel.nodes = factory.nodes;
+
+    factory.enterNodeLevel(root);
+    assert.equal(manager.currentLevel.level, 1);
+    assert.equal(manager.currentLevel.parentNode, root);
+    assert.equal(factory.nodes, root.children);
+
+    factory.enterNodeLevel(child);
+    assert.equal(manager.currentLevel.level, 2);
+    assert.equal(manager.currentLevel.parentNode, child);
+    assert.equal(factory.nodes, child.children);
+
+    factory.exitNodeLevel();
+    assert.equal(manager.currentLevel.level, 1);
+    assert.equal(manager.currentLevel.parentNode, root);
+    assert.equal(factory.nodes.length, 1);
+    assert.equal(factory.nodes[0], child);
+    assert.ok(manager.previousLevel, 'the root snapshot must survive');
+
+    factory.exitNodeLevel();
+    assert.equal(manager.currentLevel.level, 0);
+    assert.equal(manager.currentLevel.parentNode, null);
+    assert.equal(factory.nodes.length, 1);
+    assert.equal(factory.nodes[0], root);
+    assert.equal(manager.previousLevel, null);
+    assert.equal(factory.levelStack.length, 0);
+});
+
+check('replacing the graph clears nested level state', () => {
+    const { manager, factory } = makeNavigationFactory();
+    const { root, child } = makeNestedGraph();
+    factory.nodes = [root];
+    manager.currentLevel.nodes = factory.nodes;
+
+    factory.enterNodeLevel(root);
+    factory.enterNodeLevel(child);
+    factory.resetLevelNavigation();
+
+    assert.equal(manager.currentLevel.level, 0);
+    assert.equal(manager.currentLevel.parentNode, null);
+    assert.equal(manager.previousLevel, null);
+    assert.equal(factory.levelStack.length, 0);
+});
 
 group('sample tunes');
 /** A manager shaped like the real one, but without any DOM. */

@@ -114,8 +114,6 @@ below are not published.
 
 ## Known gaps
 
-* Child levels nest only one deep (`exitNodeLevel` restores from a single
-  `previousLevel` snapshot).
 * Strudel still loads from the CDN (`@strudel/web@1.0.3`). Bundling it locally is
   the next step for offline use and version pinning.
 
@@ -132,6 +130,7 @@ git rm js/main.js js/ui.js js/layerManager.js js/timeline.js \
   js/collectionManager.js js/collectionUI.js js/presets.js \
   js/soundGenerator.js js/audioEngine.js js/notifications.js \
   js/nodeManager.js js/strudel.js js/strudel.mjs js/strudel.esm.min.js \
-  js/strudel-core.mjs js/strudel-web.html test-all-fixes.js
+  js/strudel-core.mjs js/strudel-web.html js/musicManager.js \
+  js/audioEffectsManager.js js/strudel-sample-manager.js test-all-fixes.js
 git rm -r docs
 ```
