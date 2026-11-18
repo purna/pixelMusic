@@ -99,12 +99,19 @@ const NodeProperties = context.window.NodeProperties || context.NodeProperties;
 const ProjectManager = loadModule(context, 'js/projectManager.js', 'ProjectManager');
 const SettingsCodegen = loadModule(context, 'js/settingsCodegen.js', 'SettingsCodegen');
 
+// A separate sandbox for NodeFactory: the tests above stub it for NodeManager.
+const navigationContext = makeSandbox();
+const NodeFactory = loadModule(navigationContext, 'js/nodes/NodeFactory.js', 'NodeFactory');
+
 // NodeManager needs these collaborators only to define its methods; the tests
 // borrow its prototype, so lightweight stubs are enough.
 runInContext(`
 class NodeCanvas { init() {} }
 class ConnectionManager { constructor() { this.connections = []; } clearAllConnections() { this.connections = []; } }
-class NodeFactory { constructor(manager) { this.manager = manager; this.nodes = []; } }
+class NodeFactory {
+    constructor(manager) { this.manager = manager; this.nodes = []; this.selectedNode = null; this.levelStack = []; this.rootNodes = null; }
+    resetLevelNavigation() { this.levelStack = []; this.rootNodes = null; }
+}
 class NodeAudio {}
 // Pre-set the global so NodeManager's auto-boot guard stays inert in tests.
 window.nodeManager = {};
@@ -497,7 +504,6 @@ check('autosave is restored after a reload', () => {
  * ---------------------------------------------------------------------- */
 
 group('sample tunes');
-
 /** A manager shaped like the real one, but without any DOM. */
 function makeStudio() {
     const manager = {
