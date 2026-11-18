@@ -283,11 +283,9 @@ class ConnectionManager {
         this.connections.push(connection);
         this.renderConnection(connection);
         this.manager.updateStatus(`Connected ${sourceNode.type} to ${targetNode.type}`);
-        
-        // Update strudel example input for the target node
-        if (this.manager.factory && typeof this.manager.factory.updateStrudelExampleInput === 'function') {
-            this.manager.factory.updateStrudelExampleInput(targetNode);
-        }
+
+        // The pattern field always shows the code for the whole graph.
+        this.manager.updateStrudelOutput();
     }
 
     renderConnection(connection) {

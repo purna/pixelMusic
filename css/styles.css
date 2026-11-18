@@ -2366,6 +2366,50 @@ select { width: 100%; background: var(--bg-darkest); color: var(--text-primary);
     font-size: 11px;
 }
 
+/* Pattern input + explicit import action */
+.input-group {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.input-group #strudel-example-input {
+    flex: 1;
+    margin: 0;
+}
+
+.build-nodes-btn {
+    background: var(--bg-medium);
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    padding: 0 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.build-nodes-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-darkest);
+}
+
+@media (max-width: 768px) {
+    .input-group {
+        flex-direction: column;
+    }
+
+    .build-nodes-btn {
+        padding: 12px 16px;
+        justify-content: center;
+    }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .strudel-footer {
@@ -2390,4 +2434,29 @@ select { width: 100%; background: var(--bg-darkest); color: var(--text-primary);
         min-width: 90px;
         padding: 10px 6px;
     }
+}
+
+/* Instrument palette load failure */
+.palette-error {
+    margin: 12px;
+    padding: 14px;
+    border: 2px solid #ff4136;
+    border-radius: 6px;
+    background: rgba(255, 65, 54, 0.08);
+    color: #ffb3ad;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    line-height: 1.7;
+}
+
+.palette-error i {
+    color: #ff4136;
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.palette-error-detail {
+    color: #ff8b83;
+    word-break: break-word;
 }

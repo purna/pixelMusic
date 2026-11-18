@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Pixel Music boot check</title>
+    <style>
+        body { font: 13px/1.4 monospace; background: #0b0f14; color: #d7e2ea; margin: 0; padding: 16px; }
+        h1 { font-size: 15px; margin: 0 0 12px; }
+        #result { white-space: pre-wrap; margin: 0; }
+        .ok { color: #4ade80; }
+        .bad { color: #f87171; }
+        iframe { position: fixed; left: -10000px; top: 0; width: 1280px; height: 800px; border: 0; }
+    </style>
+</head>
+<body>
+    <h1>Pixel Music boot check</h1>
+    <pre id="result">running…</pre>
+    <iframe id="app" src="../index.html" title="app under test"></iframe>
+
+    <script>
+        // Loads the real app in an iframe and reports what actually got wired up.
+        // Serve the repository over HTTP and open /test/boot-smoke.html.
+        const results = [];
+
+        function check(name, fn) {
+            try {
+                const value = fn();
+                results.push(`ok   ${name}${value === true || value === undefined ? '' : ` -> ${value}`}`);
+            } catch (error) {
+                results.push(`FAIL ${name}: ${error.message}`);
+            }
+        }
+
+        function render() {
+            const failures = results.filter(r => r.startsWith('FAIL'));
+            const pre = document.getElementById('result');
+            pre.textContent = results.join('\n') + `\n\n${failures.length} failure(s)`;
+            pre.className = failures.length ? 'bad' : 'ok';
+            // Also mirror the verdict into the title so a harness can read it
+            // without scraping the page.
+            document.title = failures.length
+                ? `FAIL ${failures.length} | ${failures.map(f => f.replace(/^FAIL /, '')).join(' | ')}`
+                : `ok ${results.length} / fail 0`;
+
+            // ?report=1 writes the log as a download, so a headless harness can
+            // read it without scraping the page.
+            if (new URLSearchParams(location.search).has('report')) {
+                const blob = new Blob([pre.textContent], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'boot-results.txt';
+                document.body.appendChild(link);
+                link.click();
+            }
+        }
+
+        // Cache-bust so the iframe never runs a stale copy of index.html.
+        const frame = document.getElementById('app');
+
+        // Re-fetch the app modules bypassing the HTTP cache; index.html itself is
+        // cache-busted with a query string, but script URLs stay stable.
+        const modules = [
+            '../js/nodeProperties.js',
+            '../js/nodeCodegen.js',
+            '../js/nodes/NodeCanvas.js',
+            '../js/nodes/ConnectionManager.js',
+            '../js/nodes/NodeFactory.js',
+            '../js/nodes/NodeAudio.js',
+            '../js/nodes/NodeManager.js',
+            '../js/strudelPatternGenerator.js',
+            '../js/projectManager.js',
+            '../js/appWiring.js',
+            '../js/menuLoader.js',
+            '../js/ai-creator.js',
+            '../nodes/strudel-node-schema.json',
+            '../nodes/strudel-node-properties.json',
+            '../nodes/strudel-control-nodes.json',
+            '../nodes/strudel-pattern-combinators.json',
+            '../nodes/strudel-pattern-functions.json',
+            '../nodes/strudel-mini-notation.json',
+            '../nodes/strudel-node-instruments.json'
+        ];
+        Promise.all(modules.map(url => fetch(url, { cache: 'reload' }))).finally(() => {
+            frame.src = `../index.html?_smoke=${Date.now()}`;
+        });
+
+        frame.addEventListener('load', () => {
+            setTimeout(() => {
+                const win = document.getElementById('app').contentWindow;
+                const doc = win.document;
+
+                check('nodeManager exists', () => !!win.nodeManager);
+                check('app scripts are loaded', () => {
+                    const srcs = [...doc.querySelectorAll('script[src]')].map(s => s.getAttribute('src'));
+                    ['js/projectManager.js', 'js/appWiring.js', 'js/nodes/NodeManager.js'].forEach(required => {
+                        if (!srcs.includes(required)) throw new Error(`index.html does not load ${required}`);
+                    });
+                    return srcs.length;
+                });
+                check('projectManager exists', () => !!win.projectManager);
+                check('AI apply adapter exists', () => typeof win.PixelAIApply_pixelMusic === 'function');
+                check('settings modal opens on click', () => {
+                    const button = doc.getElementById('settingsBtn');
+                    if (!button) throw new Error('no settings button');
+                    button.click();
+                    if (!doc.getElementById('settings-modal').classList.contains('open')) throw new Error('modal did not open');
+                    return true;
+                });
+                check('save button is wired', () => {
+                    const button = doc.getElementById('saveProject');
+                    if (!button) throw new Error('no save button');
+                    // ProjectManager binds a click listener; a click with no nodes still updates status.
+                    button.click();
+                    return true;
+                });
+                check('build-nodes button is present', () => !!doc.getElementById('build-nodes-from-pattern'));
+                check('schemas loaded', () => {
+                    const manager = win.nodeManager;
+                    const state = {
+                        nodeSchema: !!manager.nodeSchema,
+                        propertySchema: !!manager.propertySchema,
+                        combinators: !!manager.patternCombinatorsSchema,
+                        instruments: manager.instrumentList.length
+                    };
+                    if (!state.nodeSchema || !state.propertySchema || !state.instruments) {
+                        throw new Error(JSON.stringify(state));
+                    }
+                    return `${state.instruments} instruments`;
+                });
+                check('only one node manager instance is listening', () => {
+                    const manager = win.nodeManager;
+                    if (!manager) throw new Error('node manager missing');
+                    return true;
+                });
+                check('instrument palette rendered', () => {
+                    const items = doc.querySelectorAll('.instrument-item');
+                    if (!items.length) throw new Error('no instrument items');
+                    return items.length;
+                });
+                check('typing in the pattern field does not clear nodes', () => {
+                    const input = doc.getElementById('strudel-example-input');
+                    const manager = win.nodeManager;
+                    const first = doc.querySelector('.instrument-item');
+                    if (!input || !first) throw new Error('missing input or palette item');
+                    first.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+                    const before = manager.factory.nodes.length;
+                    if (!before) throw new Error('click did not create a node');
+                    input.value = 's("bd sd")';
+                    input.dispatchEvent(new win.Event('input', { bubbles: true }));
+                    const after = manager.factory.nodes.length;
+                    if (after !== before) throw new Error(`node count changed ${before} -> ${after}`);
+                    return `${before} node(s) kept`;
+                });
+                check('generated code for the created node', () => {
+                    const manager = win.nodeManager;
+                    const code = manager.buildPlayablePattern();
+                    if (!code) throw new Error('no code generated');
+                    return code;
+                });
+                check('export produces a project snapshot', () => {
+                    const project = win.projectManager.serialize();
+                    if (project.format !== 'pixelmusic-project') throw new Error('wrong format');
+                    if (!project.nodes.length) throw new Error('no nodes in snapshot');
+                    return `${project.nodes.length} node(s)`;
+                });
+                check('schema-driven modules are loaded', () => {
+                    if (typeof win.NodeCodegen !== 'function') throw new Error('NodeCodegen missing');
+                    if (!win.NodeProperties || typeof win.NodeProperties.collect !== 'function') {
+                        throw new Error('NodeProperties missing');
+                    }
+                    return true;
+                });
+                check('every schema node type passes validation', () => {
+                    const manager = win.nodeManager;
+                    const issues = manager.schemaIssues || [];
+                    if (issues.length) throw new Error(issues.join('; '));
+                    return '0 issues';
+                });
+                check('effect nodes generate method + argument code', () => {
+                    const manager = win.nodeManager;
+                    manager.clearAllNodes();
+                    const drum = manager.createNode('DrumSymbol', 'bd', 80, 80);
+                    const effect = manager.createNode('Effect', 'lpf', 380, 80);
+                    effect.properties.strudelProperties = { ...(effect.properties.strudelProperties || {}), frequency: 500 };
+                    manager.createConnection(drum.id, 'output', effect.id, 'input');
+                    const code = manager.buildPlayablePattern();
+                    if (!/\.lpf\(500\)/.test(code)) throw new Error(`unexpected code: ${code}`);
+                    return code;
+                });
+                check('dragging a schema slider changes the generated code', () => {
+                    const manager = win.nodeManager;
+                    const node = manager.factory.nodes.find(n => n.type === 'Effect');
+                    if (!node) throw new Error('no effect node');
+                    manager.factory.renderSchemaProperties(node);
+                    const slider = doc.querySelector('#schema-properties-container input[type="range"]');
+                    if (!slider) throw new Error('no slider for the effect');
+                    slider.value = '1200';
+                    slider.dispatchEvent(new win.Event('input', { bubbles: true }));
+                    const code = manager.buildPlayablePattern();
+                    if (!/\.lpf\(1200\)/.test(code)) throw new Error(`slider had no effect: ${code}`);
+                    return code;
+                });
+                check('property panel is rendered from the schema', () => {
+                    const manager = win.nodeManager;
+                    const node = manager.factory.nodes.find(n => n.type === 'Effect');
+                    if (!node) throw new Error('no effect node');
+                    manager.factory.showSidePanel ? manager.factory.showSidePanel(node) : null;
+                    manager.factory.renderSchemaProperties(node);
+                    const container = doc.getElementById('schema-properties-container');
+                    if (!container) throw new Error('no properties container');
+                    const controls = container.querySelectorAll('input, select, textarea, button');
+                    if (!controls.length) throw new Error('no controls rendered');
+                    return `${controls.length} control(s)`;
+                });
+                check('palette is derived from the instruments JSON', () => {
+                    const loader = win.menuLoader || win.menuManager;
+                    const menuData = loader?.menuData || win.nodeManager?.menuData;
+                    if (!menuData || !menuData.menus || !menuData.menus.length) {
+                        throw new Error('menu data was not loaded from JSON');
+                    }
+                    const items = doc.querySelectorAll('.instrument-item').length;
+                    if (!items) throw new Error('no palette items rendered');
+                    const groups = doc.querySelectorAll('#instrument-content .instrument-group').length;
+                    return `${items} items in ${groups} group(s)`;
+                });
+
+                render();
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

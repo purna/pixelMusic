@@ -1988,6 +1988,118 @@
           "mapsTo": ".length"
         }
       }
+    },
+  "codegen": {
+    "description": "How each node type becomes Strudel code. NodeCodegen reads these rules; nothing about code generation is hard-coded in JS.",
+    "kinds": {
+      "source": "sound/note source, built from the instrument menu signature",
+      "method": "chainable .method(args) fragment appended to the upstream pattern",
+      "signal": "control-rate expression such as sine or rand",
+      "multiplier": "mini-notation repeat, emitted as .fast()",
+      "probability": "passes events through with a probability, emitted as .degradeBy()",
+      "combinator": "combines its connected children (stack/cat/...)"
+    },
+    "categories": {
+      "source": { "kind": "source" },
+      "synth": { "kind": "source" },
+      "effect": { "kind": "method", "args": ["amount"] },
+      "transform": { "kind": "method" },
+      "rhythmic": { "kind": "method" },
+      "temporal": { "kind": "method" },
+      "conditional": { "kind": "method" },
+      "modulation": { "kind": "method" },
+      "pitch": { "kind": "method" },
+      "wrapper": { "kind": "probability" },
+      "control": { "kind": "signal" },
+      "structural": { "kind": "combinator", "combinator": "stack" }
+    },
+    "types": {
+      "Stack": { "kind": "combinator", "combinator": "stack" },
+      "stack": {
+        "kind": "combinator",
+        "combinatorFrom": "instrument",
+        "combinator": "stack",
+        "combinatorMap": { "stack": "stack", "cat": "cat", "seq": "cat" }
+      },
+      "Sequence": { "kind": "combinator", "combinator": "cat" },
+      "Group": {
+        "kind": "combinator",
+        "combinatorFrom": "instrument",
+        "combinator": "stack",
+        "combinatorMap": { "[ ]": "stack", "< >": "cat" }
+      },
+      "group": { "kind": "combinator", "combinator": "stack" },
+      "Chance": {
+        "kind": "probability",
+        "probabilityProp": "probability",
+        "map": { "sometimes": 0.5, "often": 0.75, "rarely": 0.25, "when": 0.5 }
+      },
+      "Often": { "kind": "probability", "probability": 0.7 },
+      "Sometimes": { "kind": "probability", "probability": 0.5 },
+      "Rarely": { "kind": "probability", "probability": 0.25 },
+      "LFO": { "kind": "signal", "call": "sine", "args": ["rate"] },
+      "Range": { "kind": "signal", "call": "range", "args": ["min", "max"] },
+      "Random": { "kind": "signal", "call": "rand" },
+      "Perlin": { "kind": "signal", "call": "perlin" },
+      "StepSeq": { "kind": "signal", "call": "run", "args": ["length"] },
+      "Pitch": { "kind": "method", "method": "note", "args": ["semitones"] },
+      "Transform": {
+        "kind": "method",
+        "methodFrom": "instrument",
+        "methodMap": {
+          "chop": { "method": "chop", "args": ["amount"] },
+          "stutter": { "method": "stutter", "args": ["amount"] },
+          "rev": { "method": "rev" },
+          "palindrome": { "method": "palindrome" },
+          "shuffle": { "method": "shuffle", "args": ["seed"] },
+          "jux": { "method": "jux", "args": ["leftTransform", "rightTransform"] }
+        }
+      },
+      "Effect": { "kind": "method", "methodFrom": "instrument" },
+      "Repeater": {
+        "kind": "multiplier",
+        "multiplierMap": { "*": 4, "slow": 0.5, "fast": 2 }
+      },
+      "Generator": { "kind": "signal", "callFrom": "instrument", "args": ["max"] },
+      "Output": {
+        "kind": "method",
+        "methodFrom": "instrument",
+        "methodMap": {
+          "gain": { "method": "gain", "args": ["amount"] },
+          "mute": { "method": "gain", "value": 0 },
+          "solo": { "method": "gain", "value": 1 }
+        }
+      },
+      "bank": { "kind": "method", "method": "bank", "args": ["bankName"], "fallbackArg": "tr909" },
+      "dec": { "kind": "method", "method": "dec", "args": ["amount"] },
+      "struct": {
+        "kind": "method",
+        "methodFrom": "instrument",
+        "methodMap": {
+          "struct": { "method": "struct", "args": ["structure"] },
+          "mask": { "method": "mask", "args": ["structure"] },
+          "euclidean": { "method": "euclidean", "value": "3, 8" }
+        },
+        "method": "struct",
+        "args": ["structure"]
+      },
+      "slow": {
+        "kind": "method",
+        "methodFrom": "instrument",
+        "methodMap": {
+          "slow": { "method": "slow", "args": ["factor"] },
+          "fast": { "method": "fast", "args": ["factor"] },
+          "off": { "method": "off", "args": ["time", "transform"] }
+        },
+        "method": "slow",
+        "args": ["factor"]
+      },
+      "fast": { "kind": "method", "method": "fast", "args": ["factor"] },
+      "off": { "kind": "method", "method": "off", "args": ["time", "transform"] },
+      "every": { "kind": "method", "method": "every", "args": ["n", "transform"] },
+      "whenmod": { "kind": "method", "method": "whenmod", "args": ["divisor", "remainder", "transform"] },
+      "add": { "kind": "method", "method": "add", "args": ["value"] },
+      "scale": { "kind": "method", "method": "scale", "args": ["scalePattern"] }
     }
   },
   "socketCompatibilityMatrix": {

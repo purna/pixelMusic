@@ -6,6 +6,7 @@ class NodeFactory {
     constructor(manager) {
         this.manager = manager;
         this.nodes = [];
+        this.rootNodes = null;
         this.selectedNode = null;
         this.sidePanelListenersAdded = false;
     }
@@ -495,70 +496,6 @@ class NodeFactory {
 
         // Render schema-based properties
         this.renderSchemaProperties(node);
-
-        // Update effects panel
-        this.updateEffectsPanel(node);
-    }
-
-    updateStrudelExampleInput(node) {
-        const exampleInput = document.getElementById('strudel-example-input');
-        if (!exampleInput) return;
-        
-        // Generate valid Strudel code based on node type and properties
-        let strudelCode = '';
-        
-        if (node.type === 'Instrument' || node.type === 'DrumSymbol') {
-            const sound = node.properties.strudelProperties.sound || node.properties.strudelProperties.symbol || node.instrument;
-            const note = node.properties.note || '';
-            
-            if (node.type === 'DrumSymbol') {
-                // For drum symbols, use the symbol directly
-                strudelCode = `s("${sound}")`;
-            } else if (note) {
-                // For instruments with notes, use note().sound()
-                strudelCode = `note("${note}").sound("${sound}")`;
-            } else {
-                // For instruments without notes, just use sound
-                strudelCode = `s("${sound}")`;
-            }
-            
-            // Add effects if any
-            const effects = node.properties.effects || {};
-            const strudelProps = node.properties.strudelProperties || {};
-            
-            if (strudelProps.lpf) {
-                strudelCode += `.lpf(${strudelProps.lpf})`;
-            }
-            if (strudelProps.hpf) {
-                strudelCode += `.hpf(${strudelProps.hpf})`;
-            }
-            if (strudelProps.delay) {
-                strudelCode += `.delay(${strudelProps.delay})`;
-            }
-            if (strudelProps.reverb) {
-                strudelCode += `.reverb(${strudelProps.reverb})`;
-            }
-            if (strudelProps.distort) {
-                strudelCode += `.distort(${strudelProps.distort})`;
-            }
-            if (strudelProps.pan) {
-                strudelCode += `.pan(${strudelProps.pan})`;
-            }
-            if (strudelProps.gain && strudelProps.gain !== 1) {
-                strudelCode += `.gain(${strudelProps.gain})`;
-            }
-        } else if (node.type === 'Effect') {
-            const effectType = node.properties.strudelProperties.type || node.instrument || 'lpf';
-            strudelCode = `s("*").${effectType}()`;
-        } else if (node.type === 'Repeater') {
-            const amount = node.properties.strudelProperties.amount || 2;
-            strudelCode = `s("*").fast(${amount})`;
-        } else {
-            // Default for other node types
-            strudelCode = `s("${node.instrument || 'sine'}")`;
-        }
-        
-        exampleInput.value = strudelCode;
     }
 
     updateInstrumentSelector(node) {
@@ -975,47 +912,6 @@ class NodeFactory {
         return instruments;
     }
 
-    updateEffectsPanel(node) {
-        const effects = node.properties.effects || {};
-        const strudelProps = node.properties.strudelProperties || {};
-
-        // Update effect checkboxes and sliders based on node properties
-        const effectControls = [
-            { checkbox: 'effect-lpf', slider: 'effect-lpf-value', value: 'lpf' },
-            { checkbox: 'effect-hpf', slider: 'effect-hpf-value', value: 'hpf' },
-            { checkbox: 'effect-bpf', slider: 'effect-bpf-value', value: 'bpf' },
-            { checkbox: 'effect-delay', slider: 'effect-delay-value', value: 'delay' },
-            { checkbox: 'effect-reverb', slider: 'effect-reverb-value', value: 'reverb' },
-            { checkbox: 'effect-distort', slider: 'effect-distort-value', value: 'distort' },
-            { checkbox: 'effect-speed', slider: 'effect-speed-value', value: 'speed' },
-            { checkbox: 'effect-pan', slider: 'effect-pan-value', value: 'pan' }
-        ];
-
-        effectControls.forEach(control => {
-            const checkbox = document.getElementById(control.checkbox);
-            const slider = document.getElementById(control.slider);
-            const valueDisplay = document.getElementById(control.checkbox.replace('effect-', 'effect-') + '-val');
-
-            if (checkbox && slider && valueDisplay) {
-                const isActive = effects[control.value] !== undefined || strudelProps[control.value] !== undefined;
-                checkbox.checked = isActive;
-
-                const value = effects[control.value] || strudelProps[control.value] || this.getDefaultEffectValue(control.value);
-                slider.disabled = !isActive;
-                slider.value = value;
-
-                // Update value display
-                if (control.value === 'lpf' || control.value === 'hpf' || control.value === 'bpf') {
-                    valueDisplay.textContent = `${Math.round(value)} Hz`;
-                } else if (control.value === 'pan') {
-                    valueDisplay.textContent = value.toFixed(2);
-                } else {
-                    valueDisplay.textContent = value.toFixed(2);
-                }
-            }
-        });
-    }
-
     // Schema-based property rendering methods
     renderSchemaProperties(node) {
         const schemaContainer = document.getElementById('schema-properties-container');
@@ -1040,8 +936,9 @@ class NodeFactory {
         propsSection.className = 'schema-properties-section';
         propsSection.innerHTML = '<h4>Node Properties</h4>';
 
+        const strudelProps = node.properties.strudelProperties || {};
         Object.entries(properties).forEach(([propName, propDef]) => {
-            const control = this.createPropertyControl(propName, propDef, node.properties.strudelProperties[propName]);
+            const control = this.createPropertyControl(propName, propDef, strudelProps[propName], node);
             if (control) {
                 propsSection.appendChild(control);
             }
@@ -1050,90 +947,85 @@ class NodeFactory {
         schemaContainer.appendChild(propsSection);
     }
 
-    getCombinedProperties(node) {
-        const properties = {};
+    /**
+     * Writes a control's value back to the node, then regenerates the code so the
+     * panel and the output can never drift apart.
+     */
+    commitProperty(node, propName, value) {
+        node.properties.strudelProperties = node.properties.strudelProperties || {};
 
-        // Helper to extract properties from a schema definition
-        const extractProps = (def) => {
-            if (!def) return;
-            if (def.properties) {
-                Object.assign(properties, def.properties);
-            }
-            if (def.sections) {
-                def.sections.forEach(section => {
-                    if (section.properties) {
-                        Object.assign(properties, section.properties);
-                    }
-                });
-            }
-        };
+        const trimmed = typeof value === 'string' ? value.trim() : value;
+        const numeric = typeof trimmed === 'string' && trimmed !== '' && Number.isFinite(Number(trimmed))
+            ? Number(trimmed)
+            : trimmed;
 
-        // Get properties from node schema
-        if (this.manager.nodeSchema?.nodes?.[node.type]) {
-            extractProps(this.manager.nodeSchema.nodes[node.type]);
+        node.properties.strudelProperties[propName] = numeric;
+
+        // DrumSymbol/Instrument keep their palette value in `instrument` too.
+        if ((propName === 'symbol' || propName === 'sound') && typeof numeric === 'string') {
+            node.instrument = numeric;
         }
 
-        // Get properties from property schema
-        if (this.manager.propertySchema?.nodes?.[node.type]) {
-            extractProps(this.manager.propertySchema.nodes[node.type]);
-        }
-
-        // Also check transformNodes in propertySchema
-        if (this.manager.propertySchema?.transformNodes?.[node.type]) {
-            extractProps(this.manager.propertySchema.transformNodes[node.type]);
-        }
-
-        // Get properties from control nodes schema
-        if (this.isControlNode(node) && this.manager.controlNodesSchema?.controlNodes?.[node.type]) {
-            extractProps(this.manager.controlNodesSchema.controlNodes[node.type]);
-        }
-
-        // Get properties from pattern combinators schema
-        if (this.manager.patternCombinatorsSchema?.combinators?.[node.type]) {
-            extractProps(this.manager.patternCombinatorsSchema.combinators[node.type]);
-        }
-
-        // Get properties from pattern functions schema
-        if (this.manager.patternFunctionsSchema?.constructors?.[node.type]) {
-            extractProps(this.manager.patternFunctionsSchema.constructors[node.type]);
-        }
-
-        return properties;
+        this.manager.updateStrudelOutput?.();
+        this.manager.updateNodeDisplay?.(node);
     }
 
-    createPropertyControl(propName, propDef, currentValue) {
+    /**
+     * Property definitions come from one place (js/nodeProperties.js) so the panel
+     * and the code generator can never disagree about a node type.
+     */
+    getCombinedProperties(node) {
+        if (typeof NodeProperties === 'undefined') return {};
+        const codegen = this.manager.patternGenerator?.codegen;
+        const rule = codegen?.ruleFor?.(node.type) || {};
+        const methodName = codegen?.resolveMethodName?.(node, rule);
+        return NodeProperties.collect({
+            nodeSchema: this.manager.nodeSchema,
+            propertySchema: this.manager.propertySchema,
+            controlNodesSchema: this.manager.controlNodesSchema,
+            patternCombinatorsSchema: this.manager.patternCombinatorsSchema,
+            patternFunctionsSchema: this.manager.patternFunctionsSchema
+        }, node.type, methodName);
+    }
+
+    createPropertyControl(propName, propDef, currentValue, node) {
         const container = document.createElement('div');
         container.className = 'property-control';
 
         const label = document.createElement('label');
-        label.textContent = propDef.title || propName;
+        label.textContent = propDef.title || propDef.label || propName;
         label.title = propDef.description || '';
 
+        const onChange = value => node && this.commitProperty(node, propName, value);
+        const type = String(propDef.type || 'string').toLowerCase();
         let control;
 
-        switch (propDef.type) {
+        switch (type) {
             case 'number':
-                control = this.createNumberControl(propName, propDef, currentValue);
+            case 'knob':
+            case 'slider':
+                control = this.createNumberControl(propName, propDef, currentValue, onChange);
                 break;
             case 'string':
-                control = this.createStringControl(propName, propDef, currentValue);
+            case 'text':
+            case 'pattern':
+                control = this.createStringControl(propName, propDef, currentValue, onChange);
                 break;
             case 'boolean':
-                control = this.createBooleanControl(propName, propDef, currentValue);
+                control = this.createBooleanControl(propName, propDef, currentValue, onChange);
                 break;
             case 'enum':
-                control = this.createEnumControl(propName, propDef, currentValue);
+            case 'select':
+                control = this.createEnumControl(propName, propDef, currentValue, onChange);
                 break;
-            case 'childContainer':
+            case 'childcontainer':
                 control = this.createChildContainerControl(propName, propDef, currentValue);
                 break;
-            case 'transformFunction':
+            case 'transformfunction':
                 control = this.createTransformFunctionControl(propName, propDef, currentValue);
                 break;
-            case 'pattern':
-                control = this.createStringControl(propName, propDef, currentValue);
-                break;
             default:
+                console.warn(`Unsupported control type "${propDef.type}" for ${propName}`);
                 return null;
         }
 
@@ -1151,13 +1043,13 @@ class NodeFactory {
         return container;
     }
 
-    createNumberControl(propName, propDef, currentValue) {
+    createNumberControl(propName, propDef, currentValue, onChange) {
         const input = document.createElement('input');
         input.type = 'range';
-        input.min = propDef.min || 0;
-        input.max = propDef.max || 100;
+        input.min = propDef.min !== undefined ? propDef.min : 0;
+        input.max = propDef.max !== undefined ? propDef.max : 100;
         input.step = propDef.step || 1;
-        input.value = currentValue !== undefined ? currentValue : (propDef.default || propDef.min || 0);
+        input.value = currentValue !== undefined ? currentValue : (propDef.default !== undefined ? propDef.default : input.min);
         input.className = 'property-slider';
 
         const valueDisplay = document.createElement('span');
@@ -1166,7 +1058,7 @@ class NodeFactory {
 
         input.addEventListener('input', (e) => {
             valueDisplay.textContent = e.target.value;
-            // We need to get the node from context - will be handled in updateSidePanel
+            if (onChange) onChange(Number(e.target.value));
         });
 
         const wrapper = document.createElement('div');
@@ -1177,7 +1069,7 @@ class NodeFactory {
         return wrapper;
     }
 
-    createStringControl(propName, propDef, currentValue) {
+    createStringControl(propName, propDef, currentValue, onChange) {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentValue !== undefined ? currentValue : (propDef.default || '');
@@ -1185,41 +1077,46 @@ class NodeFactory {
         input.placeholder = propDef.placeholder || '';
 
         input.addEventListener('input', (e) => {
-            // We need to get the node from context - will be handled in updateSidePanel
+            if (onChange) onChange(e.target.value);
         });
 
         return input;
     }
 
-    createBooleanControl(propName, propDef, currentValue) {
+    createBooleanControl(propName, propDef, currentValue, onChange) {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = currentValue !== undefined ? currentValue : (propDef.default || false);
         checkbox.className = 'property-checkbox';
 
         checkbox.addEventListener('change', (e) => {
-            // We need to get the node from context - will be handled in updateSidePanel
+            if (onChange) onChange(e.target.checked);
         });
 
         return checkbox;
     }
 
-    createEnumControl(propName, propDef, currentValue) {
+    createEnumControl(propName, propDef, currentValue, onChange) {
         const select = document.createElement('select');
         select.className = 'property-select';
 
-        propDef.options.forEach(option => {
+        // Schemas may describe choices as `options` ([{value,label}]) or `values`.
+        const options = propDef.options || (propDef.values || []).map(entry => (
+            entry && typeof entry === 'object' ? entry : { value: entry, label: String(entry) }
+        ));
+
+        options.forEach(option => {
             const optionEl = document.createElement('option');
             optionEl.value = option.value;
             optionEl.textContent = option.label || option.value;
-            if (option.value === currentValue) {
+            if (String(option.value) === String(currentValue)) {
                 optionEl.selected = true;
             }
             select.appendChild(optionEl);
         });
 
         select.addEventListener('change', (e) => {
-            // We need to get the node from context - will be handled in updateSidePanel
+            if (onChange) onChange(e.target.value);
         });
 
         return select;
@@ -1531,6 +1428,10 @@ class NodeFactory {
     }
 
     enterNodeLevel(node) {
+        // Keep a reference to the root array so the project can always be saved,
+        // even while child nodes are being edited.
+        if (!this.rootNodes) this.rootNodes = this.nodes;
+
         // Store current level information
         if (!this.manager.currentLevel) {
             this.manager.currentLevel = { level: 0, parentNode: null, nodes: [...this.nodes] };
@@ -1591,6 +1492,11 @@ class NodeFactory {
         // Restore level info
         this.manager.currentLevel = this.manager.previousLevel;
         this.manager.previousLevel = null;
+
+        // Back at the root level: re-capture the root array on the next enter.
+        if (!this.manager.currentLevel || !(this.manager.currentLevel.level > 0)) {
+            this.rootNodes = null;
+        }
 
         this.manager.updateStatus('Returned to main level');
         this.updateDeleteButtonState();

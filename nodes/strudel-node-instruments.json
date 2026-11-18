@@ -195,7 +195,7 @@
           "label": "Grouping",
           "nodeType": "Group",
           "color": "#8b5cf6",
-          "items": ["[ ]", "< >"]
+          "items": ["[ ]", "< >", "group"]
         },
         {
           "id": "chance",
@@ -378,6 +378,16 @@
           "items": [
             { "id": "every", "label": "Every N Cycles", "value": "every" },
             { "id": "whenmod", "label": "When Modulo", "value": "whenmod" }
+          ]
+        },
+        {
+          "id": "pitch",
+          "label": "Pitch Combinators",
+          "nodeType": "add",
+          "color": "#9400d3",
+          "items": [
+            { "id": "add", "label": "Add Value", "value": "add" },
+            { "id": "scale", "label": "Musical Scale", "value": "scale" }
           ]
         }
       ]

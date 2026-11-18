@@ -668,7 +668,7 @@
     <script src="js/musicManager.js"></script>
     <!-- Strudel.cc Library - Load as regular script instead of module -->
     <script src="https://cdn.jsdelivr.net/npm/@strudel/web@1.0.3/dist/strudel.min.js"
-        onerror="this.onerror=null; this.src='js/strudel.esm.min.js'; console.log('Falling back to local Strudel file');"
+        onerror="this.onerror=null; console.error('Strudel failed to load from the CDN - the editor still generates code, but playback is unavailable.');"
         onload="console.log('Strudel CDN loaded successfully')">
         </script>
     
@@ -679,6 +679,8 @@
     <!-- Dynamic Menu Loader -->
     <script src="js/menuLoader.js"></script>
     <!-- Strudel Pattern Generator - Load before NodeManager -->
+    <script src="js/nodeProperties.js"></script>
+    <script src="js/nodeCodegen.js"></script>
     <script src="js/strudelPatternGenerator.js"></script>
     <!-- Node System Modules -->
     <script src="js/nodes/NodeCanvas.js"></script>
@@ -686,6 +688,12 @@
     <script src="js/nodes/NodeFactory.js"></script>
     <script src="js/nodes/NodeAudio.js"></script>
     <script src="js/nodes/NodeManager.js"></script>
+
+    <!-- Project persistence (save / load / export / autosave) -->
+    <script src="js/projectManager.js"></script>
+
+    <!-- Header + footer wiring (settings modal, pattern import, AI adapter) -->
+    <script src="js/appWiring.js"></script>
     
     <!-- Node Search Module -->
     <script src="js/nodeSearch.js"></script>
@@ -701,6 +709,10 @@
                 <div class="input-group">
                     <input type="text" id="strudel-example-input"
                         placeholder="Enter Strudel pattern, e.g., s('[bd <hh oh>]*2').bank('tr909').dec(.4)" />
+                    <button id="build-nodes-from-pattern" class="build-nodes-btn" type="button"
+                        data-tooltip="Replace the canvas with nodes built from this pattern">
+                        <i class="fas fa-hammer"></i> Build Nodes
+                    </button>
                 </div>
                 <div class="example-buttons">
                     <div class="example-btn" data-example="s('[bd <hh oh>]*2').bank('tr909').dec(.4)" data-tooltip="s('[bd &lt;hh oh&gt;]*2').bank('tr909').dec(.4)">

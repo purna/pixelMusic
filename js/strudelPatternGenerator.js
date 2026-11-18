@@ -1,6 +1,14 @@
 /**
- * StrudelPatternGenerator - Dedicated pattern generation for Strudel code
- * Handles all pattern construction, mini-notation parsing, and code generation
+ * strudelPatternGenerator.js
+ * Turns the node graph into Strudel code.
+ *
+ * Responsibilities split:
+ *   - NodeCodegen (js/nodeCodegen.js) decides what a *single node* emits, using
+ *     the `codegen` rules in nodes/strudel-node-schema.json.
+ *   - This class walks the graph (inputs, cycles, child levels), composes the
+ *     fragments into a program, and turns pasted patterns back into nodes.
+ *
+ * There is deliberately no per-node-type branching in this file.
  */
 
 class StrudelPatternGenerator {
@@ -12,1226 +20,388 @@ class StrudelPatternGenerator {
         this.propertySchema = null;
         this.controlNodesSchema = null;
         this.nodeSchema = null;
+        this.codegen = null;
     }
 
-    // Initialize schemas from node manager
     initSchemas(schemas) {
-        this.miniNotationSchema = schemas.miniNotationSchema;
-        this.patternCombinatorsSchema = schemas.patternCombinatorsSchema;
-        this.patternFunctionsSchema = schemas.patternFunctionsSchema;
-        this.propertySchema = schemas.propertySchema;
-        this.controlNodesSchema = schemas.controlNodesSchema;
-        this.nodeSchema = schemas.nodeSchema;
-    }
+        this.miniNotationSchema = schemas.miniNotationSchema || null;
+        this.patternCombinatorsSchema = schemas.patternCombinatorsSchema || null;
+        this.patternFunctionsSchema = schemas.patternFunctionsSchema || null;
+        this.propertySchema = schemas.propertySchema || null;
+        this.controlNodesSchema = schemas.controlNodesSchema || null;
+        this.nodeSchema = schemas.nodeSchema || null;
 
-    // Initialize the pattern generator
-    init() {
-        console.log('Initializing Strudel Pattern Generator...');
-        
-        // Set up event listener for the input field
-        const inputField = document.getElementById('strudel-example-input');
-        if (inputField) {
-            inputField.addEventListener('input', (e) => {
-                const pattern = e.target.value;
-                if (pattern && pattern.trim() !== '') {
-                    this.parseAndCreateNodes(pattern);
-                }
-            });
-        }
-    }
-
-    /**
-     * Parse Strudel pattern and create nodes in the canvas
-     */
-    parseAndCreateNodes(pattern) {
-        console.log('🚀 Parsing pattern:', pattern);
-        console.log('📊 NodeManager available:', !!this.nodeManager);
-        console.log('📋 Current nodes before clear:', this.nodeManager.factory.nodes.length);
-        
-        // Clear existing nodes
-        this.nodeManager.clearAllNodes();
-        console.log('📋 Current nodes after clear:', this.nodeManager.factory.nodes.length);
-        
-        try {
-            // Parse the pattern to extract node information
-            const parsed = this.parseStrudelPattern(pattern);
-            console.log('📝 Parsed result:', parsed);
-            
-            if (parsed) {
-                // Create nodes based on the parsed pattern
-                this.createNodesFromParsedPattern(parsed);
-                
-                // Update the strudel output
-                this.nodeManager.updateStrudelOutput();
-                
-                console.log('✅ Nodes created successfully');
-                console.log('📋 Final nodes count:', this.nodeManager.factory.nodes.length);
-                console.log('🔗 Final connections count:', this.nodeManager.connections.connections.length);
-            } else {
-                console.log('❌ Pattern could not be parsed');
-                this.nodeManager.updateStatus('Pattern could not be parsed');
-            }
-        } catch (error) {
-            console.error('❌ Error parsing pattern:', error);
-            this.nodeManager.updateStatus('Error parsing pattern: ' + error.message);
-        }
-    }
-
-    /**
-     * Parse Strudel pattern into a structured format
-     */
-    parseStrudelPattern(pattern) {
-        // Simple parsing for common patterns
-        // This is a basic implementation that can be expanded
-        
-        // Check for note pattern: note('c4 e4 g4 c5').s('piano')
-        const notePatternRegex = /note\(['"]([^'"]+)['"]\)\.s\(['"]([^'"]+)['"]\)/;
-        const match = pattern.match(notePatternRegex);
-        
-        if (match) {
-            const notes = match[1].split(' ').map(n => n.trim()).filter(n => n !== '');
-            const instrument = match[2];
-            
-            return {
-                type: 'noteWithInstrument',
-                notes: notes,
-                instrument: instrument
-            };
-        }
-        
-        // Check for simple sound pattern: s('bd sd hh')
-        const soundPatternRegex = /s\(['"]([^'"]+)['"]\)/;
-        const soundMatch = pattern.match(soundPatternRegex);
-        
-        if (soundMatch) {
-            const sounds = soundMatch[1].split(' ').map(s => s.trim()).filter(s => s !== '');
-            
-            return {
-                type: 'sound',
-                sounds: sounds
-            };
-        }
-        
-        // Check for stack pattern: stack(s('bd'), s('sd'), s('hh'))
-        const stackPatternRegex = /stack\(([^)]+)\)/;
-        const stackMatch = pattern.match(stackPatternRegex);
-        
-        if (stackMatch) {
-            // This is a more complex pattern that would require recursive parsing
-            console.warn('Stack pattern parsing not yet implemented');
-            return null;
-        }
-        
-        console.warn('Unknown pattern format:', pattern);
-        return null;
-    }
-
-    /**
-     * Create nodes from parsed pattern
-     */
-    createNodesFromParsedPattern(parsed) {
-        console.log('🏗️ Creating nodes from parsed pattern:', parsed);
-        
-        if (parsed.type === 'noteWithInstrument') {
-            // Create a note node with child notes
-            const mainNote = parsed.notes[0]; // First note is the main note
-            const childNotes = parsed.notes.slice(1); // Remaining notes are children
-            const instrument = parsed.instrument;
-            
-            console.log('🎵 Main note:', mainNote);
-            console.log('🎵 Child notes:', childNotes);
-            console.log('🎹 Instrument:', instrument);
-            
-            // Create the main note node
-            const noteNode = this.nodeManager.createNode('note', mainNote, 100, 100);
-            console.log('📝 Created main note node:', noteNode);
-            
-            // The createNode method should already set the note property correctly through the factory
-            // But let's ensure it's set properly
-            if (noteNode && noteNode.properties) {
-                noteNode.properties.note = mainNote;
-                console.log('✅ Set main note property:', noteNode.properties.note);
-            }
-            
-            // Create child note nodes
-            childNotes.forEach((childNote, index) => {
-                const childNode = this.nodeManager.createNode('note', childNote, 100, 200 + (index * 100));
-                console.log(`📝 Created child note node ${index + 1}:`, childNode);
-                
-                if (childNode && childNode.properties) {
-                    childNode.properties.note = childNote;
-                    console.log(`✅ Set child note property ${index + 1}:`, childNode.properties.note);
-                }
-                
-                // Add child to parent
-                if (!noteNode.children) {
-                    noteNode.children = [];
-                }
-                noteNode.children.push(childNode);
-            });
-            
-            // Create the instrument node
-            const instrumentNode = this.nodeManager.createNode('Instrument', instrument, 400, 100);
-            console.log('🎹 Created instrument node:', instrumentNode);
-            
-            instrumentNode.properties.strudelProperties = {
-                sound: instrument
-            };
-            console.log('✅ Set instrument properties:', instrumentNode.properties.strudelProperties);
-            
-            // Connect the note node to the instrument node
-            this.nodeManager.createConnection(noteNode.id, 'output', instrumentNode.id, 'input');
-            console.log('🔗 Created connection from note to instrument');
-            
-            // Update node displays to reflect changes
-            this.nodeManager.updateNodeDisplay(noteNode);
-            this.nodeManager.updateNodeDisplay(instrumentNode);
-            
-            console.log('✅ Updated node displays');
-            
-        } else if (parsed.type === 'sound') {
-            console.log('🔊 Creating sound nodes:', parsed.sounds);
-            // Create sound nodes
-            parsed.sounds.forEach((sound, index) => {
-                const node = this.nodeManager.createNode('Instrument', sound, 100 + (index * 200), 100);
-                console.log(`🔊 Created sound node ${index + 1}:`, node);
-            });
-        }
-    }
-
-    /**
-     * Generate pattern for a specific node
-     */
-    generatePatternFromNode(node) {
-        // Build pattern by traversing connections backwards from this node
-        const connectedNodes = this.getConnectedNodes(node);
-        
-        // Start with the base pattern for this node
-        let pattern = this.buildNodePattern(node);
-        
-        // Check if this is a combinator that needs special handling
-        const isCombinator = this.patternCombinatorsSchema &&
-                             this.patternCombinatorsSchema.combinators &&
-                             this.patternCombinatorsSchema.combinators[node.type];
-        
-        if (isCombinator) {
-            // Handle combinators with multiple inputs
-            return this.buildCombinatorPatternWithChildren(node, connectedNodes);
-        }
-        
-        // Apply connected nodes in reverse order (effect chains, etc.)
-        connectedNodes.reverse().forEach(connectedNode => {
-            const connectedPattern = this.buildNodePattern(connectedNode.node);
-            pattern = `${connectedPattern}(${pattern})`;
+        this.codegen = new NodeCodegen(schemas, {
+            signatureLookup: name => this.nodeManager?.getInstrumentSignatureInfo?.(name) || null,
+            miniNotation: value => this.parseMiniNotation(value)
         });
-        
-        return pattern;
     }
 
-    /**
-     * Build pattern for a combinator with its connected children
-     */
-    buildCombinatorPatternWithChildren(combinatorNode, connectedNodes) {
-        const combinatorType = combinatorNode.type;
-        const combinatorDef = this.patternCombinatorsSchema.combinators[combinatorType];
-        
-        if (!combinatorDef) {
-            return this.buildNodePattern(combinatorNode);
-        }
-        
-        // Get all input connections for this combinator
-        const connections = this.nodeManager.connections.connections || [];
-        const inputConnections = connections.filter(conn =>
-            conn.targetNodeId === combinatorNode.id && conn.targetPort === 'input'
-        );
-        
-        // Build patterns for all connected children
-        const childPatterns = inputConnections.map(conn => {
-            const childNode = this.nodeManager.nodes.find(n => n.id === conn.sourceNodeId);
-            return childNode ? this.generatePatternFromNode(childNode) : '';
-        }).filter(p => p !== '');
-        
-        // Handle different combinator types
-        if (combinatorType === 'stack') {
-            // stack() combinator - layers patterns in parallel
-            const childrenArg = childPatterns.join(', ');
-            
-            // Check for bank selection on the stack node
-            const props = combinatorNode.properties.strudelProperties || {};
-            let stackPattern = `stack(${childrenArg})`;
-            
-            if (props.bank) {
-                stackPattern += `.bank("${props.bank}")`;
-            }
-            
-            return stackPattern;
-        } else if (combinatorType === 'cat' || combinatorType === 'seq') {
-            // cat() or seq() combinator - sequences patterns
-            const childrenArg = childPatterns.join(', ');
-            return `${combinatorType}(${childrenArg})`;
-        } else if (combinatorDef.serialization.type === 'method') {
-            // Method-based combinators like struct, mask, etc.
-            const basePattern = childPatterns.length > 0 ? childPatterns[0] : this.buildNodePattern(combinatorNode);
-            const methodPattern = this.buildCombinatorPattern(combinatorNode);
-            return `${basePattern}${methodPattern}`;
-        } else {
-            // Fallback for other combinators
-            const basePattern = childPatterns.length > 0 ? childPatterns[0] : this.buildNodePattern(combinatorNode);
-            const combinatorPattern = this.buildCombinatorPattern(combinatorNode);
-            return `${combinatorPattern}(${basePattern})`;
-        }
+    init() {
+        // The pattern field is filled from the graph (NodeManager.updateStrudelOutput)
+        // and only turned into nodes by an explicit action ("Build Nodes"), so typing
+        // in it never destroys the current graph.
+        console.log('Strudel Pattern Generator ready');
     }
 
-    /**
-     * Get nodes connected to the given node (input connections)
-     */
+    /* ------------------------------------------------------------------ *
+     * Graph traversal
+     * ------------------------------------------------------------------ */
+
+    /** Nodes wired into this node's input port(s). */
     getConnectedNodes(node) {
-        // Find nodes that connect to this node (input connections)
-        const connections = this.nodeManager.connections.connections || [];
-        const inputConnections = connections.filter(conn => 
-            conn.targetNodeId === node.id && conn.targetPort === 'input'
-        );
-        
-        return inputConnections.map(conn => {
-            const sourceNode = this.nodeManager.nodes.find(n => n.id === conn.sourceNodeId);
-            return {
-                node: sourceNode,
-                connection: conn
-            };
-        }).filter(item => item.node);
+        const connections = this.nodeManager?.connections?.connections || [];
+        const nodes = this.nodeManager?.nodes || [];
+
+        return connections
+            .filter(conn => conn.targetNodeId === node.id && String(conn.targetPort || '').startsWith('input'))
+            .map(conn => {
+                const sourceNode = nodes.find(candidate => candidate.id === conn.sourceNodeId);
+                return { node: sourceNode, connection: conn };
+            })
+            .filter(item => item.node);
     }
 
     /**
-     * Build pattern string for a specific node
+     * Build the pattern for a node and everything feeding into it.
+     * `chain` guards against cycles.
      */
+    generatePatternFromNode(node, chain = []) {
+        if (!node || !this.codegen) return '';
+
+        if (chain.includes(node.id)) {
+            console.warn('Cycle detected in node graph at', node.id);
+            return '';
+        }
+        const path = [...chain, node.id];
+
+        const generated = this.codegen.emit(node);
+        const kind = generated.kind;
+
+        if (kind === 'combinator') {
+            return this.buildCombinatorExpression(node, generated.combinator);
+        }
+        if (kind === 'none' || !generated.code) {
+            return this.buildPatternFunctionExpression(node);
+        }
+
+        const upstream = this.getConnectedNodes(node)
+            .map(connected => this.generatePatternFromNode(connected.node, path))
+            .filter(code => code && code.trim());
+
+        if (!upstream.length) return generated.code;
+
+        const base = upstream.length === 1 ? upstream[0] : `stack(${upstream.join(', ')})`;
+
+        if (kind === 'fragment') {
+            if (generated.code.startsWith('.')) return `${base}${generated.code}`;
+            // Function-style fragments take the upstream pattern as last argument.
+            return `${generated.code.replace(/\)$/, `, ${base})`)}`;
+        }
+
+        // A source already defines its own sound, so layering an incoming pattern
+        // on top of it would double-trigger events.
+        console.warn(`${node.type} defines its own pattern; its input connection is ignored`);
+        return generated.code;
+    }
+
+    /** The pattern for one node only (children included), without its inputs. */
     buildNodePattern(node) {
-        let pattern = '';
-        const props = node.properties.strudelProperties || {};
-        
-        // Handle hierarchical children first
-        if (node.children && node.children.length > 0) {
-            pattern = this.buildHierarchicalPattern(node);
-        } else {
-            // Handle pattern combinators first
-            if (this.patternCombinatorsSchema && this.patternCombinatorsSchema.combinators && this.patternCombinatorsSchema.combinators[node.type]) {
-                pattern = this.buildCombinatorPattern(node);
-            }
-            
-            // Handle pattern functions
-            else if (this.patternFunctionsSchema && this.patternFunctionsSchema.constructors && this.patternFunctionsSchema.constructors[node.type]) {
-                pattern = this.buildPatternFunctionPattern(node);
-            }
-            
-            // Handle new node types from updated schema
-            else if (this.nodeSchema && this.nodeSchema.nodes && this.nodeSchema.nodes[node.type]) {
-                pattern = this.buildNodeSchemaPattern(node);
-            }
-            
-            else if (node.type === 'Instrument' || node.type === 'DrumSymbol' || node.type === 'instrument') {
-                // Build instrument pattern with properties
-                if (node.properties.note) {
-                    pattern = `note("${node.properties.note}")`;
-                } else {
-                    // Look up signature from instrument menu data
-                    const signatureInfo = this.manager.getInstrumentSignatureInfo(node.instrument);
-                    if (signatureInfo && signatureInfo.signature) {
-                        const propName = signatureInfo.property;
-                        const value = props[propName] || node.instrument;
-                        pattern = signatureInfo.signature.replace('{value}', value);
-                    } else {
-                        // Fallback to legacy behavior
-                        const sound = props.sound || props.symbol || node.instrument;
-                        const parsedSound = this.parseMiniNotation(sound);
-                        pattern = `s("${parsedSound}")`;
-                    }
-                }
-                
-                // Apply instrument properties
-                if (props.n !== undefined) {
-                    pattern += `.n(${props.n})`;
-                }
-                if (props.gain !== undefined && props.gain !== 1) {
-                    pattern += `.gain(${props.gain})`;
-                }
-                if (props.pan !== undefined && props.pan !== 0) {
-                    pattern += `.pan(${props.pan})`;
-                }
-                if (props.bank) {
-                    pattern += `.bank("${props.bank}")`;
-                }
-                if (props.dec !== undefined && props.dec !== 0.3) {
-                    pattern += `.dec(${props.dec})`;
-                }
-                
-                // Apply ADSR envelope
-                if (props.attack !== undefined && props.attack !== 0.01) {
-                    pattern += `.attack(${props.attack})`;
-                }
-                if (props.decay !== undefined && props.decay !== 0.3) {
-                    pattern += `.decay(${props.decay})`;
-                }
-                if (props.sustain !== undefined && props.sustain !== 0.7) {
-                    pattern += `.sustain(${props.sustain})`;
-                }
-                if (props.release !== undefined && props.release !== 0.5) {
-                    pattern += `.release(${props.release})`;
-                }
-                
-                // Apply audio effects
-                if (props.vowel) {
-                    pattern += `.vowel()`;
-                }
-                if (props.lpf !== undefined && props.lpf !== 8000) {
-                    pattern += `.lpf(${props.lpf})`;
-                }
-                if (props.hpf !== undefined && props.hpf !== 20) {
-                    pattern += `.hpf(${props.hpf})`;
-                }
-                if (props.bpf !== undefined && props.bpf !== 1000) {
-                    pattern += `.bpf(${props.bpf})`;
-                }
-                if (props.delay !== undefined && props.delay !== 0) {
-                    pattern += `.delay(${props.delay})`;
-                }
-                if (props.reverb !== undefined && props.reverb !== 0) {
-                    pattern += `.reverb(${props.reverb})`;
-                }
-                if (props.distort !== undefined && props.distort !== 0) {
-                    pattern += `.distort(${props.distort})`;
-                }
-                if (props.crush !== undefined && props.crush !== 0) {
-                    pattern += `.crush(${Math.round(props.crush)})`;
-                }
-                if (props.speed !== undefined && props.speed !== 1) {
-                    pattern += `.speed(${props.speed})`;
-                }
-                
-                // Apply pattern combinator methods
-                if (props.structure) {
-                    pattern += `.struct("${props.structure}")`;
-                }
-                if (props.mask) {
-                    pattern += `.mask("${props.mask}")`;
-                }
-                if (props.pulses !== undefined && props.steps !== undefined) {
-                    pattern += `.euclidean(${props.pulses}, ${props.steps})`;
-                }
-                if (props.slowFactor !== undefined) {
-                    pattern += `.slow(${props.slowFactor})`;
-                }
-                if (props.fastFactor !== undefined) {
-                    pattern += `.fast(${props.fastFactor})`;
-                }
-                if (props.everyN !== undefined && props.everyTransform) {
-                    pattern += `.every(${props.everyN}, ${props.everyTransform})`;
-                }
-                if (props.whenmodDivisor !== undefined && props.whenmodRemainder !== undefined && props.whenmodTransform) {
-                    pattern += `.whenmod(${props.whenmodDivisor}, ${props.whenmodRemainder}, ${props.whenmodTransform})`;
-                }
-                
-            } else if (node.type === 'Repeater' || node.type === 'multiplier') {
-                const amount = props.amount || 4;
-                pattern = `*(${amount})`;
-            } else if (node.type === 'Chance') {
-                const probType = props.type || 'sometimes';
-                const probability = props.probability || 0.5;
-                const interval = props.interval || 4;
-                
-                // Map chance types to Strudel functions
-                const chanceMap = {
-                    'often': `often(${probability})`,
-                    'sometimes': `sometimes(${probability})`,
-                    'rarely': `rarely(${probability})`,
-                    'chance': `when(${probability})`,
-                    'every': `every(${interval})`
-                };
-                
-                pattern = chanceMap[probType] || `sometimes(${probability})`;
-            } else if (node.type === 'Effect') {
-                pattern = this.buildEffectPattern(node);
-            } else if (node.type === 'Pitch') {
-                const note = props.note || 0;
-                const speed = props.speed || 1;
-                pattern = `.note(${note}).speed(${speed})`;
-            } else if (node.type === 'Generator') {
-                const type = props.type || 'rand';
-                const max = props.max || 8;
-                pattern = `${type}(${max})`;
-            } else if (node.type === 'Transform') {
-                const transformType = props.type || 'chop';
-                const amount = props.amount !== undefined ? props.amount : 0.5;
-                const speed = props.speed !== undefined && props.speed !== 1 ? `.speed(${props.speed})` : '';
-                
-                // Map transform types to Strudel methods
-                const transformMap = {
-                    'chop': `.chop(${Math.round(amount * 16)})`,
-                    'stutter': `.stutter(${Math.round(amount * 16)})`,
-                    'density': `.density(${amount})`,
-                    'linger': `.linger(${amount})`,
-                    'rarely': `.rarely(${amount})`,
-                    'sometimes': `.sometimes(${amount})`,
-                    'often': `.often(${amount})`,
-                    'slow': `.slow(${Math.max(1, Math.round(amount * 4))})`,
-                    'fast': `.fast(${Math.max(1, Math.round(amount * 4))})`,
-                    'rev': `.rev()`,
-                    'palindrome': `.palindrome()`
-                };
-                
-                pattern = transformMap[transformType] || `.${transformType}(${amount})`;
-                if (speed) pattern += speed;
-            } else if (this.propertySchema.transformNodes && this.propertySchema.transformNodes[node.type]) {
-                // Handle individual transform nodes
-                pattern = this.buildIndividualTransformPattern(node);
-            } else if (this.isControlNode(node)) {
-                // Handle control nodes
-                pattern = this.buildControlNodePattern(node);
-            } else if (node.type === 'note') {
-                pattern = `note("${node.properties.note}")`;
-            } else {
-                pattern = `s("${node.instrument}")`;
-            }
+        if (!node) return '';
+
+        if (node.children && node.children.length) {
+            return this.buildHierarchicalPattern(node);
         }
-        
-        return pattern;
+        if (!this.codegen) return '';
+
+        const generated = this.codegen.emit(node);
+        if (generated.kind === 'combinator') {
+            return this.buildCombinatorExpression(node, generated.combinator);
+        }
+        if (generated.code) return generated.code;
+
+        return this.buildPatternFunctionExpression(node);
     }
 
-    /**
-     * Build pattern for node schema types
-     */
-    /**
-     * Build pattern for hierarchical nodes with children
-     */
+    /* ------------------------------------------------------------------ *
+     * Combinators and pattern functions (templates from their own schemas)
+     * ------------------------------------------------------------------ */
+
+    /** `stack(children)`, `cat(children)` … driven by the codegen rule. */
+    buildCombinatorExpression(node, combinatorName) {
+        const children = this.getConnectedNodes(node)
+            .map(connected => this.generatePatternFromNode(connected.node))
+            .filter(code => code && code.trim());
+
+        if (!children.length) {
+            console.warn(`${node.type} has no connected inputs; nothing to combine`);
+            return '';
+        }
+
+        const name = ({ seq: 'cat', sequence: 'cat', slowcat: 'cat' })[combinatorName] || combinatorName || 'stack';
+        const combined = `${name}(${children.join(', ')})`;
+        return this.codegen.applyInstrumentProperties(combined, node);
+    }
+
+    /** Fallback for constructors that only exist in the pattern-functions schema. */
+    buildPatternFunctionExpression(node) {
+        if (!this.patternFunctionsSchema?.constructors?.[node.type]) return '';
+        return this.buildPatternFunctionPattern(node);
+    }
+
+    buildCombinatorPatternWithChildren(combinatorNode, connectedNodes = []) {
+        return this.buildCombinatorExpression(combinatorNode, this.codegen.resolveCombinator(
+            combinatorNode,
+            this.codegen.ruleFor(combinatorNode.type) || {}
+        ));
+    }
+
+    /** Template-driven rendering from nodes/strudel-pattern-combinators.json. */
+    buildCombinatorPattern(node) {
+        const definition = this.patternCombinatorsSchema?.combinators?.[node.type];
+        if (!definition?.serialization) return '';
+
+        const props = node.properties?.strudelProperties || {};
+        const { template = '' } = definition.serialization;
+
+        return template
+            .replace('{args}', '{children}')
+            .replace(/\{(\w+)\}/g, (match, key) => {
+                if (key === 'children') return match;
+                if (!(key in props)) return match;
+                return this.formatTemplateValue(props[key]);
+            });
+    }
+
+    /** Template-driven rendering from nodes/strudel-pattern-functions.json. */
+    buildPatternFunctionPattern(node) {
+        const definition = this.patternFunctionsSchema?.constructors?.[node.type];
+        if (!definition?.serialization) return '';
+
+        const props = node.properties?.strudelProperties || {};
+        const { template = '' } = definition.serialization;
+
+        return template.replace(/\{(\w+)\}/g, (match, key) => {
+            if (!(key in props)) return match;
+            const value = props[key];
+            const argDefinition = definition.arguments?.[key];
+            const processed = argDefinition?.supportsMiniNotation && typeof value === 'string'
+                ? this.parseMiniNotation(value)
+                : value;
+            return this.formatTemplateValue(processed);
+        });
+    }
+
+    formatTemplateValue(value) {
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+        const text = String(value);
+        if (/^-?\d+(\.\d+)?$/.test(text) || text.includes('=>')) return text;
+        return `"${text.replace(/"/g, '\\"')}"`;
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Child levels (nodes with children rendered as mini-notation)
+     * ------------------------------------------------------------------ */
+
     buildHierarchicalPattern(node) {
-        if (!node.children || node.children.length === 0) {
-            return this.buildBasicNodePattern(node);
+        const childNotation = this.buildChildPattern(node.children);
+        if (!childNotation) return this.buildNodePattern({ ...node, children: [] });
+
+        const base = this.buildNodePattern({ ...node, children: [] });
+
+        if (!base || !base.startsWith('.')) {
+            // A source node: the children become the mini-notation inside s()/note().
+            const call = this.codegen?.sourceCallFor?.(node) || 's';
+            return this.codegen
+                ? this.codegen.applyInstrumentProperties(`${call}("${childNotation}")`, node)
+                : `${call}("${childNotation}")`;
         }
 
-        const basePattern = this.buildBasicNodePattern(node);
-        const childPattern = this.buildChildPattern(node.children);
-        
-        // For instrument nodes, use the child pattern as the content
-        if (node.type === 'Instrument' || node.type === 'DrumSymbol' || node.type === 'instrument') {
-            // Replace the sound pattern with the hierarchical content
-            if (node.properties.note) {
-                return `note("${childPattern}")`;
-            } else {
-                const props = node.properties.strudelProperties || {};
-                const sound = props.sound || props.symbol || node.instrument;
-                
-                let pattern = `s("${childPattern}")`;
-                
-                // Apply other properties from the parent node
-                if (props.n !== undefined) pattern += `.n(${props.n})`;
-                if (props.gain !== undefined && props.gain !== 1) pattern += `.gain(${props.gain})`;
-                if (props.pan !== undefined && props.pan !== 0) pattern += `.pan(${props.pan})`;
-                if (props.bank) pattern += `.bank("${props.bank}")`;
-                
-                return pattern;
-            }
-        }
-        
-        // For other node types, combine base pattern with children
-        return `${basePattern}(${childPattern})`;
+        // An effect/transform with children applies to the children's pattern.
+        return `s("${childNotation}")${base}`;
     }
 
-    /**
-     * Build pattern string from child nodes
-     */
     buildChildPattern(children) {
-        if (!children || children.length === 0) return '';
-        
-        // Group children by container type
-        const groups = this.groupChildrenByContainer(children);
-        
-        // Generate notation string from groups
-        return groups.map(group => this.generateGroupNotation(group)).join(' ');
+        if (!children || !children.length) return '';
+        return this.groupChildrenByContainer(children)
+            .map(group => this.generateGroupNotation(group))
+            .join(' ');
     }
 
-    /**
-     * Group children by their container types
-     */
     groupChildrenByContainer(children) {
         const groups = [];
         let currentGroup = [];
-        
-        children.forEach((child, index) => {
+
+        children.forEach(child => {
             if (child.containerType) {
-                // Close current group if it has items
-                if (currentGroup.length > 0) {
-                    groups.push({ type: 'sequence', items: [...currentGroup] });
+                if (currentGroup.length) {
+                    groups.push({ type: 'sequence', items: currentGroup });
                     currentGroup = [];
                 }
-                // Add container group
                 groups.push({ type: child.containerType, items: [child] });
             } else {
                 currentGroup.push(child);
             }
         });
-        
-        // Add remaining items as sequence
-        if (currentGroup.length > 0) {
-            groups.push({ type: 'sequence', items: currentGroup });
-        }
-        
+
+        if (currentGroup.length) groups.push({ type: 'sequence', items: currentGroup });
         return groups;
     }
 
-    /**
-     * Generate notation string for a group of children
-     */
     generateGroupNotation(group) {
-        if (group.type === 'sequence') {
-            return group.items.map(item => this.getChildNotation(item)).join(' ');
-        } else if (group.type === 'parallel') {
-            const content = group.items.map(item => this.getChildNotation(item)).join(' ');
-            return `[${content}]`;
-        } else if (group.type === 'random') {
-            const content = group.items.map(item => this.getChildNotation(item)).join(' ');
-            return `<${content}>`;
-        }
-        
-        return group.items.map(item => this.getChildNotation(item)).join(' ');
+        const content = group.items.map(item => this.getChildNotation(item)).join(' ');
+        if (group.type === 'parallel') return `[${content}]`;
+        if (group.type === 'random') return `<${content}>`;
+        return content;
     }
 
-    /**
-     * Get notation string for a single child node
-     */
     getChildNotation(child) {
-        if (child.type === 'note') {
-            return child.properties.note || '0';
-        } else if (child.type === 'sound') {
-            return child.instrument || child.properties.sound || 's';
-        } else if (child.type === 'rest') {
-            return '~';
-        }
-        
-        // Handle other child types
-        return child.instrument || child.type;
+        if (!child) return '~';
+        if (child.type === 'rest') return '~';
+        if (child.type === 'note') return child.properties?.note || child.instrument || '0';
+        if (child.type === 'sound') return child.instrument || child.properties?.sound || 's';
+
+        const sound = child.properties?.strudelProperties;
+        return child.instrument || sound?.symbol || sound?.sound || child.type;
     }
 
-    /**
-     * Build basic node pattern without hierarchical processing
-     */
-    buildBasicNodePattern(node) {
-        const props = node.properties.strudelProperties || {};
-        
-        // Handle pattern combinators
-        if (this.patternCombinatorsSchema && this.patternCombinatorsSchema.combinators && this.patternCombinatorsSchema.combinators[node.type]) {
-            return this.buildCombinatorPattern(node);
-        }
-        
-        // Handle pattern functions
-        if (this.patternFunctionsSchema && this.patternFunctionsSchema.constructors && this.patternFunctionsSchema.constructors[node.type]) {
-            return this.buildPatternFunctionPattern(node);
-        }
-        
-        // Handle new node types from updated schema
-        if (this.nodeSchema && this.nodeSchema.nodes && this.nodeSchema.nodes[node.type]) {
-            return this.buildNodeSchemaPattern(node);
-        }
-        
-        // Handle basic node types
-        if (node.type === 'Instrument' || node.type === 'DrumSymbol' || node.type === 'instrument') {
-            if (node.properties.note) {
-                return `note("${node.properties.note}")`;
-            } else {
-                const sound = props.sound || props.symbol || node.instrument;
-                return `s("${sound}")`;
+    /* ------------------------------------------------------------------ *
+     * Pattern -> nodes
+     * ------------------------------------------------------------------ */
+
+    parseAndCreateNodes(pattern) {
+        this.nodeManager.clearAllNodes();
+
+        try {
+            const parsed = this.parseStrudelPattern(pattern);
+            if (!parsed) {
+                this.nodeManager.updateStatus('Pattern could not be parsed');
+                return;
             }
-        } else if (node.type === 'note') {
-            return `note("${node.properties.note}")`;
-        } else {
-            return `s("${node.instrument}")`;
+            this.createNodesFromParsedPattern(parsed);
+            this.nodeManager.updateStrudelOutput();
+        } catch (error) {
+            console.error('Error parsing pattern:', error);
+            this.nodeManager.updateStatus('Error parsing pattern: ' + error.message);
         }
     }
 
-    buildNodeSchemaPattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const nodeType = node.type;
-        const nodeDef = this.nodeSchema.nodes[nodeType];
-        
-        if (!nodeDef) {
-            return '';
+    /** Recognises a few common Strudel shapes so a pasted pattern becomes nodes. */
+    parseStrudelPattern(pattern) {
+        const source = String(pattern || '').trim();
+        if (!source) return null;
+
+        const noteWithSound = source.match(/note\(['"]([^'"]+)['"]\)\.s(?:ound)?\(['"]([^'"]+)['"]\)/);
+        if (noteWithSound) {
+            return {
+                type: 'noteWithInstrument',
+                notes: noteWithSound[1].split(/\s+/).filter(Boolean),
+                instrument: noteWithSound[2]
+            };
         }
-        
-        let pattern = '';
-        
-        // Handle different node types from the schema
-        switch (nodeType) {
-            case 's':
-                // Sound pattern constructor
-                const soundPattern = props.pattern || node.instrument || 'bd';
-                const parsedSound = this.parseMiniNotation(soundPattern);
-                pattern = `s("${parsedSound}")`;
-                break;
-                
-            case 'note':
-                // Note pattern constructor
-                const notePattern = props.pattern || node.instrument || 'c4';
-                const parsedNote = this.parseMiniNotation(notePattern);
-                pattern = `note("${parsedNote}")`;
-                break;
-                
-            case 'bank':
-                // Bank selection (method call)
-                const bankName = props.bankName || 'tr909';
-                pattern = `.bank("${bankName}")`;
-                break;
-                
-            case 'dec':
-                // Decay control (method call)
-                const decAmount = props.amount || 0.3;
-                pattern = `.dec(${decAmount})`;
-                break;
-                
-            case 'stack':
-                // Stack combinator - handled separately in buildCombinatorPatternWithChildren
-                pattern = 'stack({children})';
-                break;
-                
-            case 'struct':
-                // Structure application (method call)
-                const structure = props.structure || 'x ~ x ~';
-                const parsedStructure = this.parseMiniNotation(structure);
-                pattern = `.struct("${parsedStructure}")`;
-                break;
-                
-            case 'slow':
-                // Slow down (method call)
-                const slowFactor = props.factor || 2;
-                pattern = `.slow(${slowFactor})`;
-                break;
-                
-            case 'fast':
-                // Speed up (method call)
-                const fastFactor = props.factor || 2;
-                pattern = `.fast(${fastFactor})`;
-                break;
-                
-            case 'every':
-                // Every N cycles transformation
-                const everyN = props.n || 4;
-                const everyTransform = props.transform || 'x => x.fast(2)';
-                pattern = `.every(${everyN}, ${everyTransform})`;
-                break;
-                
-            case 'whenmod':
-                // When modulo transformation
-                const divisor = props.divisor || 4;
-                const remainder = props.remainder || 0;
-                const whenmodTransform = props.transform || 'x => x.speed(2)';
-                pattern = `.whenmod(${divisor}, ${remainder}, ${whenmodTransform})`;
-                break;
-                
-            case 'group':
-                // Group multiple patterns
-                const groupMode = props.mode || 'parallel';
-                pattern = `.group("${groupMode}")`;
-                break;
-                
-            case 'scale':
-                // Apply musical scale
-                const scalePattern = props.scalePattern || 'C5:minor';
-                const parsedScale = this.parseMiniNotation(scalePattern);
-                pattern = `.scale("${parsedScale}")`;
-                break;
-                
-            case 'off':
-                // Add offset timing
-                const time = props.time || '1/16';
-                const transform = props.transform || 'x => x.add(4)';
-                pattern = `.off(${time}, ${transform})`;
-                break;
-                
-            case 'add':
-                // Add value to pattern
-                const value = props.value || 4;
-                pattern = `.add(${value})`;
-                break;
-                
-            default:
-                // Fallback for other node types
-                pattern = nodeType;
-                break;
+
+        const stacked = source.match(/^stack\((.*)\)$/s);
+        if (stacked) {
+            const parts = stacked[1].split(/,\s*(?=[a-z]+\()/i).filter(Boolean);
+            return { type: 'stack', parts };
         }
-        
-        return pattern;
+
+        const sound = source.match(/s\(['"]([^'"]+)['"]\)/);
+        if (sound) {
+            return {
+                type: 'sound',
+                sounds: sound[1].split(/\s+/).filter(name => name && name !== '~')
+            };
+        }
+
+        const note = source.match(/note\(['"]([^'"]+)['"]\)/);
+        if (note) {
+            return {
+                type: 'noteWithInstrument',
+                notes: note[1].split(/\s+/).filter(Boolean),
+                instrument: null
+            };
+        }
+
+        console.warn('Unsupported pattern shape:', source);
+        return null;
     }
 
-    /**
-     * Build pattern for individual transform nodes
-     */
-    buildIndividualTransformPattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const transformType = node.type;
-        const transformDef = this.propertySchema.transformNodes[transformType];
-        
-        if (!transformDef) {
-            return '';
-        }
-  
-        let pattern = '';
-        
-        // Map transform types to Strudel methods with proper parameters
-        const transformMap = {
-            'chop': () => `.chop(${props.slices || 8})`,
-            'stutter': () => `.stutter(${props.repeats || 2})`,
-            'trunc': () => `.trunc(${props.amount || 0.5})`,
-            'speed': () => `.speed(${props.factor || 1})`,
-            'note': () => `.note(${props.semitones || 0})`,
-            'coarse': () => `.coarse(${props.octaves || 0})`,
-            'vibrato': () => {
-                let p = `.vibrato(${props.rate || 4})`;
-                if (props.depth !== undefined && props.depth !== 0.02) {
-                    p += `.depth(${props.depth})`;
+    createNodesFromParsedPattern(parsed) {
+        const manager = this.nodeManager;
+
+        if (parsed.type === 'noteWithInstrument') {
+            const [firstNote, ...childNotes] = parsed.notes;
+            if (!firstNote) return;
+
+            const noteNode = manager.createNode('note', firstNote, 100, 100);
+            if (noteNode?.properties) noteNode.properties.note = firstNote;
+
+            childNotes.forEach((childNote, index) => {
+                const childNode = manager.createNode('note', childNote, 100, 220 + index * 110);
+                if (childNode?.properties) childNode.properties.note = childNote;
+                if (!parsed.instrument) return;
+                noteNode.children = noteNode.children || [];
+                noteNode.children.push(childNode);
+            });
+
+            if (parsed.instrument) {
+                const instrumentNode = manager.createNode('Instrument', parsed.instrument, 420, 100);
+                if (instrumentNode?.properties) {
+                    instrumentNode.properties.strudelProperties = { sound: parsed.instrument };
                 }
-                return p;
-            },
-            'tremolo': () => {
-                let p = `.tremolo(${props.rate || 8})`;
-                if (props.depth !== undefined && props.depth !== 0.5) {
-                    p += `.depth(${props.depth})`;
-                }
-                return p;
-            },
-            'lpf': () => `.lpf(${props.frequency || 800})`,
-            'hpf': () => `.hpf(${props.frequency || 200})`,
-            'lpq': () => `.lpq(${props.q || 0.7})`,
-            'gain': () => `.gain(${props.amount || 1})`,
-            'delay': () => `.delay(${props.time || 0.25})`,
-            'delayfb': () => `.delayfb(${props.amount || 0.4})`,
-            'reverb': () => `.reverb(${props.amount || 0.3})`,
-            'room': () => `.room(${props.size || 0.5})`,
-            'often': () => `.often(${props.chance || 0.75})`,
-            'sometimes': () => `.sometimes(${props.chance || 0.5})`,
-            'rarely': () => `.rarely(${props.chance || 0.25})`
-        };
-        
-        const transformFunc = transformMap[transformType];
-        if (transformFunc) {
-            pattern = transformFunc();
-        } else {
-            // Fallback for unknown transform types
-            pattern = `.${transformType}()`;
-        }
-        
-        return pattern;
-    }
-
-    /**
-     * Build pattern for combinator nodes
-     */
-    buildCombinatorPattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const combinatorType = node.type;
-        const combinatorDef = this.patternCombinatorsSchema.combinators[combinatorType];
-        
-        if (!combinatorDef) {
-            return '';
-        }
-        
-        let pattern = '';
-        const serialization = combinatorDef.serialization;
-        
-        if (serialization.type === 'function') {
-            // Function-based combinators like stack(), cat(), etc.
-            pattern = serialization.template;
-            
-            // Replace placeholders with actual values
-            if (serialization.template.includes('{args}')) {
-                // For multi-input combinators, we'll handle this in pattern generation
-                pattern = serialization.template.replace('{args}', '{children}');
+                manager.createConnection(noteNode.id, 'output', instrumentNode.id, 'input');
+                manager.updateNodeDisplay(noteNode);
+                manager.updateNodeDisplay(instrumentNode);
             }
-            
-        } else if (serialization.type === 'method') {
-            // Method-based combinators like .struct(), .mask(), etc.
-            pattern = serialization.template;
-            
-            // Replace placeholders with actual values
-            Object.keys(props).forEach(propKey => {
-                const placeholder = `{${propKey}}`;
-                const value = props[propKey];
-                if (serialization.template.includes(placeholder)) {
-                    pattern = pattern.replace(placeholder, typeof value === 'string' ? `"${value}"` : value);
+            return;
+        }
+
+        if (parsed.type === 'sound') {
+            parsed.sounds.forEach((sound, index) => {
+                manager.createNode('DrumSymbol', sound, 100 + index * 210, 100);
+            });
+            return;
+        }
+
+        if (parsed.type === 'stack') {
+            const stackNode = manager.createNode('stack', 'stack', 120, 120);
+            parsed.parts.forEach((part, index) => {
+                const inner = this.parseStrudelPattern(part);
+                if (!inner) return;
+                const nodesBefore = manager.nodes.length;
+                this.createNodesFromParsedPattern(inner);
+                const created = manager.nodes.slice(nodesBefore);
+                const terminal = created[created.length - 1];
+                if (terminal && stackNode) {
+                    manager.createConnection(terminal.id, 'output', stackNode.id, `input${index}`);
                 }
             });
-            
-        } else {
-            // Fallback for template-based serialization
-            pattern = serialization.template || combinatorType;
-            
-            // Replace placeholders with actual values
-            Object.keys(props).forEach(propKey => {
-                const placeholder = `{${propKey}}`;
-                const value = props[propKey];
-                pattern = pattern.replace(placeholder, typeof value === 'string' ? `"${value}"` : value);
-            });
         }
-        
-        return pattern;
     }
 
-    /**
-     * Build pattern for pattern function constructors
-     */
-    buildPatternFunctionPattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const functionType = node.type;
-        const functionDef = this.patternFunctionsSchema.constructors[functionType];
-        
-        if (!functionDef) {
-            return '';
-        }
-        
-        let pattern = '';
-        const serialization = functionDef.serialization;
-        
-        if (serialization.type === 'function') {
-            // Function-based pattern constructors like s(), n(), note(), etc.
-            pattern = serialization.template;
-            
-            // Replace placeholders with actual values
-            Object.keys(props).forEach(propKey => {
-                const placeholder = `{${propKey}}`;
-                const value = props[propKey];
-                if (serialization.template.includes(placeholder)) {
-                    // Check if this argument supports mini-notation
-                    const argDef = functionDef.arguments && functionDef.arguments[propKey];
-                    let processedValue = value;
-                    
-                    if (argDef && argDef.supportsMiniNotation && typeof value === 'string') {
-                        processedValue = this.parseMiniNotation(value);
-                    }
-                    
-                    pattern = pattern.replace(placeholder, typeof processedValue === 'string' ? `"${processedValue}"` : processedValue);
-                }
-            });
-            
-        } else {
-            // Fallback for template-based serialization
-            pattern = serialization.template || functionType;
-            
-            // Replace placeholders with actual values
-            Object.keys(props).forEach(propKey => {
-                const placeholder = `{${propKey}}`;
-                const value = props[propKey];
-                
-                // Check if this argument supports mini-notation
-                const argDef = functionDef.arguments && functionDef.arguments[propKey];
-                let processedValue = value;
-                
-                if (argDef && argDef.supportsMiniNotation && typeof value === 'string') {
-                    processedValue = this.parseMiniNotation(value);
-                }
-                
-                pattern = pattern.replace(placeholder, typeof processedValue === 'string' ? `"${processedValue}"` : processedValue);
-            });
-        }
-        
-        return pattern;
-    }
+    /* ------------------------------------------------------------------ *
+     * Mini-notation helpers
+     * ------------------------------------------------------------------ */
 
-    /**
-     * Build pattern for control nodes
-     */
-    buildControlNodePattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const controlType = node.type;
-        const controlDef = this.nodeManager.getControlNodeDefinition(controlType);
-        
-        if (!controlDef) {
-            return '';
-        }
-
-        const serialization = controlDef.serialization;
-        if (!serialization) {
-            return '';
-        }
-
-        let pattern = '';
-        
-        switch (serialization.type) {
-            case 'literal':
-                // Direct value replacement
-                pattern = serialization.template.replace('{value}', props.value || 0);
-                break;
-                
-            case 'function':
-                // Function call with arguments
-                const func = serialization.function;
-                const args = serialization.args || [];
-                const argValues = args.map(argName => {
-                    const value = props[argName];
-                    return typeof value === 'string' ? `"${value}"` : value;
-                }).join(', ');
-                pattern = `${func}(${argValues})`;
-                break;
-                
-            case 'method':
-                // Method call on input
-                const method = serialization.function;
-                const methodArgs = serialization.args || [];
-                const methodArgValues = methodArgs.map(argName => {
-                    const value = props[argName];
-                    return typeof value === 'string' ? `"${value}"` : value;
-                }).join(', ');
-                pattern = `.${method}(${methodArgValues})`;
-                break;
-                
-            default:
-                // Fallback for template-based serialization
-                if (serialization.template) {
-                    pattern = serialization.template;
-                    // Replace placeholders with actual values
-                    Object.keys(props).forEach(propKey => {
-                        const placeholder = `{${propKey}}`;
-                        const value = props[propKey];
-                        pattern = pattern.replace(placeholder, typeof value === 'string' ? `"${value}"` : value);
-                    });
-                }
-                break;
-        }
-        
-        return pattern;
-    }
-
-    /**
-     * Build pattern for effect nodes
-     */
-    buildEffectPattern(node) {
-        const props = node.properties.strudelProperties || {};
-        const effectType = props.type || node.instrument || 'lpf';
-        const amount = props.amount || 0.5;
-        
-        let pattern = '';
-        
-        // Map effect types to Strudel methods
-        const effectMap = {
-            'lpf': `.lpf(${amount})`,
-            'hpf': `.hpf(${amount})`,
-            'bpf': `.bpf(${amount})`,
-            'lpq': `.lpq(${amount})`,
-            'delay': `.delay(${amount})`,
-            'delayfb': `.delayfb(${amount})`,
-            'delayt': `.delayt(${amount})`,
-            'reverb': `.reverb(${amount})`,
-            'room': `.room(${amount})`,
-            'distort': `.distort(${amount})`,
-            'crush': `.crush(${Math.round(amount * 16)})`,
-            'shape': `.shape(${amount})`,
-            'vibrato': `.vibrato(${amount})`,
-            'tremolo': `.tremolo(${amount})`,
-            'chop': `.chop(${Math.round(amount * 16)})`,
-            'stutter': `.stutter(${Math.round(amount * 16)})`
-        };
-        
-        pattern = effectMap[effectType] || `.${effectType}(${amount})`;
-        
-        return pattern;
-    }
-
-    /**
-     * Check if a node is a control node
-     */
-    isControlNode(node) {
-        if (!this.controlNodesSchema || !this.controlNodesSchema.controlNodes) {
-            return false;
-        }
-        return this.controlNodesSchema.controlNodes[node.type] !== undefined;
-    }
-
-    /**
-     * Mini-notation parsing support
-     */
+    /** Warns about unbalanced mini-notation brackets and returns the text as-is. */
     parseMiniNotation(patternString) {
-        if (!this.miniNotationSchema) {
-            console.warn('Mini-notation schema not loaded');
-            return patternString; // Return as-is if schema not available
-        }
-        
-        // Basic validation - check for balanced brackets
-        const bracketPairs = [
-            { open: '[', close: ']' },
-            { open: '<', close: '>' },
-            { open: '(', close: ')' },
-            { open: '{', close: '}' }
-        ];
-        
-        for (const pair of bracketPairs) {
-            let openCount = 0;
-            let closeCount = 0;
-            
-            for (const char of patternString) {
-                if (char === pair.open) openCount++;
-                if (char === pair.close) closeCount++;
-            }
-            
-            if (openCount !== closeCount) {
-                console.warn(`Unbalanced ${pair.open}/${pair.close} brackets in mini-notation: ${patternString}`);
-                return patternString; // Return as-is if invalid
-            }
-        }
-        
-        // Pattern is valid, return it for use in Strudel
-        return patternString;
-    }
+        const text = String(patternString ?? '');
+        if (!this.miniNotationSchema) return text;
 
-    /**
-     * Generate canonical code using graph normalizer if available
-     */
-    generateCanonicalCode() {
-        // Check if graph normalizer is available
-        if (this.nodeManager.graphNormalizer && this.nodeManager.nodeSchema) {
-            try {
-                const result = this.nodeManager.graphNormalizer.normalizeGraph(this.nodeManager.nodes, this.nodeManager.connections);
-                
-                if (result.success) {
-                    console.log('Canonical code generated:', {
-                        code: result.code,
-                        chains: result.chains.length,
-                        normalizationMetadata: result.metadata
-                    });
-                    return result.code;
-                } else {
-                    console.error('Canonical code generation failed:', result.error);
-                    return '';
-                }
-            } catch (error) {
-                console.error('Canonical code generation error:', error);
-                return '';
-            }
-        } else {
-            console.warn('Graph normalizer not available, using basic code generation');
-            return this.basicGenerateCanonicalCode();
-        }
-    }
-
-    /**
-     * Basic canonical code generation fallback
-     */
-    basicGenerateCanonicalCode() {
-        const normalizedChains = this.nodeManager.normalizeGraph();
-        const patterns = [];
-
-        normalizedChains.forEach(chain => {
-            const pattern = this.buildChainPattern(chain);
-            if (pattern) {
-                patterns.push(pattern);
+        const pairs = [['[', ']'], ['<', '>'], ['(', ')'], ['{', '}']];
+        pairs.forEach(([open, close]) => {
+            const opens = [...text].filter(char => char === open).length;
+            const closes = [...text].filter(char => char === close).length;
+            if (opens !== closes) {
+                console.warn(`Unbalanced ${open}/${close} in mini-notation: ${text}`);
             }
         });
 
-        return patterns.join(' ');
-    }
-
-    /**
-     * Build pattern for an execution chain
-     */
-    buildChainPattern(chain) {
-        if (chain.length === 0) return '';
-        
-        // Start with the source node
-        let pattern = this.buildNodePattern(chain[0]);
-        
-        // Apply nodes in execution order (excluding the source)
-        for (let i = 1; i < chain.length; i++) {
-            const node = chain[i];
-            const nodeDef = this.nodeSchema.nodes[node.type];
-            
-            if (nodeDef?.execution?.wraps) {
-                // Wrapper nodes enclose the entire pattern
-                pattern = this.buildWrapperPattern(node, pattern);
-            } else {
-                // Regular nodes chain with the pattern
-                const nodePattern = this.buildNodePattern(node);
-                pattern = `${nodePattern}(${pattern})`;
-            }
-        }
-        
-        return pattern;
-    }
-
-    /**
-     * Build pattern for wrapper nodes
-     */
-    buildWrapperPattern(wrapperNode, innerPattern) {
-        const props = wrapperNode.properties.strudelProperties || {};
-        const wrapperDef = this.nodeSchema.nodes[wrapperNode.type];
-        
-        // Map wrapper types to Strudel functions
-        const wrapperMap = {
-            'Often': `often(${props.probability || 0.7})`,
-            'Sometimes': `sometimes(${props.probability || 0.5})`,
-            'Rarely': `rarely(${props.probability || 0.3})`,
-            'Chance': (() => {
-                const probType = props.type || 'sometimes';
-                const probability = props.probability || 0.5;
-                const interval = props.interval || 4;
-                
-                const chanceMap = {
-                    'often': `often(${probability})`,
-                    'sometimes': `sometimes(${probability})`,
-                    'rarely': `rarely(${probability})`,
-                    'chance': `when(${probability})`,
-                    'every': `every(${interval})`
-                };
-                
-                return chanceMap[probType] || `sometimes(${probability})`;
-            })()
-        };
-        
-        const wrapperFunc = wrapperMap[wrapperNode.type] || wrapperNode.type.toLowerCase();
-        return `${wrapperFunc}(${innerPattern})`;
-    }
-
-    /**
-     * Test new Strudel features
-     */
-    testNewStrudelFeatures() {
-        console.log('Testing new Strudel features...');
-        
-        // Test mini-notation parsing
-        const testPatterns = [
-            'bd ~ sd ~',
-            '<[x*<1 2> [~@3 x]] x>',
-            '~ [rim, sd:<2 3>]',
-            '[0 <1 3>]*<2!3 4>'
-        ];
-        
-        testPatterns.forEach(pattern => {
-            const parsed = this.parseMiniNotation(pattern);
-            console.log(`Mini-notation test: "${pattern}" -> "${parsed}"`);
-        });
-        
-        // Test combinator pattern generation
-        const combinatorTests = [
-            { type: 'stack', props: {}, expected: 'stack({children})' },
-            { type: 'cat', props: {}, expected: 'cat({children})' },
-            { type: 'struct', props: { structure: 'x ~ x ~' }, expected: '.struct("x ~ x ~")' }
-        ];
-        
-        combinatorTests.forEach(test => {
-            const node = { type: test.type, properties: { strudelProperties: test.props } };
-            const pattern = this.buildCombinatorPattern(node);
-            console.log(`Combinator test: ${test.type} -> ${pattern}`);
-        });
-        
-        // Test pattern function generation
-        const functionTests = [
-            { type: 's', props: { pattern: 'bd sd hh' }, expected: 's("bd sd hh")' },
-            { type: 'n', props: { pattern: '[0 <1 3>]*<2!3 4>' }, expected: 'n("[0 <1 3>]*<2!3 4>")' }
-        ];
-        
-        functionTests.forEach(test => {
-            const node = { type: test.type, properties: { strudelProperties: test.props } };
-            const pattern = this.buildPatternFunctionPattern(node);
-            console.log(`Pattern function test: ${test.type} -> ${pattern}`);
-        });
-        
-        this.nodeManager.updateStatus('✅ New Strudel features test completed - check console for details');
+        return text;
     }
 }
 
-// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = StrudelPatternGenerator;
 }
