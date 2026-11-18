@@ -236,7 +236,7 @@
           "label": "Modulation",
           "nodeType": "Effect",
           "color": "#9400d3",
-          "items": ["vibrato", "vibdepth", "tremolo", "tremdepth"]
+          "items": ["vibrato", "tremolo"]
         },
         {
           "id": "glitch",

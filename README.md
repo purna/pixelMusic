@@ -51,6 +51,7 @@ js/
   strudelPatternGenerator.js graph traversal and composition (no per-type cases)
   nodeCodegen.js             what one node emits, from the schema's `codegen` rules
   nodeProperties.js          property definitions shared by panels and codegen
+  settingsCodegen.js         settings -> master chain / tempo code (pure functions)
   projectManager.js          save / load / export / autosave
   sampleTunes.js             example graphs behind the "Sample Tune" button
   nodeContextMenu.js         right-click menu for a single node
@@ -113,16 +114,10 @@ below are not published.
 
 ## Known gaps
 
-* Some effect palette items have no property definition in
-  `nodes/strudel-node-properties.json` (`bpf`, `pan`, `delayt`, `distort`, `vibdepth`,
-  `tremdepth`, `slice`), so they emit a no-argument call such as `.bpf()` and show
-  no controls. Adding the definition fixes both at once.
 * Child levels nest only one deep (`exitNodeLevel` restores from a single
   `previousLevel` snapshot).
 * Strudel still loads from the CDN (`@strudel/web@1.0.3`). Bundling it locally is
   the next step for offline use and version pinning.
-* Settings that would need a paired Strudel call (`vibrato`/`vibdepth`,
-  `tremolo`/`tremdepth`) are stored but not folded into the master chain yet.
 
 ## Legacy files (safe to delete)
 

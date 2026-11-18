@@ -97,6 +97,7 @@ const NodeCodegen = loadModule(context, 'js/nodeCodegen.js', 'NodeCodegen');
 const StrudelPatternGenerator = loadModule(context, 'js/strudelPatternGenerator.js', 'StrudelPatternGenerator');
 const NodeProperties = context.window.NodeProperties || context.NodeProperties;
 const ProjectManager = loadModule(context, 'js/projectManager.js', 'ProjectManager');
+const SettingsCodegen = loadModule(context, 'js/settingsCodegen.js', 'SettingsCodegen');
 
 // NodeManager needs these collaborators only to define its methods; the tests
 // borrow its prototype, so lightweight stubs are enough.
@@ -138,6 +139,18 @@ const paletteTypes = [];
 instrumentsMenu.menus.forEach(menu => {
     (menu.groups || []).forEach(g => {
         if (g.nodeType) paletteTypes.push(g.nodeType);
+    });
+});
+
+/** Effect palette entries are method names; each needs its own schema entry. */
+const effectPaletteItems = [];
+instrumentsMenu.menus.forEach(menu => {
+    (menu.groups || []).forEach(group => {
+        if (group.nodeType !== 'Effect') return;
+        (group.items || []).forEach(item => {
+            const name = typeof item === 'string' ? item : (item.value ?? item.id);
+            if (name) effectPaletteItems.push(name);
+        });
     });
 });
 
@@ -281,6 +294,29 @@ check('no node type falls back to a placeholder', () => {
 check('validate() reports no schema issues', () => {
     const issues = createCodegen().validate(paletteTypes);
     assert.equal(JSON.stringify(issues), '[]', issues.join('\n'));
+});
+
+check('every effect palette item emits a call with an argument', () => {
+    const codegen = createCodegen();
+    const failures = [];
+    effectPaletteItems.forEach(method => {
+        const code = codegen.emit(makeNode('Effect', method)).code;
+        if (!/^\.\w+\(.+\)$/.test(code) || /,\s*\)|\(\s*,/.test(code)) {
+            failures.push(`${method}: ${code || 'no code'}`);
+        }
+    });
+    assert.equal(JSON.stringify(failures), '[]', failures.join('\n'));
+});
+
+check('optional signature arguments keep their defaults', () => {
+    const codegen = createCodegen();
+    assert.equal(codegen.emit(makeNode('Effect', 'vibrato')).code, '.vibrato(4, 0.02)');
+    assert.equal(codegen.emit(makeNode('Effect', 'tremolo')).code, '.tremolo(8, 0.5)');
+});
+
+check('vibrato and tremolo depth are paired, not palette effects', () => {
+    assert.ok(!effectPaletteItems.includes('vibdepth'));
+    assert.ok(!effectPaletteItems.includes('tremdepth'));
 });
 
 /* ---------------------------------------------------------------------- *
@@ -561,6 +597,42 @@ check('the sample button cycles through the tunes', () => {
  * ---------------------------------------------------------------------- */
 
 group('settings are part of the generated code');
+
+const SETTINGS_DEFAULTS = {
+    'settings-gain': 1,
+    'settings-vibrato': 4,
+    'settings-vibdepth': 0.02,
+    'settings-tremolo': 8,
+    'settings-tremdepth': 0.5
+};
+
+check('untouched paired settings add nothing', () => {
+    const settings = { ...SETTINGS_DEFAULTS };
+    assert.equal(SettingsCodegen.masterChain(settings, SETTINGS_DEFAULTS), '');
+});
+
+check('changing vibrato rate emits rate and depth together', () => {
+    const settings = { ...SETTINGS_DEFAULTS, 'settings-vibrato': 12 };
+    assert.equal(SettingsCodegen.masterChain(settings, SETTINGS_DEFAULTS), '.vibrato(12, 0.02)');
+});
+
+check('changing tremolo depth emits rate and depth together', () => {
+    const settings = { ...SETTINGS_DEFAULTS, 'settings-tremdepth': 0.9 };
+    assert.equal(SettingsCodegen.masterChain(settings, SETTINGS_DEFAULTS), '.tremolo(8, 0.9)');
+});
+
+check('paired effects chain after single-value settings', () => {
+    const settings = {
+        ...SETTINGS_DEFAULTS,
+        'settings-gain': 0.6,
+        'settings-vibrato': 10,
+        'settings-tremdepth': 0.8
+    };
+    assert.equal(
+        SettingsCodegen.masterChain(settings, SETTINGS_DEFAULTS),
+        '.gain(0.6).vibrato(10, 0.02).tremolo(8, 0.8)'
+    );
+});
 
 function makePatternBuilder(studio) {
     const generator = new StrudelPatternGenerator(studio);

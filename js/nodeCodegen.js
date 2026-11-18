@@ -326,7 +326,7 @@ class NodeCodegen {
         if (!call) return [];
         return call[1]
             .split(',')
-            .map(name => name.trim().replace(/^\{|\}$/g, ''))
+            .map(name => name.trim().replace(/^\{|\}$/g, '').replace(/\?$/, ''))
             .filter(name => name && name !== 'children' && name !== 'args');
     }
 

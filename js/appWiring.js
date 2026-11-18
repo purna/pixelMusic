@@ -15,36 +15,10 @@
      * ------------------------------------------------------------------ */
 
     /**
-     * Settings that become an audible master chain on the final pattern.
-     * Only single-value methods are listed: paired controls (vibrato depth, …)
-     * would need a different call shape, so they are left out rather than
-     * emitting invalid Strudel.
+     * Settings become an audible master chain on the final pattern. The rule
+     * (single methods plus paired vibrato/tremolo calls) lives in
+     * settingsCodegen.js so it can be tested without a DOM.
      */
-    const MASTER_METHODS = {
-        'settings-gain': 'gain',
-        'settings-pan': 'pan',
-        'settings-attack': 'attack',
-        'settings-decay': 'decay',
-        'settings-sustain': 'sustain',
-        'settings-release': 'release',
-        'settings-lpf': 'lpf',
-        'settings-hpf': 'hpf',
-        'settings-bpf': 'bpf',
-        'settings-lpq': 'lpq',
-        'settings-delay': 'delay',
-        'settings-delayfb': 'delayfb',
-        'settings-delayt': 'delaytime',
-        'settings-reverb': 'reverb',
-        'settings-room': 'room',
-        'settings-distort': 'distort',
-        'settings-crush': 'crush',
-        'settings-shape': 'shape',
-        'settings-speed': 'speed',
-        'settings-chop': 'chop',
-        'settings-stutter': 'stutter',
-        'settings-trunc': 'trunc'
-    };
-
     const GRID_SIZES = { '2x2': 80, '4x4': 40, '8x8': 20 };
 
     /** Markup defaults, so unchanged controls stay out of the generated code. */
@@ -70,24 +44,12 @@
 
     /** Master effects chain from settings, e.g. ".gain(0.8).room(0.3)". */
     function masterChain(settings = window.pixelMusicSettings) {
-        if (!settings) return '';
-
-        return Object.entries(MASTER_METHODS).reduce((chain, [id, method]) => {
-            const value = settings[id];
-            if (value === undefined || value === null || value === '') return chain;
-            const number = Number(value);
-            if (!Number.isFinite(number)) return chain;
-            if (defaults[id] !== undefined && number === defaults[id]) return chain;
-            return `${chain}.${method}(${number})`;
-        }, '');
+        return window.SettingsCodegen?.masterChain(settings, defaults) || '';
     }
 
     /** `setcpm(...)` directive for the configured tempo, or '' at the default. */
     function tempoDirective(settings = window.pixelMusicSettings) {
-        const bpm = Number(settings?.bpm);
-        if (!Number.isFinite(bpm) || bpm <= 0) return '';
-        if (defaults.bpm !== undefined && bpm === defaults.bpm) return '';
-        return `setcpm(${bpm / 4})`;
+        return window.SettingsCodegen?.tempoDirective(settings, defaults) || '';
     }
 
     function applyGridSize(settings = window.pixelMusicSettings) {

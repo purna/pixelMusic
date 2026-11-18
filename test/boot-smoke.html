@@ -94,7 +94,7 @@
                 check('nodeManager exists', () => !!win.nodeManager);
                 check('app scripts are loaded', () => {
                     const srcs = [...doc.querySelectorAll('script[src]')].map(s => s.getAttribute('src'));
-                    ['js/projectManager.js', 'js/appWiring.js', 'js/sampleTunes.js', 'js/nodeContextMenu.js', 'js/nodes/NodeManager.js'].forEach(required => {
+                    ['js/projectManager.js', 'js/settingsCodegen.js', 'js/appWiring.js', 'js/sampleTunes.js', 'js/nodeContextMenu.js', 'js/nodes/NodeManager.js'].forEach(required => {
                         if (!srcs.includes(required)) throw new Error(`index.html does not load ${required}`);
                     });
                     return srcs.length;
@@ -169,6 +169,9 @@
                     if (typeof win.NodeCodegen !== 'function') throw new Error('NodeCodegen missing');
                     if (!win.NodeProperties || typeof win.NodeProperties.collect !== 'function') {
                         throw new Error('NodeProperties missing');
+                    }
+                    if (!win.SettingsCodegen || typeof win.SettingsCodegen.masterChain !== 'function') {
+                        throw new Error('SettingsCodegen missing');
                     }
                     return true;
                 });
