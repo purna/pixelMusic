@@ -325,13 +325,16 @@ class NodeFactory {
                 // Insert before effects
                 const effectsDiv = nodeElement.querySelector('.node-effects');
                 const childPort = nodeElement.querySelector('.child-port');
-                if (effectsDiv) {
+                // insertBefore throws if the reference node is not a direct child,
+                // which happens as soon as the layout nests these blocks.
+                if (effectsDiv && effectsDiv.parentNode === nodeElement) {
                     nodeElement.insertBefore(newNoteDiv, effectsDiv);
-                } else if (childPort) {
+                } else if (childPort && childPort.parentNode === nodeElement) {
                     nodeElement.insertBefore(newNoteDiv, childPort);
                 } else {
                     const contentDiv = nodeElement.querySelector('.node-content');
-                    contentDiv.appendChild(newNoteDiv);
+                    if (contentDiv) contentDiv.appendChild(newNoteDiv);
+                    else nodeElement.appendChild(newNoteDiv);
                 }
             }
         } else {
