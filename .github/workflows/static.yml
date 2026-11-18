@@ -34,27 +34,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Assemble site
-        # Only publish what the app actually loads. Development notes (docs/),
-        # archived modules and scratch test pages stay out of the deploy.
+        # Only publish what the app actually loads. Tests stay out of the deploy.
         run: |
-          mkdir -p _site/js/nodes
+          mkdir -p _site/js/nodes _site/js/vendor
           cp index.html favicon.ico favicon.svg favicon-96x96.png apple-touch-icon.png \
              web-app-manifest-192x192.png web-app-manifest-512x512.png _site/
           cp -R css fonts nodes _site/
           cp js/*.js _site/js/
           cp js/nodes/*.js _site/js/nodes/
-          # Legacy modules that are no longer part of the app
-          rm -f _site/js/main.js _site/js/ui.js _site/js/layerManager.js \
-                _site/js/timeline.js _site/js/settings-manager.js \
-                _site/js/tutorialSystem.js _site/js/tutorialConfig.js \
-                _site/js/graphNormalizer.js _site/js/fileManager.js \
-                _site/js/databaseManager.js _site/js/collectionManager.js \
-                _site/js/collectionUI.js _site/js/presets.js \
-                _site/js/soundGenerator.js _site/js/audioEngine.js \
-                _site/js/notifications.js _site/js/nodeManager.js \
-                _site/js/strudel.js _site/js/strudel.mjs \
-                _site/js/strudel.esm.min.js _site/js/strudel-core.mjs \
-                _site/js/strudel-web.html
+          cp js/vendor/*.js _site/js/vendor/
           rm -f _site/nodes/.DS_Store
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

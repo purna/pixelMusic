@@ -59,6 +59,7 @@ js/
   menuLoader.js              instrument palette from nodes/strudel-node-instruments.json
   nodeSearch.js              canvas search (Ctrl/Cmd+F)
   ai-provider.js, ai-creator.js  optional AI helper
+vendor/strudel-1.0.3.js  vendored Strudel engine (dist/index.js from @strudel/web@1.0.3)
 nodes/*.json          the schema: node types, properties, sockets, instruments
 ```
 
@@ -109,28 +110,10 @@ python3 -m http.server 8899
 ## Deploy
 
 `.github/workflows/static.yml` publishes to GitHub Pages on pushes to `main`. It
-copies only the files the app loads, so `docs/`, `test/` and the legacy modules
-below are not published.
+copies only the files the app loads, so `test/` is not published.
 
 ## Known gaps
 
-* Strudel still loads from the CDN (`@strudel/web@1.0.3`). Bundling it locally is
-  the next step for offline use and version pinning.
-
-## Legacy files (safe to delete)
-
-These are no longer loaded by `index.html`. Deleting them was refused by the tool
-policy in this environment, so they are still in the tree; the Pages build skips
-them. Run this yourself to remove them:
-
-```bash
-git rm js/main.js js/ui.js js/layerManager.js js/timeline.js \
-  js/settings-manager.js js/tutorialSystem.js js/tutorialConfig.js \
-  js/graphNormalizer.js js/fileManager.js js/databaseManager.js \
-  js/collectionManager.js js/collectionUI.js js/presets.js \
-  js/soundGenerator.js js/audioEngine.js js/notifications.js \
-  js/nodeManager.js js/strudel.js js/strudel.mjs js/strudel.esm.min.js \
-  js/strudel-core.mjs js/strudel-web.html js/musicManager.js \
-  js/audioEffectsManager.js js/strudel-sample-manager.js test-all-fixes.js
-git rm -r docs
-```
+* The Strudel engine is vendored locally, but the sample packs loaded on **Enable
+  Audio** still come from GitHub (`tidalcycles/dirt-samples`), so the first
+  playback needs a network connection.

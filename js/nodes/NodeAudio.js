@@ -9,18 +9,20 @@ class NodeAudio {
     constructor(manager) {
         this.manager = manager;
         this.audioInitialized = false;
+        this.strudelInitialized = false;
         this.currentPattern = '';
     }
 
     /** Strudel's @strudel/web globals, accessed safely. */
     get strudel() {
         const global = typeof window !== 'undefined' ? window : {};
-        return {
-            evaluate: typeof global.evaluate === 'function' ? global.evaluate
-                : (typeof global.Strudel?.evaluate === 'function' ? global.Strudel.evaluate.bind(global.Strudel) : null),
-            hush: typeof global.hush === 'function' ? global.hush
-                : (typeof global.Strudel?.hush === 'function' ? global.Strudel.hush.bind(global.Strudel) : null)
+        const lib = global.Strudel || global.strudel || null;
+        const method = (name) => {
+            if (typeof global[name] === 'function') return global[name];
+            if (typeof lib?.[name] === 'function') return lib[name].bind(lib);
+            return null;
         };
+        return { evaluate: method('evaluate'), hush: method('hush') };
     }
 
     async initializeAudio() {
@@ -36,11 +38,24 @@ class NodeAudio {
             }
 
             if (!this.strudel.evaluate && !(typeof window !== 'undefined' && window.Strudel)) {
-                await this.loadStrudelFromCDN();
+                await this.loadStrudelBundle();
             }
 
             if (!this.strudel.evaluate) {
-                throw new Error('Strudel is not available (no network?)');
+                throw new Error('Strudel is not available');
+            }
+
+            // The vendored build exposes initStrudel(), which creates the
+            // scheduler that evaluate()/hush() need. The click that got us here
+            // is the user gesture browsers require.
+            if (typeof window.initStrudel === 'function' && !this.strudelInitialized) {
+                try {
+                    window.initStrudel();
+                    this.strudelInitialized = true;
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                } catch (error) {
+                    console.warn('Strudel scheduler init failed:', error);
+                }
             }
 
             this.audioInitialized = true;
@@ -52,14 +67,17 @@ class NodeAudio {
         }
     }
 
-    async loadStrudelFromCDN() {
+    async loadStrudelBundle() {
         return new Promise(resolve => {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@strudel/web@1.0.3/dist/strudel.min.js';
+            script.src = 'js/vendor/strudel-1.0.3.js';
             script.async = true;
-            script.onload = () => setTimeout(resolve, 500);
+            script.onload = () => {
+                window.Strudel = window.Strudel || window.strudel;
+                setTimeout(resolve, 500);
+            };
             script.onerror = () => {
-                console.warn('Strudel CDN unavailable - the editor still generates code, playback is disabled');
+                console.warn('Local Strudel bundle unavailable - the editor still generates code, playback is disabled');
                 resolve();
             };
             document.head.appendChild(script);

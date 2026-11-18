@@ -676,10 +676,10 @@
         </div>
     </div>
 
-    <!-- Strudel.cc Library - Load as regular script instead of module -->
-    <script src="https://cdn.jsdelivr.net/npm/@strudel/web@1.0.3/dist/strudel.min.js"
-        onerror="this.onerror=null; console.error('Strudel failed to load from the CDN - the editor still generates code, but playback is unavailable.');"
-        onload="console.log('Strudel CDN loaded successfully')">
+    <!-- Strudel 1.0.3 vendored locally (dist/index.js), so playback does not depend on a CDN -->
+    <script src="js/vendor/strudel-1.0.3.js"
+        onload="window.Strudel = window.Strudel || window.strudel; console.log('Strudel 1.0.3 loaded locally')"
+        onerror="this.onerror=null; console.error('Local Strudel bundle failed to load - the editor still generates code, but playback is unavailable.');">
         </script>
     
     <!-- Tooltip System -->

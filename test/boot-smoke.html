@@ -250,8 +250,8 @@
                         clientX: 200,
                         clientY: 200
                     }));
-                    const menu = doc.getElementById('node-context-menu');
-                    if (!menu) throw new Error('no node-context-menu element');
+                    const menu = doc.getElementById('canvas-context-menu');
+                    if (!menu) throw new Error('no canvas-context-menu element');
                     if (!menu.classList.contains('visible')) {
                         const diagnostics = {
                             hasMenuApi: !!win.nodeContextMenu,
