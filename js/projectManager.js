@@ -138,23 +138,16 @@ class ProjectManager {
         const manager = this.manager;
         const factory = manager.factory;
 
-        // Leave any nested child-editing level first so roots render correctly.
-        let guard = 0;
-        while (manager.currentLevel && manager.currentLevel.level > 0 && manager.previousLevel && guard++ < 32) {
-            factory.exitNodeLevel();
-        }
+        // The graph is replaced wholesale, so drop any nested child-editing level.
+        factory.nodes = [];
+        factory.resetLevelNavigation();
+        factory.selectedNode = null;
 
         manager.connections.clearAllConnections();
         if (this.dom) {
             const canvas = document.getElementById('canvas-content');
             if (canvas) canvas.querySelectorAll('.node').forEach(el => el.remove());
         }
-
-        factory.nodes = [];
-        factory.rootNodes = null;
-        factory.selectedNode = null;
-        manager.currentLevel = { level: 0, parentNode: null, nodes: [] };
-        manager.previousLevel = null;
 
         data.nodes.forEach(node => {
             factory.nodes.push(node);

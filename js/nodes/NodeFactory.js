@@ -9,6 +9,8 @@ class NodeFactory {
         this.rootNodes = null;
         this.selectedNode = null;
         this.sidePanelListenersAdded = false;
+        /** One snapshot per nesting level, so grandchild levels unwind in order. */
+        this.levelStack = [];
     }
 
     createNode(type, instrument, x = 100, y = 100) {
@@ -1431,6 +1433,8 @@ class NodeFactory {
     }
 
     enterNodeLevel(node) {
+        if (!node) return;
+
         // Keep a reference to the root array so the project can always be saved,
         // even while child nodes are being edited.
         if (!this.rootNodes) this.rootNodes = this.nodes;
@@ -1440,12 +1444,17 @@ class NodeFactory {
             this.manager.currentLevel = { level: 0, parentNode: null, nodes: [...this.nodes] };
         }
 
-        // Store previous state
-        this.manager.previousLevel = {
+        // One snapshot per level: entering a grandchild must not overwrite the
+        // way back to the child level.
+        const snapshot = {
+            level: this.manager.currentLevel.level,
+            parentNode: this.manager.currentLevel.parentNode,
             nodes: [...this.nodes],
             selectedNode: this.selectedNode,
             canvasOffset: { ...this.manager.canvas }
         };
+        this.levelStack.push(snapshot);
+        this.manager.previousLevel = snapshot;
 
         // Initialize child nodes if not exists
         if (!node.children) {
@@ -1454,7 +1463,7 @@ class NodeFactory {
 
         // Switch to child node editing mode
         this.manager.currentLevel = {
-            level: this.manager.currentLevel.level + 1,
+            level: snapshot.level + 1,
             parentNode: node,
             nodes: node.children
         };
@@ -1478,11 +1487,12 @@ class NodeFactory {
     }
 
     exitNodeLevel() {
-        if (!this.manager.previousLevel) return;
+        const snapshot = this.levelStack.pop();
+        if (!snapshot) return;
 
         // Restore previous state
-        this.nodes = [...this.manager.previousLevel.nodes];
-        this.selectedNode = this.manager.previousLevel.selectedNode;
+        this.nodes = [...snapshot.nodes];
+        this.selectedNode = snapshot.selectedNode;
 
         // Clear current canvas but preserve the main nodes
         this.clearCanvasForExitLevel();
@@ -1492,21 +1502,31 @@ class NodeFactory {
             this.renderNode(node);
         });
 
-        // Restore level info
-        this.manager.currentLevel = this.manager.previousLevel;
-        this.manager.previousLevel = null;
+        // Restore level info; the next snapshot down (if any) is the new "previous".
+        this.manager.currentLevel = {
+            level: snapshot.level,
+            parentNode: snapshot.parentNode,
+            nodes: [...snapshot.nodes]
+        };
+        this.manager.previousLevel = this.levelStack[this.levelStack.length - 1] || null;
 
         // Back at the root level: re-capture the root array on the next enter.
-        if (!this.manager.currentLevel || !(this.manager.currentLevel.level > 0)) {
-            this.rootNodes = null;
-        }
+        if (snapshot.level === 0) this.rootNodes = null;
 
-        this.manager.updateStatus('Returned to main level');
+        this.manager.updateStatus(snapshot.level > 0 ? `Returned to level ${snapshot.level}` : 'Returned to main level');
         this.updateDeleteButtonState();
 
         // Update strudel output and back button state
         this.manager.updateStrudelOutput();
         this.manager.updateBackButtonState();
+    }
+
+    /** Drop all level state without rendering, e.g. when a project replaces the graph. */
+    resetLevelNavigation() {
+        this.levelStack = [];
+        this.rootNodes = null;
+        this.manager.previousLevel = null;
+        this.manager.currentLevel = { level: 0, parentNode: null, nodes: [...this.nodes] };
     }
 
     clearCanvasForExitLevel() {
