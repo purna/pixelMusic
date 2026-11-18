@@ -12,7 +12,104 @@
   const spec = SPECS[APP];
   if (!spec) return;
   const style = document.createElement('style');
-  style.textContent = `#pixel-ai-create-launch{position:fixed;right:18px;bottom:18px;z-index:9998;background:#7048e8;color:#fff;border:0;border-radius:10px;padding:11px 16px;font:600 14px system-ui;box-shadow:0 4px 18px #0005;cursor:pointer}#pixel-ai-create{position:fixed;inset:0;z-index:9999;background:#0009;display:none;align-items:center;justify-content:center;font:14px system-ui;color:#222}#pixel-ai-create.open{display:flex}#pixel-ai-create .card{background:#fff;border-radius:12px;padding:20px;width:min(620px,92vw);max-height:86vh;overflow:auto;box-shadow:0 12px 50px #0006}#pixel-ai-create textarea{box-sizing:border-box;width:100%;min-height:90px;padding:10px;border:1px solid #bbb;border-radius:7px;font:14px system-ui}#pixel-ai-create pre{white-space:pre-wrap;word-break:break-word;max-height:36vh;overflow:auto;background:#f4f4f7;padding:12px;border-radius:7px}#pixel-ai-create button{padding:8px 12px;margin:5px 5px 5px 0;cursor:pointer}#pixel-ai-create .status{min-height:20px}`;
+  style.textContent = `
+    #pixel-ai-create-launch {
+      position: fixed; right: 18px; bottom: 18px; z-index: 9998;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: #fff; border: 1px solid rgba(167, 139, 250, .55); border-radius: 10px;
+      padding: 12px 18px; font: 600 14px Inter, system-ui, sans-serif;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 20px rgba(124, 58, 237, .35);
+      cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+    #pixel-ai-create-launch:hover {
+      transform: translateY(-1px); filter: brightness(1.08);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .5), 0 0 26px rgba(124, 58, 237, .5);
+    }
+    #pixel-ai-create {
+      position: fixed; inset: 0; z-index: 9999; display: none;
+      align-items: center; justify-content: center; padding: 20px;
+      background: rgba(4, 7, 15, .78); backdrop-filter: blur(6px);
+      font: 14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text-primary, #e0e7ff);
+    }
+    #pixel-ai-create.open { display: flex; }
+    #pixel-ai-create .card {
+      width: min(640px, 100%); max-height: 88vh; overflow: auto;
+      padding: 24px; border-radius: 12px;
+      background: linear-gradient(180deg, var(--bg-dark, #1a1a2e), var(--bg-medium, #16213e));
+      border: 1px solid var(--border-color, #2d3748);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .65), 0 0 30px rgba(0, 255, 65, .06);
+      scrollbar-color: var(--border-color, #2d3748) var(--bg-darkest, #0f0f1b);
+    }
+    #pixel-ai-create h2 {
+      margin: 0 0 8px; color: var(--accent-primary, #00ff41);
+      font-size: 1.25rem; font-weight: 700; letter-spacing: .01em;
+      text-shadow: 0 0 18px rgba(0, 255, 65, .18);
+    }
+    #pixel-ai-create .card > p {
+      margin: 0 0 16px; color: var(--text-secondary, #94a3b8); font-size: .85rem;
+    }
+    #pixel-ai-create textarea {
+      box-sizing: border-box; width: 100%; min-height: 120px; resize: vertical;
+      padding: 12px 14px; border-radius: 8px;
+      border: 1px solid var(--border-color, #2d3748);
+      background: var(--bg-darkest, #0f0f1b); color: var(--text-primary, #e0e7ff);
+      font: inherit; line-height: 1.5; outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    #pixel-ai-create textarea:focus {
+      border-color: var(--accent-tertiary, #00d9ff);
+      box-shadow: 0 0 0 3px rgba(0, 217, 255, .14);
+    }
+    #pixel-ai-create .card > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    #pixel-ai-create button {
+      appearance: none; margin: 0; padding: 9px 14px; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--border-color, #2d3748);
+      background: var(--bg-light, #1e293b); color: var(--text-primary, #e0e7ff);
+      font: 600 13px Inter, system-ui, sans-serif;
+      transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    }
+    #pixel-ai-create button:hover:not(:disabled) {
+      background: var(--bg-medium, #16213e);
+      border-color: var(--accent-tertiary, #00d9ff);
+      color: var(--accent-tertiary, #00d9ff);
+    }
+    #pixel-ai-create button:disabled { opacity: .45; cursor: not-allowed; }
+    #pixel-ai-create .generate { border-color: rgba(0, 217, 255, .4); color: var(--accent-tertiary, #00d9ff); }
+    #pixel-ai-create .apply:not(:disabled) {
+      background: var(--accent-primary, #00ff41); border-color: var(--accent-primary, #00ff41);
+      color: #04120a; box-shadow: 0 0 16px rgba(0, 255, 65, .25);
+    }
+    #pixel-ai-create .apply:not(:disabled):hover {
+      background: #5cff87; border-color: #5cff87; color: #04120a;
+    }
+    #pixel-ai-create .close { color: var(--text-secondary, #94a3b8); }
+    #pixel-ai-create .status {
+      min-height: 20px; margin: 12px 0 0;
+      color: var(--text-secondary, #94a3b8); font-size: 12px;
+    }
+    #pixel-ai-create pre {
+      margin: 12px 0 0; padding: 14px; max-height: 36vh; overflow: auto;
+      border: 1px solid var(--border-color, #2d3748); border-radius: 8px;
+      background: var(--bg-darkest, #0f0f1b); color: #9ae6b4;
+      font: 12px/1.55 "Courier New", monospace;
+      white-space: pre-wrap; word-break: break-word;
+      scrollbar-color: var(--border-color, #2d3748) var(--bg-darkest, #0f0f1b);
+    }
+    #pixel-ai-create ::-webkit-scrollbar { width: 8px; height: 8px; }
+    #pixel-ai-create ::-webkit-scrollbar-track { background: var(--bg-darkest, #0f0f1b); }
+    #pixel-ai-create ::-webkit-scrollbar-thumb {
+      background: var(--border-color, #2d3748); border-radius: 999px;
+    }
+    #pixel-ai-create ::-webkit-scrollbar-thumb:hover { background: var(--accent-tertiary, #00d9ff); }
+    @media (max-width: 600px) {
+      #pixel-ai-create { padding: 12px; }
+      #pixel-ai-create .card { padding: 18px; border-radius: 10px; }
+      #pixel-ai-create .card > div { flex-direction: column; }
+      #pixel-ai-create button { width: 100%; }
+    }
+  `;
   document.head.appendChild(style);
   const launch = document.createElement('button'); launch.id='pixel-ai-create-launch'; launch.type='button'; launch.textContent='✦ AI Create';
   const modal = document.createElement('div'); modal.id='pixel-ai-create'; modal.innerHTML=`<section class="card" role="dialog" aria-modal="true" aria-labelledby="pixel-ai-title"><h2 id="pixel-ai-title">AI Create</h2><p>Describe what you want to make in ${spec[0]}. The generated result is previewed before it changes the editor.</p><textarea id="pixel-ai-prompt" placeholder="Describe what you want to create…"></textarea><div><button type="button" class="generate">Generate preview</button><button type="button" class="apply" disabled>Apply to editor</button><button type="button" class="close">Close</button></div><p class="status" role="status"></p><pre class="preview">Your preview will appear here.</pre></section>`;

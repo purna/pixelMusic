@@ -167,12 +167,66 @@
         const style = document.createElement('style');
         style.id = 'pixel-ai-settings-styles';
         style.textContent = `
-            .pixel-ai-provider-fields[hidden], #pixel-ai-openrouter-model-list[hidden] { display:none !important; }
-            .pixel-ai-form { padding:12px; max-height:65vh; overflow:auto; }
-            .pixel-ai-form label { display:block; margin:10px 0 5px; }
-            .pixel-ai-form input, .pixel-ai-form select { box-sizing:border-box; width:100%; padding:8px; }
-            .pixel-ai-help, .pixel-ai-status { font-size:.78rem; line-height:1.45; opacity:.85; }
-            .pixel-ai-form button { margin-top:10px; }
+            .pixel-ai-provider-fields[hidden], #pixel-ai-openrouter-model-list[hidden] { display: none !important; }
+            .pixel-ai-form {
+                padding: 0 0 8px; max-height: 65vh; overflow: auto;
+                color: var(--text-primary, #e0e7ff);
+                scrollbar-color: var(--border-color, #2d3748) var(--bg-dark, #1a1a2e);
+            }
+            .pixel-ai-form h3 {
+                margin: 0 0 8px; padding-bottom: 10px;
+                border-bottom: 1px solid var(--border-color, #2d3748);
+                color: var(--accent-tertiary, #00d9ff);
+                font-size: .95rem; font-weight: 700; letter-spacing: .01em;
+            }
+            .pixel-ai-form label {
+                display: block; margin: 14px 0 6px;
+                color: var(--text-secondary, #94a3b8);
+                font-size: 12px; font-weight: 600; letter-spacing: .02em;
+            }
+            .pixel-ai-form input:not([type="checkbox"]),
+            .pixel-ai-form select {
+                box-sizing: border-box; width: 100%; padding: 9px 11px;
+                border: 1px solid var(--border-color, #2d3748); border-radius: 6px;
+                background: var(--bg-darkest, #0f0f1b); color: var(--text-primary, #e0e7ff);
+                font: inherit; font-size: 13px; outline: none;
+                transition: border-color .15s ease, box-shadow .15s ease;
+            }
+            .pixel-ai-form input:not([type="checkbox"]):focus,
+            .pixel-ai-form select:focus {
+                border-color: var(--accent-tertiary, #00d9ff);
+                box-shadow: 0 0 0 3px rgba(0, 217, 255, .14);
+            }
+            .pixel-ai-form input[type="checkbox"] {
+                width: auto; margin: 0 8px 0 0; vertical-align: middle;
+                accent-color: var(--accent-primary, #00ff41);
+            }
+            .pixel-ai-form button {
+                margin-top: 12px; padding: 9px 14px; border-radius: 6px; cursor: pointer;
+                border: 1px solid var(--border-color, #2d3748);
+                background: var(--bg-light, #1e293b); color: var(--text-primary, #e0e7ff);
+                font: 600 12px Inter, system-ui, sans-serif;
+                transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+            }
+            .pixel-ai-form button:hover:not(:disabled) {
+                background: var(--bg-medium, #16213e);
+                border-color: var(--accent-tertiary, #00d9ff);
+                color: var(--accent-tertiary, #00d9ff);
+            }
+            .pixel-ai-form button:disabled { opacity: .45; cursor: not-allowed; }
+            .pixel-ai-form .pixel-ai-save {
+                background: var(--accent-primary, #00ff41);
+                border-color: var(--accent-primary, #00ff41);
+                color: #04120a; box-shadow: 0 0 16px rgba(0, 255, 65, .25);
+            }
+            .pixel-ai-form .pixel-ai-save:hover:not(:disabled) {
+                background: #5cff87; border-color: #5cff87; color: #04120a;
+            }
+            .pixel-ai-help, .pixel-ai-status {
+                font-size: 12px; line-height: 1.5;
+                color: var(--text-secondary, #94a3b8);
+            }
+            .pixel-ai-status { min-height: 18px; margin: 12px 0 0; }
         `;
         document.head.appendChild(style);
     }
@@ -238,7 +292,14 @@
                 <button type="button" class="pixel-ai-save">Save AI settings</button>
             </div>
         `;
-        panelsHost.appendChild(panel);
+        // Keep the settings modal's Cancel/Save footer at the bottom. Appending
+        // the AI panel to .modal-content would put it after the footer.
+        const actions = modal.querySelector('.modal-actions');
+        if (actions && actions.parentElement === panelsHost) {
+            panelsHost.insertBefore(panel, actions);
+        } else {
+            panelsHost.appendChild(panel);
+        }
 
         const tabs = [...tabsHost.querySelectorAll('.settings-tab')];
         const panels = poseMode

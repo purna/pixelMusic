@@ -115,6 +115,19 @@
                     button.click();
                     return true;
                 });
+                check('AI settings panel sits before the modal footer', () => {
+                    const tab = [...doc.querySelectorAll('.settings-tab')]
+                        .find(item => /^AI$/i.test(item.textContent.trim()));
+                    if (!tab) throw new Error('no AI settings tab');
+                    const panel = doc.querySelector('[data-pixel-ai-panel]');
+                    if (!panel) throw new Error('no AI settings panel');
+                    const footer = doc.querySelector('#settings-modal .modal-actions');
+                    if (!footer) throw new Error('no settings footer');
+                    if (panel.nextElementSibling !== footer) {
+                        throw new Error('AI panel is not immediately before the settings footer');
+                    }
+                    return true;
+                });
                 check('build-nodes button is present', () => !!doc.getElementById('build-nodes-from-pattern'));
                 check('schemas loaded', () => {
                     const manager = win.nodeManager;
