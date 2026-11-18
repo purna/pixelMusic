@@ -56,6 +56,7 @@
     width: var(--side-panel-width);
     flex: 0 0 var(--side-panel-width);
     height: auto;
+    min-width: 0;
     max-height: none;
     padding: 14px;
     overflow-y: auto;
@@ -64,7 +65,7 @@
     box-shadow: none;
     transform: none;
     opacity: 1;
-    transition: none;
+    transition: width 0.25s ease, flex-basis 0.25s ease, padding 0.25s ease, opacity 0.18s ease;
     z-index: 1;
 }
 
@@ -73,9 +74,26 @@
     opacity: 1;
 }
 
-#side-panel .side-panel-close,
+#side-panel .side-panel-close {
+    display: block;
+}
+
 #panel-toggle {
-    display: none;
+    display: flex;
+}
+
+/* On roomy screens the inspector is pinned but can still be collapsed, so
+   the canvas can use the full width. */
+@media (min-width: 1601px) {
+    #side-panel:not(.open) {
+        width: 0;
+        flex-basis: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-left: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
 }
 
 #side-panel-overlay {
@@ -97,9 +115,9 @@
     box-sizing: border-box;
 }
 
-/* On narrow screens the inspector becomes an overlay again so the canvas
-   keeps a usable width. */
-@media (max-width: 1024px) {
+/* On medium and small screens the inspector slides in on demand so the
+   canvas keeps a usable width. */
+@media (max-width: 1600px) {
     #side-panel {
         position: fixed;
         top: var(--header-height, 60px);
@@ -121,11 +139,8 @@
         opacity: 1;
     }
 
-    #side-panel .side-panel-close {
-        display: block;
-    }
-
-    #panel-toggle {
-        display: flex;
+    #side-panel-overlay.visible {
+        display: block !important;
+        opacity: 1;
     }
 }

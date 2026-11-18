@@ -25,7 +25,7 @@ left palette to add nodes, then **Play All Nodes**.
 | --- | --- |
 | Add a node | Click an item in the instrument/pattern/effect palette, or drag it onto the canvas |
 | Show/hide the palette | Click a left icon to open that category; click the active icon again to slide the palette closed |
-| Node properties | The pinned inspector on the right updates when you select a node |
+| Node properties | The inspector on the right opens when you select a node; close it with the X or the edge tab. On medium screens it slides over the canvas. |
 | Delete a node | Right-click it → **Delete Node** (also **Disconnect** and **Edit Children**) |
 | Sample tune | Header **Sample Tune** loads a ready-made graph; click again for the next one |
 | Connect nodes | Drag from a node's output port to another node's input port |

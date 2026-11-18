@@ -314,14 +314,25 @@
                     panel.style.transition = previousTransition;
                     return 'collapsed and reopened';
                 });
-                check('right inspector is pinned and narrow', () => {
+                check('right inspector slides in and out on medium screens', () => {
                     const panel = doc.getElementById('side-panel');
-                    if (!panel) throw new Error('no inspector');
+                    const toggle = doc.getElementById('panel-toggle');
+                    const overlay = doc.getElementById('side-panel-overlay');
+                    if (!panel || !toggle) throw new Error('no inspector or toggle');
                     const styles = win.getComputedStyle(panel);
                     const width = Math.round(panel.getBoundingClientRect().width);
-                    if (styles.position === 'fixed') throw new Error('inspector is still an overlay');
+                    if (styles.position !== 'fixed') throw new Error(`inspector is ${styles.position}, expected overlay`);
+                    if (win.getComputedStyle(toggle).display === 'none') throw new Error('inspector toggle is hidden');
                     if (width > 300) throw new Error(`inspector is ${width}px wide`);
-                    return `${styles.position}, ${width}px`;
+
+                    if (panel.classList.contains('open')) toggle.click();
+                    if (panel.classList.contains('open')) throw new Error('inspector did not close');
+                    toggle.click();
+                    if (!panel.classList.contains('open')) throw new Error('inspector did not open');
+                    if (!overlay.classList.contains('visible')) throw new Error('inspector backdrop did not show');
+                    toggle.click();
+                    if (panel.classList.contains('open')) throw new Error('inspector did not close again');
+                    return `overlay, ${width}px`;
                 });
                 check('right-clicking a node offers delete and removes it', () => {
                     const manager = win.nodeManager;

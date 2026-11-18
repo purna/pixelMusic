@@ -217,6 +217,7 @@ class NodeManager {
             panel.classList.toggle('open', willOpen);
             document.getElementById('side-panel-overlay')?.classList.toggle('visible', willOpen);
         });
+        document.getElementById('side-panel-overlay')?.addEventListener('click', () => this.factory.hideSidePanel());
         document.getElementById('back-to-parent')?.addEventListener('click', () => this.factory.exitNodeLevel());
 
         // Keyboard events
