@@ -83,6 +83,17 @@ class NodeSearch {
             });
 
             this.canvas.addEventListener('contextmenu', (e) => {
+                // Right-clicking a node opens the node menu; empty canvas keeps the
+                // add/search menu.
+                const nodeElement = e.target.closest('.node');
+                if (nodeElement && window.nodeContextMenu) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.hideContextMenu();
+                    window.nodeContextMenu.open(nodeElement.id, e.clientX, e.clientY);
+                    return;
+                }
+
                 e.preventDefault();
                 this.storeClickPosition(e);
                 this.showContextMenu(e.clientX, e.clientY);

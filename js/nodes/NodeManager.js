@@ -304,7 +304,13 @@ class NodeManager {
         });
 
         if (!parts.length) return '';
-        return parts.length === 1 ? parts[0] : `stack(${parts.join(', ')})`;
+
+        // Settings act as a master bus on the whole mix.
+        const master = window.pixelMusicMasterChain?.() || '';
+        const tempo = window.pixelMusicTempo?.() || '';
+        const pattern = parts.length === 1 ? `${parts[0]}${master}` : `stack(${parts.join(', ')})${master}`;
+
+        return tempo ? `${tempo}\n${pattern}` : pattern;
     }
 
     // Update back button state based on current level

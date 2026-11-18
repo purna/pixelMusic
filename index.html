@@ -54,6 +54,7 @@
             <button id="loadProject" class="header-btn action"><i class="fas fa-folder-open"></i> Load</button>
             <button id="saveProject" class="header-btn primary"><i class="fas fa-save"></i> Save</button>
             <button id="exportMixBtn" class="header-btn action"><i class="fas fa-file-export"></i> Export</button>
+            <button id="load-sample-tune" class="header-btn action" title="Load a ready-made example graph"><i class="fas fa-wand-magic-sparkles"></i> Sample Tune</button>
             <button id="settingsBtn" class="header-btn"><i class="fas fa-cog"></i> Settings</button>
         </div>
     </header>
@@ -143,8 +144,7 @@
                     </div>
                     
                     <!-- Canvas Context Menu -->
-                    <div class="canvas-context-menu" id="canvas-context-menu">
-                        <div class="context-menu-item" data-action="add-node">
+                    <div class="canvas-context-menu" id="canvas-context-menu">                        <div class="context-menu-item" data-action="add-node">
                             <i class="fas fa-plus"></i> Add Node
                         </div>
                         <div class="context-menu-item" data-action="search-node">
@@ -248,6 +248,21 @@
     </button>
 
     <!-- Settings Modal -->
+    <!-- Right-click menu for a single node -->
+    <div class="canvas-context-menu node-context-menu" id="node-context-menu">
+        <div class="node-context-title"></div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="delete-node">
+            <i class="fas fa-trash-alt"></i> Delete Node
+        </div>
+        <div class="context-menu-item" data-action="disconnect-node">
+            <i class="fas fa-unlink"></i> Disconnect
+        </div>
+        <div class="context-menu-item" data-action="edit-children">
+            <i class="fas fa-diagram-project"></i> Edit Children
+        </div>
+    </div>
+
     <div class="modal-overlay" id="settings-modal">
         <div class="modal">
             <div class="modal-header">
@@ -691,15 +706,15 @@
 
     <!-- Project persistence (save / load / export / autosave) -->
     <script src="js/projectManager.js"></script>
-
     <!-- Header + footer wiring (settings modal, pattern import, AI adapter) -->
     <script src="js/appWiring.js"></script>
     
     <!-- Node Search Module -->
-    <script src="js/nodeSearch.js"></script>
-    
+    <script src="js/nodeSearch.js"></script>    
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
+    <script src="js/sampleTunes.js"></script>
+    <script src="js/nodeContextMenu.js"></script>
 
     <!-- Footer with Strudel Example Input -->
     <footer class="strudel-footer">

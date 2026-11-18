@@ -1036,3 +1036,36 @@
         min-width: 40px;
     }
 }
+/* Node context menu (right-click on a node) */
+.node-context-menu {
+    min-width: 200px;
+}
+
+.node-context-title {
+    padding: 4px 16px 8px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-family: 'Press Start 2P', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-context-menu .context-menu-item[data-action="delete-node"] {
+    color: #ff6b6b;
+}
+
+.node-context-menu .context-menu-item[data-action="delete-node"] i {
+    color: #ff6b6b;
+}
+
+.node-context-menu .context-menu-item[data-action="delete-node"]:hover {
+    background: rgba(255, 65, 54, 0.14);
+}
+
+/* Grid size setting */
+.canvas-content {
+    background-size: var(--canvas-grid-size, 20px) var(--canvas-grid-size, 20px);
+}

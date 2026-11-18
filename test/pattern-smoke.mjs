@@ -63,7 +63,9 @@ function makeSandbox() {
 
 function loadModule(context, relativePath, className) {
     const source = readFileSync(join(root, relativePath), 'utf8');
-    runInContext(`${source}\n;globalThis.__loaded = ${className};`, context, { filename: relativePath });
+    const probe = className ? `\n;globalThis.__loaded = ${className};` : '';
+    runInContext(`${source}${probe}`, context, { filename: relativePath });
+    if (!className) return;
     const loaded = context.__loaded;
     assert.ok(loaded, `${className} was not defined by ${relativePath}`);
     return loaded;
@@ -95,6 +97,21 @@ const NodeCodegen = loadModule(context, 'js/nodeCodegen.js', 'NodeCodegen');
 const StrudelPatternGenerator = loadModule(context, 'js/strudelPatternGenerator.js', 'StrudelPatternGenerator');
 const NodeProperties = context.window.NodeProperties || context.NodeProperties;
 const ProjectManager = loadModule(context, 'js/projectManager.js', 'ProjectManager');
+
+// NodeManager needs these collaborators only to define its methods; the tests
+// borrow its prototype, so lightweight stubs are enough.
+runInContext(`
+class NodeCanvas { init() {} }
+class ConnectionManager { constructor() { this.connections = []; } clearAllConnections() { this.connections = []; } }
+class NodeFactory { constructor(manager) { this.manager = manager; this.nodes = []; } }
+class NodeAudio {}
+// Pre-set the global so NodeManager's auto-boot guard stays inert in tests.
+window.nodeManager = {};
+`, context, { filename: 'stubs.js' });
+const NodeManager = loadModule(context, 'js/nodes/NodeManager.js', 'NodeManager');
+delete context.window.nodeManager;
+loadModule(context, 'js/sampleTunes.js');
+const SampleTunes = context.window.SampleTunes;
 
 const schemas = {
     nodeSchema: readJson('nodes/strudel-node-schema.json'),
@@ -437,6 +454,160 @@ check('autosave is restored after a reload', () => {
     const reloaded = makeEditor();
     assert.equal(new ProjectManager(reloaded, { autosaveIntervalMs: 100000 }).restoreAutosave(), true);
     assert.equal(reloaded.factory.nodes.length, 1);
+});
+
+/* ---------------------------------------------------------------------- *
+ * Sample tunes
+ * ---------------------------------------------------------------------- */
+
+group('sample tunes');
+
+/** A manager shaped like the real one, but without any DOM. */
+function makeStudio() {
+    const manager = {
+        nodes: [],
+        connections: { connections: [], clearAllConnections() { this.connections = []; } },
+        getInstrumentSignatureInfo: name => signatureMap.get(name) || null,
+        status: '',
+        createNode(type, instrument, x = 0, y = 0) {
+            const node = makeNode(type, instrument, {});
+            node.x = x;
+            node.y = y;
+            node.properties.strudelProperties = {};
+            manager.nodes.push(node);
+            return node;
+        },
+        createConnection(sourceId, sourcePort, targetId, targetPort) {
+            manager.connections.connections.push({
+                id: `c-${manager.connections.connections.length + 1}`,
+                sourceNodeId: sourceId,
+                sourcePort,
+                targetNodeId: targetId,
+                targetPort
+            });
+        },
+        clearAllNodes() {
+            manager.nodes = [];
+            manager.connections.connections = [];
+        },
+        updateStrudelOutput() {},
+        updateStatus(message) { manager.status = message; }
+    };
+    return manager;
+}
+
+function codeForStudio(manager) {
+    const generator = new StrudelPatternGenerator(manager);
+    generator.initSchemas(schemas);
+
+    const feeding = new Set(
+        manager.connections.connections
+            .filter(conn => String(conn.targetPort || '').startsWith('input'))
+            .map(conn => conn.sourceNodeId)
+    );
+    const terminals = manager.nodes.filter(node => !feeding.has(node.id));
+    return (terminals.length ? terminals : manager.nodes)
+        .map(node => generator.generatePatternFromNode(node))
+        .filter(Boolean)
+        .join(' + ');
+}
+
+check('every sample tune builds a playable graph', () => {
+    const failures = [];
+    SampleTunes.tunes.forEach(tune => {
+        const studio = makeStudio();
+        try {
+            tune.build(studio);
+        } catch (error) {
+            failures.push(`${tune.id}: threw ${error.message}`);
+            return;
+        }
+        if (!studio.nodes.length) failures.push(`${tune.id}: no nodes`);
+        const code = codeForStudio(studio);
+        if (!code.trim()) failures.push(`${tune.id}: generated no code`);
+        if (/undefined|NaN|\[object Object\]/.test(code)) failures.push(`${tune.id}: ${code}`);
+    });
+    assert.equal(JSON.stringify(failures), '[]', failures.join('\n'));
+});
+
+check('sample tunes show off distinct features', () => {
+    const codes = {};
+    SampleTunes.tunes.forEach(tune => {
+        const studio = makeStudio();
+        tune.build(studio);
+        codes[tune.id] = codeForStudio(studio);
+    });
+
+    assert.match(codes['four-on-the-floor'], /bank\('RolandTR909'\)|bank\("RolandTR909"\)/);
+    assert.match(codes['four-on-the-floor'], /\.fast\(2\)/);
+    assert.match(codes['deep-house'], /\.lpf\(900\)/);
+    assert.match(codes['sometimes-break'], /\.degradeBy\(0\.4\)/);
+    assert.equal(new Set(Object.values(codes)).size, SampleTunes.tunes.length);
+});
+
+check('the sample button cycles through the tunes', () => {
+    const seen = new Set();
+    const studio = makeStudio();
+    for (let i = 0; i < SampleTunes.tunes.length; i += 1) {
+        const tune = SampleTunes.addSampleTune(studio);
+        seen.add(tune.id);
+        if (!studio.nodes.length) throw new Error(`${tune.id}: canvas stayed empty`);
+    }
+    assert.equal(seen.size, SampleTunes.tunes.length);
+});
+
+/* ---------------------------------------------------------------------- *
+ * Settings -> master chain
+ * ---------------------------------------------------------------------- */
+
+group('settings are part of the generated code');
+
+function makePatternBuilder(studio) {
+    const generator = new StrudelPatternGenerator(studio);
+    generator.initSchemas(schemas);
+
+    const builder = Object.create(NodeManager.prototype);
+    builder.factory = { nodes: studio.nodes };
+    builder.connections = studio.connections;
+    builder.patternGenerator = generator;
+    return builder;
+}
+
+check('settings become a master chain on the mix', () => {
+    const studio = makeStudio();
+    studio.createNode('DrumSymbol', 'bd').properties.strudelProperties = { symbol: 'bd' };
+
+    context.window.pixelMusicMasterChain = () => '.gain(0.5).room(0.2)';
+    context.window.pixelMusicTempo = () => '';
+
+    const code = makePatternBuilder(studio).buildPlayablePattern();
+    assert.equal(code, `s('bd').gain(0.5).room(0.2)`);
+
+    delete context.window.pixelMusicMasterChain;
+    delete context.window.pixelMusicTempo;
+});
+
+check('tempo is written as a setcpm directive', () => {
+    const studio = makeStudio();
+    studio.createNode('DrumSymbol', 'bd').properties.strudelProperties = { symbol: 'bd' };
+
+    context.window.pixelMusicTempo = () => 'setcpm(25)';
+    const code = makePatternBuilder(studio).buildPlayablePattern();
+    assert.equal(code, `setcpm(25)\ns('bd')`);
+
+    delete context.window.pixelMusicTempo;
+});
+
+check('the master chain still stacks multiple roots', () => {
+    const studio = makeStudio();
+    studio.createNode('DrumSymbol', 'bd').properties.strudelProperties = { symbol: 'bd' };
+    studio.createNode('DrumSymbol', 'hh').properties.strudelProperties = { symbol: 'hh' };
+
+    context.window.pixelMusicMasterChain = () => '.gain(0.4)';
+    const code = makePatternBuilder(studio).buildPlayablePattern();
+    assert.equal(code, `stack(s('bd'), s('hh')).gain(0.4)`);
+
+    delete context.window.pixelMusicMasterChain;
 });
 
 console.log(`\n${passed} check(s) passed`);
