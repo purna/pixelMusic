@@ -52,11 +52,12 @@ class NodeCanvas {
         // Canvas panning with mouse
         const canvas = document.getElementById('canvas-content');
         if (canvas) {
-            // Start panning when pan tool is active
+            // Start panning when pan tool is active. Ignore port/button
+            // interactions so they never pan the canvas at the same time.
             canvas.addEventListener('mousedown', (e) => {
-                if (this.panToolActive && e.button === 0) {
-                    this.startPanning(e);
-                }
+                if (!this.panToolActive || e.button !== 0) return;
+                if (e.target.closest('button, input, select, textarea, .connection-port, .node-play-btn, .child-port')) return;
+                this.startPanning(e);
             });
 
             document.addEventListener('mousemove', (e) => {

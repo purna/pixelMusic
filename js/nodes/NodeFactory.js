@@ -197,17 +197,22 @@ class NodeFactory {
         let startX, startY, initialX, initialY;
 
         element.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('node-title')) {
-                isDragging = true;
-                element.classList.add('dragging');
-                startX = e.clientX;
-                startY = e.clientY;
-                initialX = node.x;
-                initialY = node.y;
+            // Let the pan tool own the gesture when it is active, and only drag
+            // from the node title with the primary button.
+            if (e.button !== 0 || this.manager.canvas?.panToolActive) return;
+            if (!e.target.closest('.node-title')) return;
 
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('mouseup', stopDrag);
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging = true;
+            element.classList.add('dragging');
+            startX = e.clientX;
+            startY = e.clientY;
+            initialX = node.x;
+            initialY = node.y;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
         });
 
         const drag = (e) => {
@@ -243,13 +248,12 @@ class NodeFactory {
         document.querySelectorAll('.node.selected').forEach(el => el.classList.remove('selected'));
         this.selectedNode = node;
 
-        // Select the node visually
+        // Select the node visually. Do not call scrollIntoView here: #node-canvas
+        // clips its overflow, so scrolling it would shift every node on screen
+        // right after a drag.
         const nodeElement = document.getElementById(node.id);
         if (nodeElement) {
             nodeElement.classList.add('selected');
-
-            // Scroll the node into view if needed
-            nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         // Show and update side panel
