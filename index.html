@@ -200,6 +200,9 @@
                             <button id="zoom-out" class="control-btn" title="Zoom Out">
                                 <i class="fas fa-search-minus"></i>
                             </button>
+                            <button id="fit-view" class="control-btn" title="Fit Nodes in View">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
                             <span id="zoom-level" class="zoom-level">100%</span>
                         </div>
                     </div>
@@ -691,10 +694,10 @@
     <script src="js/nodeCodegen.js"></script>
     <script src="js/strudelPatternGenerator.js"></script>
     <!-- Node System Modules -->
-    <script src="js/nodes/NodeCanvas.js"></script>
+    <script src="js/nodes/NodeCanvas.js?v=2"></script>
     <script src="js/nodes/ConnectionManager.js"></script>
     <script src="js/nodes/NodeFactory.js"></script>
-    <script src="js/nodes/NodeAudio.js"></script>
+    <script src="js/nodes/NodeAudio.js?v=2"></script>
     <script src="js/nodes/NodeManager.js"></script>
 
     <!-- Project persistence (save / load / export / autosave) -->
@@ -762,62 +765,7 @@
                     }
                 });
             });
-            
-            // Initialize Strudel samples on first user interaction
-            initializeStrudelSamples();
         });
-        
-        // Load Strudel sample libraries
-        async function initializeStrudelSamples() {
-            // Wait for user interaction to initialize audio (browser requirement)
-            const initAudioBtn = document.getElementById('initAudioBtn');
-            if (initAudioBtn) {
-                initAudioBtn.addEventListener('click', async function() {
-                    try {
-                        // Load default Strudel samples after audio is initialized
-                        if (window.Strudel && Strudel.samples) {
-                            console.log('Loading Strudel sample libraries...');
-                            
-                            // Load the main sample library
-                            await Strudel.samples('github:tidalcycles/dirt-samples');
-                            console.log('✓ Dirt Samples loaded');
-                            
-                            // Optionally load additional libraries
-                            // const base = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
-                            // await Strudel.samples(`${base}/tidal-drum-machines.json`, `${base}/tidal-drum-machines/machines/`);
-                            // console.log('✓ Drum Machines loaded');
-                            
-                            // await Strudel.samples(`${base}/vcsl.json`, `${base}/VCSL/`);
-                            // console.log('✓ VCSL samples loaded');
-                            
-                            console.log('All Strudel samples loaded successfully!');
-                        }
-                    } catch (error) {
-                        console.warn('Could not load Strudel samples:', error);
-                        // Continue without external samples - built-in samples will still work
-                    }
-                }, { once: true }); // Only run once
-            }
-        }
-        
-        // Example: Load custom samples
-        async function loadCustomSamples() {
-            if (!window.Strudel || !Strudel.samples) return;
-            
-            // Example 1: Load from GitHub
-            // await Strudel.samples('github:tidalcycles/dirt-samples');
-            
-            // Example 2: Load specific sample map
-            // await Strudel.samples({
-            //     'mykick': 'https://example.com/kick.wav',
-            //     'mysnare': 'https://example.com/snare.wav'
-            // });
-            
-            // Example 3: Load from your own GitHub repo
-            // await Strudel.samples('github:yourusername/your-repo/main');
-            
-            console.log('Custom samples loaded');
-        }
     </script>
     <script src="js/ai-provider.js" data-app-id="pixelMusic"></script>
     <script src="js/ai-creator.js" data-app-id="pixelMusic"></script>

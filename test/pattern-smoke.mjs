@@ -121,6 +121,9 @@ delete context.window.nodeManager;
 loadModule(context, 'js/sampleTunes.js');
 const SampleTunes = context.window.SampleTunes;
 
+const connectionContext = makeSandbox();
+const ConnectionManager = loadModule(connectionContext, 'js/nodes/ConnectionManager.js', 'ConnectionManager');
+
 const schemas = {
     nodeSchema: readJson('nodes/strudel-node-schema.json'),
     propertySchema: readJson('nodes/strudel-node-properties.json'),
@@ -381,6 +384,28 @@ check('cycles do not recurse forever', () => {
     const b = makeNode('Effect', 'hpf', { frequency: 1 });
     const code = codeFor([a, b], [connect(a, b), connect(b, a)], a);
     assert.equal(typeof code, 'string');
+});
+
+check('a fragment with no input is skipped instead of emitted bare', () => {
+    const effect = makeNode('Effect', 'lpf', { frequency: 500 });
+    assert.equal(codeFor([effect], [], effect), '');
+});
+
+check('programmatic connections accept node ids', () => {
+    const source = makeNode('DrumSymbol', 'bd', { symbol: 'bd' });
+    const effect = makeNode('Effect', 'lpf', { frequency: 500 });
+    const builder = Object.create(NodeManager.prototype);
+    builder.factory = { nodes: [source, effect] };
+    builder.connections = new ConnectionManager({
+        canvas: { scale: 1 },
+        updateStatus() {},
+        updateStrudelOutput() {}
+    });
+
+    builder.createConnection(source.id, 'output', effect.id, 'input');
+    assert.equal(builder.connections.connections.length, 1);
+    assert.equal(builder.connections.connections[0].sourceNodeId, source.id);
+    assert.equal(builder.connections.connections[0].targetNodeId, effect.id);
 });
 
 /* ---------------------------------------------------------------------- *
@@ -670,6 +695,16 @@ check('sample tunes show off distinct features', () => {
     assert.match(codes['deep-house'], /\.lpf\(900\)/);
     assert.match(codes['sometimes-break'], /\.degradeBy\(0\.4\)/);
     assert.equal(new Set(Object.values(codes)).size, SampleTunes.tunes.length);
+});
+
+check('sample tunes build syntactically valid Strudel code', () => {
+    SampleTunes.tunes.forEach(tune => {
+        const studio = makeStudio();
+        tune.build(studio);
+        const code = makePatternBuilder(studio).buildPlayablePattern();
+        assert.ok(code.trim(), `${tune.id}: no code`);
+        assert.doesNotThrow(() => new Function(code), `${tune.id}: ${code}`);
+    });
 });
 
 check('the sample button cycles through the tunes', () => {

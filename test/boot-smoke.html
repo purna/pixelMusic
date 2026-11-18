@@ -237,7 +237,43 @@
                     if (!manager.factory.nodes.length) throw new Error('no nodes created');
                     const code = manager.buildPlayablePattern();
                     if (!code.trim()) throw new Error('no code generated');
+                    try {
+                        new win.Function(code);
+                    } catch (error) {
+                        throw new Error(`sample tune code is not valid JavaScript: ${error.message} (${code})`);
+                    }
                     return `${manager.factory.nodes.length} node(s): ${code.split('\n').join(' ')}`;
+                });
+                check('fit view frames all nodes', () => {
+                    const button = doc.getElementById('fit-view');
+                    if (!button) throw new Error('no fit view button');
+                    button.click();
+
+                    const manager = win.nodeManager;
+                    const canvas = doc.getElementById('canvas-content');
+                    const viewport = doc.getElementById('node-canvas').getBoundingClientRect();
+                    const nodes = [...canvas.querySelectorAll('.node')];
+                    if (!nodes.length) throw new Error('no nodes to fit');
+
+                    const scale = manager.canvas.scale;
+                    if (!(scale >= 0.1 && scale <= 1)) throw new Error(`bad fit scale ${scale}`);
+                    if (!Number.isFinite(manager.canvas.offsetX) || !Number.isFinite(manager.canvas.offsetY)) {
+                        throw new Error('fit offsets are not finite');
+                    }
+
+                    nodes.forEach(element => {
+                        const box = element.getBoundingClientRect();
+                        if (box.left < viewport.left - 2 || box.top < viewport.top - 2 ||
+                            box.right > viewport.right + 2 || box.bottom > viewport.bottom + 2) {
+                            throw new Error(`node ${element.id} is outside the viewport after fit`);
+                        }
+                    });
+
+                    const label = doc.getElementById('zoom-level').textContent;
+                    if (label !== `${Math.round(scale * 100)}%`) {
+                        throw new Error(`zoom label ${label} does not match ${scale}`);
+                    }
+                    return `${nodes.length} node(s) at ${label}`;
                 });
                 check('right-clicking a node offers delete and removes it', () => {
                     const manager = win.nodeManager;

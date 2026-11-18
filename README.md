@@ -28,6 +28,7 @@ left palette to add nodes, then **Play All Nodes**.
 | Sample tune | Header **Sample Tune** loads a ready-made graph; click again for the next one |
 | Connect nodes | Drag from a node's output port to another node's input port |
 | Edit children | Double-click a node, `Esc` to go back |
+| Frame the graph | The **fit** button in the canvas controls zooms/pans so every node is visible |
 | Play / stop | `Play All Nodes` / `Stop All` |
 | See the code | The **Strudel Pattern Generator** field at the bottom always shows the generated code |
 | Import a pattern | Type a Strudel pattern and press **Build Nodes** (replaces the canvas) |
@@ -47,7 +48,7 @@ js/
   nodes/NodeFactory.js       node objects, DOM, property panels, child levels
   nodes/ConnectionManager.js ports, connection validation, SVG lines
   nodes/NodeAudio.js         Strudel evaluate/hush, playback state
-  nodes/NodeCanvas.js        pan, zoom
+  nodes/NodeCanvas.js        pan, zoom, fit-to-nodes
   strudelPatternGenerator.js graph traversal and composition (no per-type cases)
   nodeCodegen.js             what one node emits, from the schema's `codegen` rules
   nodeProperties.js          property definitions shared by panels and codegen
@@ -107,6 +108,9 @@ python3 -m http.server 8899
 # open http://localhost:8899/test/boot-smoke.html
 ```
 
+`test/sample-check.html` is a manual network check for the two remote sample
+maps: it reports whether `RolandTR909_*` and dirt sample keys registered.
+
 ## Deploy
 
 `.github/workflows/static.yml` publishes to GitHub Pages on pushes to `main`. It
@@ -114,6 +118,7 @@ copies only the files the app loads, so `test/` is not published.
 
 ## Known gaps
 
-* The Strudel engine is vendored locally, but the sample packs loaded on **Enable
-  Audio** still come from GitHub (`tidalcycles/dirt-samples`), so the first
+* The Strudel engine is vendored locally, but the sample packs are still
+  downloaded (dirt-samples and tidal-drum-machines from GitHub). The maps are
+  preloaded when the page opens and retried on **Enable Audio**, so the first
   playback needs a network connection.

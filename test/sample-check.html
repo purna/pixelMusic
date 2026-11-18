@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Sample load check</title></head>
+<body>
+<pre id="out">running</pre>
+<script src="../js/vendor/strudel-1.0.3.js"></script>
+<script>
+(async () => {
+    const log = [];
+    try {
+        const base = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
+        await window.strudel.samples(
+            `${base}tidal-drum-machines.json`,
+            `${base}tidal-drum-machines/machines/`
+        );
+        const keys = ['RolandTR909_bd', 'RolandTR909_sd', 'RolandTR909_hh', 'RolandTR909_rim'];
+        log.push('drum machine keys: ' + keys.map(k => `${k}=${!!window.strudel.getSound(k)}`).join(', '));
+
+        await window.strudel.samples('github:tidalcycles/dirt-samples');
+        log.push('dirt keys: hh=' + !!window.strudel.getSound('hh') + ' bd=' + !!window.strudel.getSound('bd'));
+    } catch (error) {
+        log.push('ERROR ' + error.message);
+    }
+    document.getElementById('out').textContent = log.join('\n');
+})();
+</script>
+</body>
+</html>

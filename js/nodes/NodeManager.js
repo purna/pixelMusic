@@ -346,7 +346,18 @@ class NodeManager {
     }
 
     createConnection(s, sp, t, tp) {
-        this.connections.createConnection(s, sp, t, tp);
+        // Callers pass either node objects or ids; resolve both so sample tunes,
+        // pasted patterns and the canvas all go through the same path.
+        const resolve = value => (typeof value === 'string'
+            ? this.factory.nodes.find(node => node.id === value)
+            : value);
+        const source = resolve(s);
+        const target = resolve(t);
+        if (!source || !target) {
+            this.updateStatus('Cannot connect: node not found');
+            return;
+        }
+        this.connections.createConnection(source, sp, target, tp);
     }
 
     clearAllNodes() {

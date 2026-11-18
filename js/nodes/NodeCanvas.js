@@ -37,6 +37,10 @@ class NodeCanvas {
             this.zoomOut();
         });
 
+        document.getElementById('fit-view')?.addEventListener('click', () => {
+            this.fitToNodes();
+        });
+
         // Pan tool toggle
         const panToolBtn = document.getElementById('pan-tool');
         if (panToolBtn) {
@@ -80,6 +84,63 @@ class NodeCanvas {
 
     zoomOut() {
         this.zoom(-0.1);
+    }
+
+    /** Frame every visible node, capped at 100% so it never magnifies. */
+    fitToNodes() {
+        const canvas = document.getElementById('canvas-content');
+        if (!canvas) return;
+
+        const nodes = Array.from(canvas.querySelectorAll('.node'));
+        if (!nodes.length) {
+            this.resetZoom();
+            this.manager.updateStatus('No nodes to fit');
+            return;
+        }
+
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        nodes.forEach(element => {
+            const x = parseFloat(element.style.left) || 0;
+            const y = parseFloat(element.style.top) || 0;
+            const width = element.offsetWidth || 200;
+            const height = element.offsetHeight || 100;
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + width);
+            maxY = Math.max(maxY, y + height);
+        });
+
+        const viewport = document.getElementById('node-canvas');
+        const padding = 48;
+        const viewWidth = viewport?.clientWidth || canvas.clientWidth || window.innerWidth;
+        const viewHeight = viewport?.clientHeight || canvas.clientHeight || window.innerHeight;
+        const contentWidth = Math.max(1, maxX - minX);
+        const contentHeight = Math.max(1, maxY - minY);
+
+        const fitScale = Math.min(
+            (viewWidth - padding * 2) / contentWidth,
+            (viewHeight - padding * 2) / contentHeight
+        );
+        const scale = Math.max(0.1, Math.min(1, fitScale));
+
+        this.scale = scale;
+        this.offsetX = (viewWidth - contentWidth * scale) / 2 - minX * scale;
+        this.offsetY = (viewHeight - contentHeight * scale) / 2 - minY * scale;
+
+        // Frame instantly; a smooth transition here reads as the view sliding
+        // out of place while nodes are being fitted.
+        const previousTransition = canvas.style.transition;
+        canvas.style.transition = 'none';
+        this.updateCanvasTransform();
+        void canvas.offsetWidth;
+        canvas.style.transition = previousTransition;
+
+        this.manager.updateStatus(`Fitted ${nodes.length} node(s) to view (${Math.round(scale * 100)}%)`);
     }
 
     zoom(delta, centerX = null, centerY = null) {

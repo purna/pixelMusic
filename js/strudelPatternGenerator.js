@@ -89,7 +89,15 @@ class StrudelPatternGenerator {
             .map(connected => this.generatePatternFromNode(connected.node, path))
             .filter(code => code && code.trim());
 
-        if (!upstream.length) return generated.code;
+        if (!upstream.length) {
+            // A bare fragment (disconnected effect/transform) is not valid
+            // Strudel on its own; leave it out rather than emitting `.lpf(500)`.
+            if (kind === 'fragment') {
+                console.warn(`${node.type} has no input to transform; skipping`);
+                return '';
+            }
+            return generated.code;
+        }
 
         const base = upstream.length === 1 ? upstream[0] : `stack(${upstream.join(', ')})`;
 

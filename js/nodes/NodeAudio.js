@@ -10,7 +10,22 @@ class NodeAudio {
         this.manager = manager;
         this.audioInitialized = false;
         this.strudelInitialized = false;
+        this.samplesLoaded = false;
+        this.samplePacksLoaded = new Set();
         this.currentPattern = '';
+
+        // Sample maps are just metadata; register them right away so drums are
+        // ready by the time the user clicks Play (no audio context required).
+        const preload = () => {
+            this.loadSampleLibraries().catch(error => {
+                console.warn('Sample preload failed:', error);
+            });
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', preload, { once: true });
+        } else {
+            setTimeout(preload, 0);
+        }
     }
 
     /** Strudel's @strudel/web globals, accessed safely. */
@@ -58,6 +73,11 @@ class NodeAudio {
                 }
             }
 
+            if (!this.samplesLoaded) {
+                this.manager.updateStatus('Loading sample libraries...');
+                await this.loadSampleLibraries();
+            }
+
             this.audioInitialized = true;
             this.manager.updateStatus('Audio initialized - ready to play');
             this.enableAudioFeatures();
@@ -65,6 +85,43 @@ class NodeAudio {
             console.error('Audio initialization failed:', error);
             this.manager.updateStatus('Audio initialization failed: ' + error.message);
         }
+    }
+
+    /** Load the sample maps the palette and sample tunes refer to. */
+    async loadSampleLibraries() {
+        const loader = window.Strudel?.samples;
+        if (typeof loader !== 'function') {
+            console.warn('Strudel sample loader unavailable');
+            return false;
+        }
+
+        const drumMachines = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
+        const packs = [
+            ['dirt', ['github:tidalcycles/dirt-samples']],
+            [
+                'drum-machines',
+                [
+                    `${drumMachines}tidal-drum-machines.json`,
+                    `${drumMachines}tidal-drum-machines/machines/`
+                ]
+            ]
+        ];
+
+        for (const [id, args] of packs) {
+            if (this.samplePacksLoaded.has(id)) continue;
+            console.log('Loading sample pack:', id);
+            try {
+                await loader(...args);
+                this.samplePacksLoaded.add(id);
+                console.log('Loaded sample pack:', id);
+            } catch (error) {
+                console.warn('Could not load sample pack:', args[0], error);
+            }
+        }
+
+        this.samplesLoaded = this.samplePacksLoaded.size === packs.length;
+        if (this.samplesLoaded) console.log('Loaded all Strudel sample packs');
+        return this.samplesLoaded;
     }
 
     async loadStrudelBundle() {
@@ -103,6 +160,13 @@ class NodeAudio {
             this.manager.updateStatus('Error: Strudel evaluate function not available');
             return false;
         }
+
+        // If a pack failed earlier (network hiccup), retry only the missing ones
+        // before evaluating a pattern that names banked samples.
+        if (!this.samplesLoaded && this.strudelInitialized) {
+            await this.loadSampleLibraries();
+        }
+
         try {
             await evaluate(code);
             this.currentPattern = code;
