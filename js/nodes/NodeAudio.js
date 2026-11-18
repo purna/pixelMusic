@@ -98,13 +98,9 @@ class NodeAudio {
         const drumMachines = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
         const packs = [
             ['dirt', ['github:tidalcycles/dirt-samples']],
-            [
-                'drum-machines',
-                [
-                    `${drumMachines}tidal-drum-machines.json`,
-                    `${drumMachines}tidal-drum-machines/machines/`
-                ]
-            ]
+            // The map carries its own _base (ritchse/tidal-drum-machines); passing
+            // a base here overrides it with a directory that has no WAV files.
+            ['drum-machines', [`${drumMachines}tidal-drum-machines.json`]]
         ];
 
         for (const [id, args] of packs) {

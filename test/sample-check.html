@@ -9,12 +9,18 @@
     const log = [];
     try {
         const base = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/';
-        await window.strudel.samples(
-            `${base}tidal-drum-machines.json`,
-            `${base}tidal-drum-machines/machines/`
-        );
+        await window.strudel.samples(`${base}tidal-drum-machines.json`);
         const keys = ['RolandTR909_bd', 'RolandTR909_sd', 'RolandTR909_hh', 'RolandTR909_rim'];
         log.push('drum machine keys: ' + keys.map(k => `${k}=${!!window.strudel.getSound(k)}`).join(', '));
+
+        const hat = window.strudel.getSound('RolandTR909_hh');
+        log.push('hat base: ' + (hat?.data?.baseUrl || 'unknown'));
+        const hatUrl = new URL('RolandTR909/rolandtr909-hh/hh01.wav', hat.data.baseUrl).href;
+        const response = await fetch(hatUrl);
+        const bytes = await response.arrayBuffer();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const decoded = await new AudioContextClass().decodeAudioData(bytes);
+        log.push(`hat wav: HTTP ${response.status}, ${bytes.byteLength} bytes, decoded ${decoded.duration.toFixed(2)}s`);
 
         await window.strudel.samples('github:tidalcycles/dirt-samples');
         log.push('dirt keys: hh=' + !!window.strudel.getSound('hh') + ' bd=' + !!window.strudel.getSound('bd'));
