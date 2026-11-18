@@ -223,6 +223,64 @@
                     const groups = doc.querySelectorAll('#instrument-content .instrument-group').length;
                     return `${items} items in ${groups} group(s)`;
                 });
+                check('sample tune button loads a playable graph', () => {
+                    const button = doc.getElementById('load-sample-tune');
+                    if (!button) throw new Error('no sample tune button');
+                    win.confirm = () => true;
+                    button.click();
+                    const manager = win.nodeManager;
+                    if (!manager.factory.nodes.length) throw new Error('no nodes created');
+                    const code = manager.buildPlayablePattern();
+                    if (!code.trim()) throw new Error('no code generated');
+                    return `${manager.factory.nodes.length} node(s): ${code.split('\n').join(' ')}`;
+                });
+                check('right-clicking a node offers delete and removes it', () => {
+                    const manager = win.nodeManager;
+                    win.confirm = () => true;
+                    const nodeElement = doc.querySelector('#canvas-content .node');
+                    if (!nodeElement) throw new Error('no node on the canvas');
+                    nodeElement.dispatchEvent(new win.MouseEvent('contextmenu', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: 200,
+                        clientY: 200
+                    }));
+                    const menu = doc.getElementById('node-context-menu');
+                    if (!menu || !menu.classList.contains('visible')) throw new Error('node menu did not open');
+                    const before = manager.factory.nodes.length;
+                    menu.querySelector('[data-action="delete-node"]').click();
+                    const after = manager.factory.nodes.length;
+                    if (after !== before - 1) throw new Error(`expected ${before - 1} nodes, got ${after}`);
+                    return `${before} -> ${after} node(s)`;
+                });
+                check('settings sliders reach the generated code', () => {
+                    const manager = win.nodeManager;
+                    win.confirm = () => true;
+                    if (!manager.factory.nodes.length) doc.getElementById('load-sample-tune').click();
+
+                    doc.getElementById('settingsBtn').click();
+                    const gain = doc.getElementById('settings-gain');
+                    const bpm = doc.getElementById('bpm');
+                    if (!gain || !bpm) throw new Error('settings controls missing');
+
+                    gain.value = '0.5';
+                    gain.dispatchEvent(new win.Event('change', { bubbles: true }));
+                    bpm.value = '140';
+                    bpm.dispatchEvent(new win.Event('change', { bubbles: true }));
+                    doc.getElementById('saveSettings').click();
+
+                    const code = manager.buildPlayablePattern();
+                    if (!/\.gain\(0\.5\)/.test(code)) throw new Error(`no gain in: ${code}`);
+                    if (!/^setcpm\(35\)/.test(code)) throw new Error(`no tempo in: ${code}`);
+
+                    // Leave the persisted state clean for the next run.
+                    gain.value = '1';
+                    gain.dispatchEvent(new win.Event('change', { bubbles: true }));
+                    bpm.value = '120';
+                    bpm.dispatchEvent(new win.Event('change', { bubbles: true }));
+                    doc.getElementById('saveSettings').click();
+                    return code.split('\n')[0];
+                });
 
                 render();
             }, 5000);
