@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="css/node.css">
     <link rel="stylesheet" href="css/node-properties.css">
     <link rel="stylesheet" href="css/layout.css?v=3">
+    <link rel="stylesheet" href="css/credits.css?v=1">
 </head>
 
 <body>
@@ -717,7 +718,7 @@
     <script src="js/nodeContextMenu.js"></script>
 
     <!-- Footer with Strudel Example Input -->
-    <footer class="strudel-footer">
+    <footer class="strudel-footer" id="strudel-footer-panel">
         <div class="footer-content">
             <div class="strudel-input-section">
                 <h3><i class="fas fa-code"></i> Strudel Pattern Generator</h3>
@@ -747,6 +748,61 @@
         </div>
     </footer>
 
+    <div id="site-credits">
+        <div class="credits-tech">
+            <span>Built with</span>
+            <a href="https://strudel.cc/" target="_blank" rel="noopener noreferrer">Strudel</a>
+            <a href="https://tidalcycles.org/" target="_blank" rel="noopener noreferrer">TidalCycles</a>
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener noreferrer">Web Audio</a>
+        </div>
+        <div class="credits-actions">
+            <button type="button" id="footer-toggle" class="credits-btn" aria-controls="strudel-footer-panel" aria-expanded="true">
+                <i class="fas fa-chevron-down"></i><span>Hide panel</span>
+            </button>
+            <button type="button" id="credits-open" class="credits-btn credits-link">
+                <i class="fas fa-circle-info"></i> Credits &amp; node guide
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-overlay credits-overlay" id="credits-modal">
+        <div class="credits-modal" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+            <div class="credits-modal-header">
+                <h2 id="credits-title"><i class="fas fa-circle-info"></i> Credits &amp; node guide</h2>
+                <button type="button" class="modal-close" id="credits-close" aria-label="Close credits">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="credits-modal-body">
+                <section class="credits-section">
+                    <h3><i class="fas fa-code"></i> Tech used</h3>
+                    <ul class="credits-list">
+                        <li><a href="https://strudel.cc/" target="_blank" rel="noopener noreferrer">Strudel</a> — the live-coding music language that plays every node graph.</li>
+                        <li><a href="https://tidalcycles.org/" target="_blank" rel="noopener noreferrer">TidalCycles</a> — the pattern language Strudel is built on.</li>
+                        <li><a href="https://github.com/tidalcycles/strudel" target="_blank" rel="noopener noreferrer">Strudel source</a> and <a href="https://github.com/ritchse/tidal-drum-machines" target="_blank" rel="noopener noreferrer">tidal-drum-machines</a> — engine and 909/808 sample packs.</li>
+                        <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener noreferrer">Web Audio API</a> — browser audio playback and sample decoding.</li>
+                        <li><a href="https://fontawesome.com/" target="_blank" rel="noopener noreferrer">Font Awesome</a>, <a href="https://fonts.google.com/specimen/Press+Start+2P" target="_blank" rel="noopener noreferrer">Press Start 2P</a> and <a href="https://fonts.google.com/specimen/Inter" target="_blank" rel="noopener noreferrer">Inter</a> — icons and typography.</li>
+                    </ul>
+                </section>
+                <section class="credits-section">
+                    <h3><i class="fas fa-diagram-project"></i> Using the nodes</h3>
+                    <ol class="credits-steps">
+                        <li><strong>Pick a sound or effect.</strong> Click an icon in the left rail to open its palette. Click the active icon again to slide the palette away; drag an item onto the canvas to add it.</li>
+                        <li><strong>Connect the graph.</strong> Drag from a node's output port to another node's input port. Sound flows from sources into effects, wrappers and repeaters.</li>
+                        <li><strong>Edit a node.</strong> Select it to open the inspector. Change the bank, symbol, note, or schema-driven controls; the generated Strudel code updates immediately.</li>
+                        <li><strong>Nest patterns.</strong> Double-click a node to edit its children, then press <kbd>Esc</kbd> to go back up a level.</li>
+                        <li><strong>Play it.</strong> Click <em>Enable Audio</em> once, then a node's play button or <em>Play All Nodes</em>. Use <em>Stop All</em> to silence everything.</li>
+                        <li><strong>Import or export.</strong> Paste a Strudel pattern and press <em>Build Nodes</em> to turn it into a graph, or use <em>Export</em> to download the generated code.</li>
+                        <li><strong>Save your work.</strong> The graph autosaves in this browser; <em>Save</em> and <em>Load</em> use JSON project files.</li>
+                    </ol>
+                </section>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Footer visibility + credits dialog -->
+    <script src="js/footerUi.js?v=1"></script>
 
     <!-- Initialize the Strudel Pattern Generator -->
     <script>
