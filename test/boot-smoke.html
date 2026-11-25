@@ -334,6 +334,31 @@
                     if (panel.classList.contains('open')) throw new Error('inspector did not close again');
                     return `overlay, ${width}px`;
                 });
+                check('pinned inspector stays open and releases the backdrop', () => {
+                    const panel = doc.getElementById('side-panel');
+                    const pin = doc.getElementById('side-panel-pin');
+                    const toggle = doc.getElementById('panel-toggle');
+                    const overlay = doc.getElementById('side-panel-overlay');
+                    if (!panel || !pin || !toggle || !overlay) throw new Error('missing inspector pin controls');
+
+                    // Normalize the starting state, including any saved pin from
+                    // an earlier run in this browser.
+                    if (panel.classList.contains('pinned')) pin.click();
+                    if (panel.classList.contains('open')) toggle.click();
+
+                    toggle.click();
+                    if (!panel.classList.contains('open')) throw new Error('inspector did not open');
+                    pin.click();
+                    if (!panel.classList.contains('pinned')) throw new Error('pin state did not apply');
+                    if (pin.getAttribute('aria-pressed') !== 'true') throw new Error('pin button is not pressed');
+                    if (!panel.classList.contains('open')) throw new Error('pinned inspector closed');
+                    if (overlay.classList.contains('visible')) throw new Error('pinned inspector still blocks the canvas');
+
+                    toggle.click();
+                    if (panel.classList.contains('open')) throw new Error('edge tab did not close the inspector');
+                    if (panel.classList.contains('pinned')) throw new Error('closing did not unpin the inspector');
+                    return 'pin holds it open without a backdrop';
+                });
                 check('right-clicking a node offers delete and removes it', () => {
                     const manager = win.nodeManager;
                     win.confirm = () => true;

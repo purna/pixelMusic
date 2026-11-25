@@ -2,6 +2,8 @@
  * NodeFactory.js
  * Handles creation of node DOM elements and UI updates.
  */
+const SIDE_PANEL_PIN_KEY = 'pixelmusic:sidePanelPinned';
+
 class NodeFactory {
     constructor(manager) {
         this.manager = manager;
@@ -9,6 +11,7 @@ class NodeFactory {
         this.rootNodes = null;
         this.selectedNode = null;
         this.sidePanelListenersAdded = false;
+        this.sidePanelPinned = false;
         /** One snapshot per nesting level, so grandchild levels unwind in order. */
         this.levelStack = [];
     }
@@ -400,18 +403,101 @@ class NodeFactory {
         return this.manager.controlNodesSchema?.controlNodes?.[nodeType];
     }
 
+    /** Restore the pin state and reopen the inspector when it was pinned. */
+    initSidePanel() {
+        let pinned = false;
+        try {
+            pinned = localStorage.getItem(SIDE_PANEL_PIN_KEY) === 'true';
+        } catch (error) {
+            // Storage can be unavailable (private mode, file://). Pinning still
+            // works for the current page load.
+        }
+        this.sidePanelPinned = pinned;
+        this.applySidePanelPinState();
+        if (pinned) this.showSidePanel();
+    }
+    applySidePanelPinState() {
+        const sidePanel = document.getElementById('side-panel');
+        const pinButton = document.getElementById('side-panel-pin');
+        if (sidePanel) sidePanel.classList.toggle('pinned', this.sidePanelPinned);
+        if (pinButton) {
+            pinButton.classList.toggle('active', this.sidePanelPinned);
+            pinButton.setAttribute('aria-pressed', String(this.sidePanelPinned));
+            const label = this.sidePanelPinned ? 'Unpin properties panel' : 'Pin properties panel open';
+            pinButton.title = label;
+            pinButton.setAttribute('aria-label', label);
+        }
+    }
+
+    setSidePanelPinned(pinned) {
+        this.sidePanelPinned = Boolean(pinned);
+        try {
+            localStorage.setItem(SIDE_PANEL_PIN_KEY, String(this.sidePanelPinned));
+        } catch (error) {
+            // Ignore unavailable storage.
+        }
+
+        this.applySidePanelPinState();
+        if (this.sidePanelPinned) {
+            this.showSidePanel();
+        } else {
+            this.refreshSidePanelOverlay();
+        }
+    }
+
+    toggleSidePanelPin() {
+        this.setSidePanelPinned(!this.sidePanelPinned);
+    }
+
+    /** Explicit close (X or edge tab): closing also unpins the inspector. */
+    closeSidePanel() {
+        if (this.sidePanelPinned) this.setSidePanelPinned(false);
+        this.hideSidePanel(true);
+    }
+
+    refreshSidePanelOverlay() {
+        const sidePanel = document.getElementById('side-panel');
+        const overlay = document.getElementById('side-panel-overlay');
+        if (!sidePanel || !overlay) return;
+        const open = sidePanel.classList.contains('open');
+        // A pinned inspector is not modal: the canvas stays interactive.
+        overlay.classList.toggle('visible', open && !this.sidePanelPinned);
+    }
+
+    showSidePanelEmptyState() {
+        const titleElement = document.getElementById('side-panel-title');
+        if (titleElement) titleElement.textContent = 'Node Properties';
+        document.getElementById('node-properties')?.setAttribute('hidden', '');
+        document.getElementById('side-panel-empty')?.removeAttribute('hidden');
+    }
+
+    showSidePanelContent() {
+        document.getElementById('side-panel-empty')?.setAttribute('hidden', '');
+        document.getElementById('node-properties')?.removeAttribute('hidden');
+    }
+
     showSidePanel() {
         const sidePanel = document.getElementById('side-panel');
         if (!sidePanel) return;
         sidePanel.classList.add('open');
-        document.getElementById('side-panel-overlay')?.classList.add('visible');
+        if (!this.selectedNode) this.showSidePanelEmptyState();
+        this.refreshSidePanelOverlay();
     }
 
-    hideSidePanel() {
+    hideSidePanel(force = false) {
         const sidePanel = document.getElementById('side-panel');
         if (!sidePanel) return;
+        // Pinning keeps automatic closes (deletes, project loads, outside
+        // clicks) from dismissing the inspector. There is nothing selected
+        // anymore, so show the placeholder instead of stale node values.
+        if (this.sidePanelPinned && !force) {
+            sidePanel.classList.add('open');
+            this.showSidePanelEmptyState();
+            this.refreshSidePanelOverlay();
+            return;
+        }
         sidePanel.classList.remove('open');
-        document.getElementById('side-panel-overlay')?.classList.remove('visible');
+        this.refreshSidePanelOverlay();
     }
 
     updateDeleteButtonState() {
@@ -429,6 +515,8 @@ class NodeFactory {
     // Placeholder for property generation methods to keep file size manageable
     updateSidePanel(node) {
         if (!node) return;
+
+        this.showSidePanelContent();
 
         // Add event listeners for the side panel controls if not already added
         if (!this.sidePanelListenersAdded) {

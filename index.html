@@ -42,7 +42,7 @@
     <link rel="stylesheet" href="css/tutorials.css">
     <link rel="stylesheet" href="css/node.css">
     <link rel="stylesheet" href="css/node-properties.css">
-    <link rel="stylesheet" href="css/layout.css?v=3">
+    <link rel="stylesheet" href="css/layout.css?v=4">
     <link rel="stylesheet" href="css/credits.css?v=1">
 </head>
 
@@ -231,9 +231,18 @@
         <div id="side-panel">
             <div class="side-panel-header">
                 <h3 id="side-panel-title">Node Properties</h3>
-                <button class="side-panel-close" id="side-panel-close">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="side-panel-actions">
+                    <button class="side-panel-pin" id="side-panel-pin" title="Pin properties panel open" aria-label="Pin properties panel open" aria-pressed="false">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                    <button class="side-panel-close" id="side-panel-close" title="Close properties panel" aria-label="Close properties panel">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="side-panel-empty" class="side-panel-empty" hidden>
+                <i class="fas fa-mouse-pointer"></i>
+                <p>Select a node to edit its properties</p>
             </div>
             <div id="node-properties">
                 <div class="property-group">
@@ -699,9 +708,9 @@
     <!-- Node System Modules -->
     <script src="js/nodes/NodeCanvas.js?v=3"></script>
     <script src="js/nodes/ConnectionManager.js"></script>
-    <script src="js/nodes/NodeFactory.js?v=4"></script>
+    <script src="js/nodes/NodeFactory.js?v=5"></script>
     <script src="js/nodes/NodeAudio.js?v=3"></script>
-    <script src="js/nodes/NodeManager.js?v=3"></script>
+    <script src="js/nodes/NodeManager.js?v=4"></script>
 
     <!-- Project persistence (save / load / export / autosave) -->
     <script src="js/projectManager.js"></script>

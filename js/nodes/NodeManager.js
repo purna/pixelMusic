@@ -27,6 +27,7 @@ class NodeManager {
         console.log('Node Manager initializing...');
         this.schemasReady = this.loadSchemas();
         this.bindEvents();
+        this.factory.initSidePanel();
         this.canvas.init();
 
         // Initialize hierarchical navigation state
@@ -209,13 +210,16 @@ class NodeManager {
         document.getElementById('stop-all-nodes')?.addEventListener('click', () => this.audio.stopAllNodes());
         document.getElementById('clear-nodes')?.addEventListener('click', () => this.clearAllNodes());
         document.getElementById('delete-selected-node')?.addEventListener('click', () => this.factory.deleteSelectedNode());
-        document.getElementById('side-panel-close')?.addEventListener('click', () => this.factory.hideSidePanel());
+        document.getElementById('side-panel-close')?.addEventListener('click', () => this.factory.closeSidePanel());
+        document.getElementById('side-panel-pin')?.addEventListener('click', () => this.factory.toggleSidePanelPin());
         document.getElementById('panel-toggle')?.addEventListener('click', () => {
             const panel = document.getElementById('side-panel');
             if (!panel) return;
-            const willOpen = !panel.classList.contains('open');
-            panel.classList.toggle('open', willOpen);
-            document.getElementById('side-panel-overlay')?.classList.toggle('visible', willOpen);
+            if (panel.classList.contains('open')) {
+                this.factory.closeSidePanel();
+            } else {
+                this.factory.showSidePanel();
+            }
         });
         document.getElementById('side-panel-overlay')?.addEventListener('click', () => this.factory.hideSidePanel());
         document.getElementById('back-to-parent')?.addEventListener('click', () => this.factory.exitNodeLevel());
